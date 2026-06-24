@@ -22,9 +22,16 @@ from __future__ import annotations
 import os
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 
+import data_acquisition.data_utils as du
+
 HR_VARS = ("t2m", "u10", "v10")
+
+# CARRA2 dynamic HR variables to download per day (CDS names) and the 3-hourly analysis times.
+CARRA_DYNAMIC = ["2m_temperature", "10m_u_component_of_wind", "10m_v_component_of_wind"]
+ALL_TIMES = ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"]
 
 
 def build_day_dataset(patch: xr.Dataset, lr_stack: xr.DataArray,
@@ -105,3 +112,81 @@ def write_day(store: str | os.PathLike, day_ds: xr.Dataset,
 
         existing = dict(zarr.open_group(store, mode="r").attrs)
         day_ds[["hr", "lr"]].assign_attrs(existing).to_zarr(store, append_dim="time")
+
+
+# --------------------------------------------------------------------------------------
+# Batch driver: download -> crop -> build -> write -> discard, one day at a time
+# --------------------------------------------------------------------------------------
+
+
+def _carra_request(variables, day: pd.Timestamp, times) -> dict:
+    """Build a CARRA2 single-levels request dict for one day."""
+    return {
+        "level_type": "single_levels", "product_type": "analysis", "data_format": "netcdf",
+        "variable": list(variables),
+        "year": [f"{day.year:04d}"], "month": [f"{day.month:02d}"], "day": [f"{day.day:02d}"],
+        "time": list(times),
+        "area": [75, -150, 60, -113],  # ignored by CDS for CARRA2, but harmless
+    }
+
+
+def acquire_static_mask(center, patch_size, work_dir, *, dataset="reanalysis-pan-carra",
+                        ref_day="2013-01-21") -> np.ndarray:
+    """Download the CARRA2 land-sea mask once (single timestep), crop, return the (y,x) patch."""
+    day = pd.Timestamp(ref_day)
+    paths = du.download_carra2(dataset, _carra_request(["land_sea_mask"], day, ["00:00"]),
+                               work_dir, basename="carra2_lsm_static")
+    hr = du.open_carra2(paths)
+    mask = du.crop_carra2_patch(hr, center, patch_size)["lsm"].isel(time=0).values.astype("float32")
+    hr.close()
+    for p in paths:
+        os.remove(p)
+    return mask
+
+
+def build_dataset(store, center, patch_size, start, end, *, work_dir,
+                  dataset="reanalysis-pan-carra", dynamic=CARRA_DYNAMIC, times=ALL_TIMES,
+                  margin_cells=2, keep_downloads=False, attrs=None, mask_ref_day=None):
+    """Build a sample zarr over a date range: per day download -> crop -> write -> discard.
+
+    Each day's full-domain CARRA2 file is downloaded, the patch (all 8 timesteps) cropped, the
+    ERA5 LR stack built (from ARCO), the day written/appended to the zarr, and the full-domain
+    file deleted -- so large data never accumulates locally. Safe to resume: if ``store`` exists
+    the new days are appended and the static mask is not re-fetched.
+
+    Parameters
+    ----------
+    store : output zarr path.
+    center : (lat, lon) patch centre.
+    patch_size : HR cells per side (e.g. 448).
+    start, end : inclusive date range (parseable by pandas); iterated daily.
+    work_dir : scratch dir for the transient full-domain downloads.
+    keep_downloads : keep the per-day CARRA2 files instead of deleting them.
+    attrs : store-level metadata (written at store creation).
+    """
+    os.makedirs(work_dir, exist_ok=True)
+    days = pd.date_range(start, end, freq="D")
+    era5 = du.open_era5_lr()
+
+    need_mask = not os.path.exists(store)
+    mask = (acquire_static_mask(center, patch_size, work_dir, dataset=dataset,
+                                ref_day=mask_ref_day or str(days[0].date()))
+            if need_mask else None)
+
+    for day in days:
+        paths = du.download_carra2(dataset, _carra_request(dynamic, day, times), work_dir,
+                                   basename=f"carra2_{day.strftime('%Y%m%d')}")
+        hr = du.open_carra2(paths)
+        patch = du.crop_carra2_patch(hr, center, patch_size)
+        lr = du.build_era5_lr_stack(patch, era5=era5, margin_cells=margin_cells)
+        day_ds = build_day_dataset(patch, lr)
+        write_day(store, day_ds, land_sea_mask=(mask if need_mask else None),
+                  attrs=(attrs if need_mask else None))
+        need_mask = False
+        hr.close()
+        if not keep_downloads:
+            for p in paths:
+                os.remove(p)
+        print(f"  wrote {day.date()}: +{day_ds.sizes['time']} steps -> {store}")
+
+    return store
