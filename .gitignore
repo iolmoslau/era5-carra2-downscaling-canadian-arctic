@@ -1,0 +1,28 @@
+# Scratch / downloaded data (never commit large reanalysis files)
+data_acquisition/_scratch_data/
+*.nc
+*.grib
+*.grib2
+*.zarr/
+*.idx
+
+# Figures / outputs
+*.png
+*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.venv/
+env/
+
+# Credentials (CDS key lives in ~/.cdsapirc, but guard against copies)
+.cdsapirc
+*.key
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
