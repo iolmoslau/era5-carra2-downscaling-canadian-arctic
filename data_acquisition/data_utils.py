@@ -12,7 +12,7 @@ ERA5 (ARCO-ERA5, the low-resolution input)
       until you call ``.compute()`` / ``.load()``.
 
 CARRA2 (Copernicus pan-Arctic Regional Reanalysis, the high-resolution target)
-    * 2.5 km, 3-hourly, polar-stereographic projection.
+    * 2.5 km, 3-hourly, Lambert Projection (Harmonie-Arome grid)
     * The grid is CURVILINEAR: ``latitude``/``longitude`` are 2-D fields indexed by
       projected dimensions (conventionally ``y``, ``x``). You crop in (y, x) index space.
     * CDS-only: there is no lazy cloud source. You must DOWNLOAD it (we request NetCDF to
@@ -499,6 +499,80 @@ def build_era5_lr_stack(patch: xr.Dataset, era5: xr.Dataset | None = None, *,
 
     # Drop the per-channel scalar 'level' coord so the channels concat cleanly.
     chans = [c.drop_vars("level", errors="ignore") for c in chans]
+    da = xr.concat(chans, dim="channel").assign_coords(channel=names)
+    da = da.transpose("time", "channel", "latitude", "longitude")
+    da.name = "lr"
+    return da
+
+
+# --------------------------------------------------------------------------------------
+# ERA5 LR via CDS (area-subset) -- the efficient source for the full build
+# --------------------------------------------------------------------------------------
+
+ERA5_SL_DATASET = "reanalysis-era5-single-levels"
+ERA5_PL_DATASET = "reanalysis-era5-pressure-levels"
+ERA5_SL_VARS = ["2m_temperature", "10m_u_component_of_wind", "10m_v_component_of_wind",
+                "sea_ice_cover"]
+ERA5_PL_VARS = ["temperature", "geopotential", "u_component_of_wind", "v_component_of_wind"]
+
+
+def download_era5_cds(out_dir, *, year, month, days, times, area, levels=LR_LEVELS,
+                      basename_prefix="era5", **download_kwargs):
+    """Download one month of ERA5 (single + pressure levels), area-subset, from the CDS.
+
+    Unlike CARRA2, ERA5 honours the lat/lon ``area`` server-side, so each file is tiny.
+    ``area`` is ``[N, W, S, E]`` in degrees; ``levels`` are the pressure levels (hPa).
+
+    Returns (sl_paths, pl_paths).
+    """
+    common = {"product_type": "reanalysis", "data_format": "netcdf",
+              "year": [str(year)], "month": [f"{int(month):02d}"],
+              "day": [f"{int(d):02d}" for d in days], "time": list(times), "area": list(area)}
+    sl = download_carra2(ERA5_SL_DATASET, {"variable": ERA5_SL_VARS, **common}, out_dir,
+                         basename=f"{basename_prefix}_sl_{year}{int(month):02d}", **download_kwargs)
+    pl = download_carra2(ERA5_PL_DATASET,
+                         {"variable": ERA5_PL_VARS,
+                          "pressure_level": [str(l) for l in levels], **common}, out_dir,
+                         basename=f"{basename_prefix}_pl_{year}{int(month):02d}", **download_kwargs)
+    return sl, pl
+
+
+def open_era5_cds(sl_paths, pl_paths) -> xr.Dataset:
+    """Open + merge CDS ERA5 single- and pressure-level files into one normalised Dataset.
+
+    Normalises to the ARCO-like convention so the LR stack is source-agnostic: ``time`` dim,
+    longitude in [0, 360) ascending, latitude descending; drops ``number``/``expver``.
+    """
+    def _open(p):
+        return xr.open_dataset(p) if isinstance(p, (str, os.PathLike)) else \
+            xr.open_mfdataset(list(p))
+
+    ds = xr.merge([_open(sl_paths), _open(pl_paths)], compat="override")
+    ds = ds.drop_vars([c for c in ("number", "expver") if c in ds.variables], errors="ignore")
+    if "valid_time" in ds.dims:
+        ds = ds.rename({"valid_time": "time"})
+    ds = ds.assign_coords(longitude=_to_360(ds["longitude"].values)).sortby("longitude")
+    ds = ds.sortby("latitude", ascending=False)
+    return ds
+
+
+def build_era5_lr_stack_cds(era5_ds: xr.Dataset, times, *, levels=LR_LEVELS) -> xr.DataArray:
+    """Build the 12-channel LR stack from a CDS ERA5 dataset (from :func:`open_era5_cds`).
+
+    Produces the SAME channel names/order as :func:`lr_channel_names` so the stored ``lr``
+    is identical in layout whether sourced from ARCO or CDS.
+    """
+    sub = era5_ds.sel(time=times, method="nearest")
+    chans, names = [], []
+    # CDS short names: t2m,u10,v10,siconc (single) and t,z,u,v (pressure).
+    for v in ("t2m", "u10", "v10"):
+        chans.append(sub[v]); names.append(v)
+    for v, short in (("t", "t"), ("z", "z"), ("u", "u"), ("v", "v")):
+        for lev in levels:
+            chans.append(sub[v].sel(pressure_level=lev)); names.append(f"{short}{lev}")
+    chans.append(sub["siconc"].fillna(0.0)); names.append("siconc")
+
+    chans = [c.drop_vars("pressure_level", errors="ignore") for c in chans]
     da = xr.concat(chans, dim="channel").assign_coords(channel=names)
     da = da.transpose("time", "channel", "latitude", "longitude")
     da.name = "lr"

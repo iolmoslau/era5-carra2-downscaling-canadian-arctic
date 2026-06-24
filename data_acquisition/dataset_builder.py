@@ -137,7 +137,10 @@ def acquire_static_mask(center, patch_size, work_dir, *, dataset="reanalysis-pan
     paths = du.download_carra2(dataset, _carra_request(["land_sea_mask"], day, ["00:00"]),
                                work_dir, basename="carra2_lsm_static")
     hr = du.open_carra2(paths)
-    mask = du.crop_carra2_patch(hr, center, patch_size)["lsm"].isel(time=0).values.astype("float32")
+    lsm = du.crop_carra2_patch(hr, center, patch_size)["lsm"]
+    if "time" in lsm.dims:  # single-timestep requests collapse time to a scalar coord
+        lsm = lsm.isel(time=0)
+    mask = lsm.values.astype("float32")
     hr.close()
     for p in paths:
         os.remove(p)
