@@ -13,8 +13,9 @@ Store schema (see channel manifest)::
     coords: time, hr_channel, lr_channel,
             hr_lat/hr_lon (y, x), lat/lon (1-D)
 
-New days are appended along ``time`` so the store grows incrementally (the download ->
-crop -> discard batch driver calls :func:`write_day` once per day).
+Chunks of samples are appended along ``time`` so the store grows incrementally. A "chunk"
+is any span from one day up to one month (the download granularity); the batch driver calls
+:func:`write_chunk` once per chunk.
 """
 
 from __future__ import annotations
@@ -34,21 +35,24 @@ CARRA_DYNAMIC = ["2m_temperature", "10m_u_component_of_wind", "10m_v_component_o
 ALL_TIMES = ["00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00"]
 
 
-def build_day_dataset(patch: xr.Dataset, lr_stack: xr.DataArray,
-                      *, hr_vars=HR_VARS) -> xr.Dataset:
-    """Assemble one day's (8-timestep) sample Dataset from a CARRA2 patch + ERA5 LR stack.
+def build_chunk_dataset(patch: xr.Dataset, lr_stack: xr.DataArray,
+                        *, hr_vars=HR_VARS) -> xr.Dataset:
+    """Assemble a chunk of samples (any number of timesteps) into the store schema.
+
+    The timestamps come from whatever is in ``patch``/``lr_stack`` -- this is granularity
+    agnostic, so the caller decides the chunk span (a day, a week, a whole month).
 
     Parameters
     ----------
     patch : cropped CARRA2 patch with the HR variables (from ``crop_carra2_patch`` on a
         dataset opened via ``open_carra2``); must carry ``y_dim``/``x_dim`` attrs.
-    lr_stack : the ERA5 12-channel coarse stack (from ``build_era5_lr_stack``), dims
-        ``(time, channel, latitude, longitude)``.
+    lr_stack : the ERA5 12-channel coarse stack (from ``build_era5_lr_stack*``), dims
+        ``(time, channel, latitude, longitude)``, on the same timestamps as ``patch``.
 
     Returns
     -------
     xr.Dataset with ``hr`` and ``lr`` (both float32) and all coords -- but NOT the static
-    land-sea mask (that is written once by :func:`write_day`).
+    land-sea mask (that is written once by :func:`write_chunk`).
     """
     y_dim, x_dim = patch.attrs["y_dim"], patch.attrs["x_dim"]
 
@@ -74,25 +78,25 @@ def build_day_dataset(patch: xr.Dataset, lr_stack: xr.DataArray,
     )
 
 
-def write_day(store: str | os.PathLike, day_ds: xr.Dataset,
-              *, land_sea_mask: np.ndarray | None = None,
-              attrs: dict | None = None) -> None:
-    """Write/append one day's sample Dataset to a zarr store.
+def write_chunk(store: str | os.PathLike, chunk_ds: xr.Dataset,
+                *, land_sea_mask: np.ndarray | None = None,
+                attrs: dict | None = None) -> None:
+    """Write/append one chunk's sample Dataset to a zarr store.
 
     On first call (store does not exist) the store is created, the static land-sea mask and
     store-level attrs are written, and per-sample chunking (time=1) is set. On later calls
-    the day is appended along ``time``.
+    the chunk is appended along ``time``.
 
     Parameters
     ----------
     store : path to the zarr store.
-    day_ds : output of :func:`build_day_dataset`.
+    chunk_ds : output of :func:`build_chunk_dataset`.
     land_sea_mask : (y, x) static HR mask; written only at store creation.
     attrs : optional store-level metadata (center, levels, source, units, ...).
     """
     store = os.fspath(store)
     if not os.path.exists(store):
-        init = day_ds
+        init = chunk_ds
         if land_sea_mask is not None:
             init = init.assign(
                 land_sea_mask=(("y", "x"), np.asarray(land_sea_mask, dtype="float32"))
@@ -100,8 +104,8 @@ def write_day(store: str | os.PathLike, day_ds: xr.Dataset,
         if attrs:
             init = init.assign_attrs(attrs)
         encoding = {
-            "hr": {"chunks": (1,) + day_ds["hr"].shape[1:]},
-            "lr": {"chunks": (1,) + day_ds["lr"].shape[1:]},
+            "hr": {"chunks": (1,) + chunk_ds["hr"].shape[1:]},
+            "lr": {"chunks": (1,) + chunk_ds["lr"].shape[1:]},
         }
         init.to_zarr(store, mode="w", encoding=encoding)
     else:
@@ -111,7 +115,7 @@ def write_day(store: str | os.PathLike, day_ds: xr.Dataset,
         import zarr
 
         existing = dict(zarr.open_group(store, mode="r").attrs)
-        day_ds[["hr", "lr"]].assign_attrs(existing).to_zarr(store, append_dim="time")
+        chunk_ds[["hr", "lr"]].assign_attrs(existing).to_zarr(store, append_dim="time")
 
 
 # --------------------------------------------------------------------------------------
@@ -166,14 +170,16 @@ def _group_by_month(days):
 
 def build_dataset(store, center, patch_size, start, end, *, work_dir,
                   carra_dataset="reanalysis-pan-carra", dynamic=CARRA_DYNAMIC, times=ALL_TIMES,
-                  levels=du.LR_LEVELS, margin_cells=2, keep_downloads=False, attrs=None):
+                  levels=du.LR_LEVELS, margin_cells=2, chunk_days=1,
+                  keep_downloads=False, attrs=None):
     """Build the sample zarr over [start, end], batching downloads BY MONTH.
 
     Per month: one CARRA2 request (full domain, dynamic HR vars) + one ERA5 CDS request
-    (single+pressure levels, area-subset); then crop/write each day; then delete the month's
-    files. Batching by month amortises the large per-request CDS latency (previously paid
-    per-day). ERA5 comes from CDS area-subset (tiny) rather than ARCO. Resumable: appends if
-    the store already exists. The static land-sea mask and fixed ERA5 area are obtained once.
+    (single+pressure levels, area-subset); then assemble/write the month's days in chunks of
+    ``chunk_days``; then delete the month's files. Batching downloads by month amortises the
+    large per-request CDS latency (previously paid per-day). ERA5 comes from CDS area-subset
+    (tiny) rather than ARCO. Resumable: appends if the store already exists. The static
+    land-sea mask and fixed ERA5 area are obtained once.
 
     Parameters
     ----------
@@ -182,6 +188,8 @@ def build_dataset(store, center, patch_size, start, end, *, work_dir,
     patch_size : HR cells per side (e.g. 448).
     start, end : inclusive date range (parseable by pandas); grouped by calendar month.
     work_dir : scratch dir for the transient downloads (deleted per month unless keep_downloads).
+    chunk_days : days assembled+written per :func:`write_chunk` call (1 = day .. >=31 = whole
+        month). Downloads stay monthly; this only sets the write granularity / memory per write.
     attrs : store-level metadata (written at store creation).
     """
     os.makedirs(work_dir, exist_ok=True)
@@ -204,16 +212,19 @@ def build_dataset(store, center, patch_size, start, end, *, work_dir,
         patch_month = du.crop_carra2_patch(hr, center, patch_size)
         era5 = du.open_era5_cds(sl, pl)
 
-        for day in grp:
-            day_times = [t for t in patch_month["time"].values
-                         if pd.Timestamp(t).date() == day.date()]
-            patch_day = patch_month.sel(time=day_times)
-            lr = du.build_era5_lr_stack_cds(era5, patch_day["time"].values, levels=levels)
-            day_ds = build_day_dataset(patch_day, lr)
-            write_day(store, day_ds, land_sea_mask=(mask if need_mask else None),
-                      attrs=(attrs if need_mask else None))
+        # Within the month, assemble + write in chunks of `chunk_days`.
+        for i in range(0, len(grp), chunk_days):
+            chunk_dates = {d.date() for d in grp[i:i + chunk_days]}
+            chunk_times = [t for t in patch_month["time"].values
+                           if pd.Timestamp(t).date() in chunk_dates]
+            patch_chunk = patch_month.sel(time=chunk_times)
+            lr = du.build_era5_lr_stack_cds(era5, patch_chunk["time"].values, levels=levels)
+            chunk_ds = build_chunk_dataset(patch_chunk, lr)
+            write_chunk(store, chunk_ds, land_sea_mask=(mask if need_mask else None),
+                        attrs=(attrs if need_mask else None))
             need_mask = False
-            print(f"  wrote {day.date()}: +{day_ds.sizes['time']} steps -> {store}")
+            span = sorted(chunk_dates)
+            print(f"  wrote {span[0]}..{span[-1]}: +{chunk_ds.sizes['time']} steps -> {store}")
 
         hr.close()
         era5.close()
