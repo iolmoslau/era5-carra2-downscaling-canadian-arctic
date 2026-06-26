@@ -10,11 +10,20 @@ Tools to build paired low-/high-resolution training samples for downscaling, ove
 
 ## Layout
 - `data_acquisition/data_utils.py` — lazy openers, CARRA2 download (CDS), cropping, ERA5 box
-  derivation, the ERA5 LR channel stack, and the bilinear regridding
+  derivation, the ERA5 LR channel stack (ARCO + CDS), and the bilinear regridding
   (`bilinear_weights` + `apply_bilinear`).
+- `data_acquisition/dataset_builder.py` — `build_chunk_dataset` / `write_chunk` (zarr schema)
+  and `build_dataset`: the month-batched download → crop → write → discard driver.
 - `data_acquisition/scratch_step1.py` — end-to-end manual test harness.
+- `dataloading/` — training layer: `PatchDataset` (one zarr store per split), `compute_norm_stats`
+  (train-only), and `BilinearUpsampler` (coarse LR → patch grid on GPU at forward time).
 - `visualization/plotting.py` — native-grid (North-up) plotting: lat/lon graticule, coastlines,
   national/territorial borders, scale bar, community markers.
+
+## Splits
+Train / val / test are **separate stores** built from distinct, contiguous time ranges
+(range-based, not random — 3-hourly samples are strongly autocorrelated). Normalization stats
+are computed on the **train** store only and reused for all splits; grid geometry is shared.
 
 ## Setup
 Python env with `xarray, numpy, scipy, gcsfs, zarr, dask, pyproj, netCDF4, cartopy, cdsapi`.
