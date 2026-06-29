@@ -22,6 +22,12 @@ env/
 .cdsapirc
 *.key
 
+# SLURM / cluster logs
+logs/
+slurm-*.out
+*.out
+*.err
+
 # OS / editor
 .DS_Store
 .vscode/
