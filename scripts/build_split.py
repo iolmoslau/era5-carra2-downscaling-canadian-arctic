@@ -10,8 +10,13 @@ Requires a configured ~/.cdsapirc and accepted CARRA2 + ERA5 licences, and INTER
 """
 
 import argparse
+import os
+import sys
 
-from data_acquisition.dataset_builder import build_dataset
+# Make the repo root importable regardless of how this script is invoked.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from data_acquisition.dataset_builder import build_dataset  # noqa: E402
 
 
 def main():
