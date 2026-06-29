@@ -22,7 +22,7 @@ STORE="$PROJECT/data/test_2day.zarr"               # output store (persistent)
 WORKDIR="$SLURM_TMPDIR/work"                            # transient downloads (node-local, auto-cleaned)
 
 # ---- environment (FILL: your module + venv setup) --------------------------
-module load python/3.11
+module load python/3.11 mpi4py/4.1.0
 source ~/ENV/bin/activate   
 
 # If Fir's compute nodes reach the internet only via a proxy, set it here:
