@@ -3,8 +3,8 @@
 # Submit from the repo root:   sbatch scripts/test_build_2day.sh
 #
 # ============================ FILL THESE IN ============================
-#SBATCH --account=def-CHANGEME          # <-- your Alliance allocation (def-<pi> / rrg-<pi>)
-#SBATCH --mail-user=CHANGEME@email.com  # <-- for notifications (or delete the mail lines)
+#SBATCH --account=def-stockie         # <-- your Alliance allocation (def-<pi> / rrg-<pi>)
+#SBATCH --mail-user=ioa4@sfu.ca  # <-- for notifications (or delete the mail lines)
 # ======================================================================
 #SBATCH --job-name=carra2_build_test
 #SBATCH --time=03:00:00                  # generous: CDS queue latency dominates
@@ -17,13 +17,13 @@
 set -euo pipefail
 
 # ---- paths (FILL/CHECK) ----------------------------------------------------
-REPO="$HOME/era5-carra2-downscaling-canadian-arctic"   # where you cloned the repo
-STORE="$PROJECT/datasets/test_2day.zarr"               # output store (persistent)
+REPO="$HOME/thesis/era5-carra2-downscaling-canadian-arctic"   # where you cloned the repo
+STORE="$PROJECT/data/test_2day.zarr"               # output store (persistent)
 WORKDIR="$SLURM_TMPDIR/work"                            # transient downloads (node-local, auto-cleaned)
 
 # ---- environment (FILL: your module + venv setup) --------------------------
-module load StdEnv/2023 python/3.12        # adjust to what's available on Fir
-source "$HOME/envs/thesis/bin/activate"    # your virtualenv with the deps installed
+module load python/3.11
+source ~/ENV/bin/activate   
 
 # If Fir's compute nodes reach the internet only via a proxy, set it here:
 # export http_proxy="http://PROXY:PORT"; export https_proxy="$http_proxy"
