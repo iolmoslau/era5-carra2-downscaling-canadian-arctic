@@ -9,7 +9,7 @@
 # ===========================================================
 # Array: one task per year. 0-7 => 8 years. %4 = at most 4 running at once.
 # Keep the concurrency (%N) at or below your CDS active-request limit.
-#SBATCH --array=0-7%4
+#SBATCH --array=0-8%4
 #SBATCH --job-name=carra2_year
 #SBATCH --time=24:00:00                 # per year; resumable, so a timeout just requeues
 #SBATCH --cpus-per-task=2
@@ -22,12 +22,12 @@ set -euo pipefail
 
 # ---- config (FILL/CHECK) ---------------------------------------------------
 REPO="$HOME/thesis/era5-carra2-downscaling-canadian-arctic"
-OUT="$PROJECT/data/shards"              # one shard_YYYY.zarr per year goes here
-START_YEAR=2008                         # year for array index 0 (index N => START_YEAR+N)
+OUT="$PROJECT/data"              # one shard_YYYY.zarr per year goes here
+START_YEAR=2011                        # year for array index 0 (index N => START_YEAR+N)
 WORKDIR="$SLURM_TMPDIR/work"            # node-local transient downloads (auto-cleaned)
 
 # ---- environment -----------------------------------------------------------
-module load python/3.11 mpi4py/4.0.0   # <-- use the mpi4py version from `module avail mpi4py`
+module load python/3.11 mpi4py/4.1.0   # <-- use the mpi4py version from `module avail mpi4py`
 source ~/ENV/bin/activate
 
 cd "$REPO"
