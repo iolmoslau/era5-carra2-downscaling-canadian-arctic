@@ -17,7 +17,7 @@ import os
 import numpy as np
 import torch
 import xarray as xr
-from torch.utils.data import Dataset
+from torch.utils.data import ConcatDataset, Dataset
 
 EPS = 1e-6  # guard against zero-variance channels when normalizing
 
@@ -44,8 +44,8 @@ class PatchDataset(Dataset):
         meta = xr.open_zarr(self.store)
         n = meta.sizes["time"]
         self.indices = list(range(*time_slice.indices(n))) if time_slice else list(range(n))
-        self.lr_channels = [str(c) for c in meta["lr_channel"].values]
-        self.hr_channels = [str(c) for c in meta["hr_channel"].values]
+        self.lr_channels = list(meta.attrs["lr_channels"])  # names live in attrs (not coords)
+        self.hr_channels = list(meta.attrs["hr_channels"])
         # geometry kept for building the upsampler / cross-split consistency checks
         self.lr_lat, self.lr_lon = meta["lat"].values, meta["lon"].values
         self.hr_lat, self.hr_lon = meta["hr_lat"].values, meta["hr_lon"].values
@@ -102,3 +102,17 @@ def assert_same_geometry(a: PatchDataset, b: PatchDataset) -> None:
             raise ValueError(f"geometry mismatch between splits: {name}")
     if a.lr_channels != b.lr_channels or a.hr_channels != b.hr_channels:
         raise ValueError("channel order mismatch between splits")
+
+
+def concat_split(stores, stats: dict | None = None, **kwargs) -> ConcatDataset:
+    """Build one split from several shard stores (e.g. per-year), as a torch ``ConcatDataset``.
+
+    Each shard becomes a :class:`PatchDataset`; all are checked to share grid/channel geometry
+    (so the same stats + upsampler apply). Use this when a split spans multiple yearly shards
+    produced by the parallel build. The first shard's dataset is reachable as ``cd.datasets[0]``
+    for ``.make_upsampler()``.
+    """
+    parts = [PatchDataset(s, stats=stats, **kwargs) for s in stores]
+    for p in parts[1:]:
+        assert_same_geometry(parts[0], p)
+    return ConcatDataset(parts)

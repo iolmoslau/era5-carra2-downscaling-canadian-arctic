@@ -61,21 +61,24 @@ def build_chunk_dataset(patch: xr.Dataset, lr_stack: xr.DataArray,
           .astype("float32"))
     lr = lr_stack.transpose("time", "channel", "latitude", "longitude").astype("float32")
 
-    return xr.Dataset(
+    ds = xr.Dataset(
         {
             "hr": (("time", "hr_channel", "y", "x"), hr.values),
             "lr": (("time", "lr_channel", "lat", "lon"), lr.values),
         },
         coords={
             "time": patch["time"].values,
-            "hr_channel": list(hr_vars),
-            "lr_channel": list(lr_stack["channel"].values),
             "hr_lat": (("y", "x"), np.asarray(patch["latitude"].values)),
             "hr_lon": (("y", "x"), np.asarray(patch["longitude"].values)),
             "lat": np.asarray(lr_stack["latitude"].values),
             "lon": np.asarray(lr_stack["longitude"].values),
         },
     )
+    # Channel names live in attrs, NOT as string coord arrays: fixed-length unicode arrays
+    # have no stable Zarr v3 spec (UnstableSpecificationWarning) and could become unreadable.
+    ds.attrs["hr_channels"] = list(hr_vars)
+    ds.attrs["lr_channels"] = [str(c) for c in lr_stack["channel"].values]
+    return ds
 
 
 def write_chunk(store: str | os.PathLike, chunk_ds: xr.Dataset,
@@ -196,11 +199,22 @@ def build_dataset(store, center, patch_size, start, end, *, work_dir,
     days = pd.date_range(start, end, freq="D")
     need_mask = not os.path.exists(store)
 
+    # Resumability: skip timestamps already in the store, so a timed-out/requeued job appends
+    # only the missing months and never duplicates samples.
+    existing = set()
+    if os.path.exists(store):
+        existing = {pd.Timestamp(t) for t in xr.open_zarr(store)["time"].values}
+
     mask, area = _acquire_mask_and_area(center, patch_size, work_dir, dataset=carra_dataset,
                                         ref_day=days[0], margin_cells=margin_cells)
     print(f"static mask acquired; fixed ERA5 area [N,W,S,E] = {area}")
 
     for (yr, mo), grp in _group_by_month(days):
+        expected = [pd.Timestamp(f"{d.strftime('%Y-%m-%d')} {hh}") for d in grp for hh in times]
+        if existing.issuperset(expected):
+            print(f"  skip {yr}-{mo:02d}: already in store")
+            continue
+
         daynums = [d.day for d in grp]
         cpaths = du.download_carra2(
             carra_dataset, _carra_request(dynamic, yr, mo, daynums, times),
@@ -212,19 +226,23 @@ def build_dataset(store, center, patch_size, start, end, *, work_dir,
         patch_month = du.crop_carra2_patch(hr, center, patch_size)
         era5 = du.open_era5_cds(sl, pl)
 
-        # Within the month, assemble + write in chunks of `chunk_days`.
+        # Within the month, assemble + write in chunks of `chunk_days` (skipping any already there).
         for i in range(0, len(grp), chunk_days):
             chunk_dates = {d.date() for d in grp[i:i + chunk_days]}
             chunk_times = [t for t in patch_month["time"].values
-                           if pd.Timestamp(t).date() in chunk_dates]
+                           if pd.Timestamp(t).date() in chunk_dates
+                           and pd.Timestamp(t) not in existing]
+            if not chunk_times:
+                continue
             patch_chunk = patch_month.sel(time=chunk_times)
             lr = du.build_era5_lr_stack_cds(era5, patch_chunk["time"].values, levels=levels)
             chunk_ds = build_chunk_dataset(patch_chunk, lr)
             write_chunk(store, chunk_ds, land_sea_mask=(mask if need_mask else None),
                         attrs=(attrs if need_mask else None))
             need_mask = False
-            span = sorted(chunk_dates)
-            print(f"  wrote {span[0]}..{span[-1]}: +{chunk_ds.sizes['time']} steps -> {store}")
+            existing.update(pd.Timestamp(t) for t in chunk_times)
+            print(f"  wrote {min(chunk_dates)}..{max(chunk_dates)}: "
+                  f"+{chunk_ds.sizes['time']} steps -> {store}")
 
         hr.close()
         era5.close()

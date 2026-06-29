@@ -20,10 +20,16 @@ Tools to build paired low-/high-resolution training samples for downscaling, ove
 - `visualization/plotting.py` — native-grid (North-up) plotting: lat/lon graticule, coastlines,
   national/territorial borders, scale bar, community markers.
 
-## Splits
+## Splits & scale build
 Train / val / test are **separate stores** built from distinct, contiguous time ranges
 (range-based, not random — 3-hourly samples are strongly autocorrelated). Normalization stats
-are computed on the **train** store only and reused for all splits; grid geometry is shared.
+(`compute_norm_stats`) are computed on the **train** store(s) only and reused for all splits;
+grid geometry is shared and checked (`assert_same_geometry`).
+
+For the full multi-year build, parallelize with a SLURM **job array** that writes **one shard
+per year** (`scripts/build_years_array.sh`) — parallel CDS connections multiply throughput
+(CDS throttles per connection). Builds are **resumable** (a timed-out year requeues and appends
+only missing months). Read several yearly shards as one split with `concat_split([...])`.
 
 ## Setup
 Python env with `xarray, numpy, scipy, gcsfs, zarr, dask, pyproj, netCDF4, cartopy, cdsapi`.
