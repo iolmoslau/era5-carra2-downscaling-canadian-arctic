@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: Apache-2.0
+# CorrDiff-Mini REGRESSION (mean predictor) for ERA5 -> CARRA2 downscaling.
+# Stage 1 of 2. Train on 2011-2018, validate on 2019. WITH sea ice (all 12 LR channels).
+# Launch from training_mini/:  python train.py --config-name=config_training_era5_carra2_mini_regression
+
+hydra:
+    job:
+        chdir: false
+        name: era5_carra2_mini_regression
+    run:
+        dir: ./output/${hydra:job.name}
+    searchpath:
+        - pkg://conf/base # Do not modify
+
+defaults:
+    - dataset: era5_carra2
+    - model: regression
+    - model_size: mini
+    - training: ${model}
+
+dataset:
+    data_path: ./data                         # dir holding shard_YYYY.zarr
+    stats_path: ./data/stats_train_2011_2018.json
+    years: [2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018]
+    # lr_channels: null -> all 12 (with siconc); include_lsm: true (from base)
+
+# Held-out validation year (overrides `years` for the validation dataset).
+validation:
+    years: [2019]
+
+training:
+    hp:
+        training_duration: 2000000
+        # ~2M processed samples (mirrors CorrDiff-Mini regression budget)
+        total_batch_size: 64
+        batch_size_per_gpu: 4
+        # per-GPU batch for full 448x448 images; the rest via gradient accumulation
+    io:
+        print_progress_freq: 1000
+        save_checkpoint_freq: 5000
+        validation_freq: 5000
+
+wandb:
+    mode: offline
+    results_dir: ./wandb
+    watch_model: false

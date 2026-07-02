@@ -1,0 +1,27 @@
+# Training dependencies for CorrDiff-Mini (ERA5 -> CARRA2 downscaling).
+# Install into a CUDA-enabled environment (fir GPU node or Kaggle). NOT needed on the
+# M1 dev machine -- the adapter unit test only needs torch + xarray + zarr + pandas.
+#
+# PhysicsNeMo provides the CorrDiff models/losses/utilities; the example driver scripts
+# (train.py, generate.py, helpers/, datasets/base.py, conf/base/) are VENDORED in
+# training_mini/ at a pinned commit -- see training_mini/README.md.
+
+# --- core framework ---
+nvidia-physicsnemo            # install a version compatible with your torch/CUDA
+torch                         # install the CUDA build matching the cluster / Kaggle image
+
+# --- CorrDiff example requirements (mirrors training_mini/requirements.txt) ---
+netCDF4>=1.7.2
+hydra-core>=1.2.0
+omegaconf>=2.3.0
+wandb>=0.13.7
+nvtx>=0.2.8
+dask>=2025.3.0
+cftime>=1.6.2
+numba>=0.61.0
+scipy>=1.15.1
+tensorboard
+zarr
+xarray
+pandas
+matplotlib

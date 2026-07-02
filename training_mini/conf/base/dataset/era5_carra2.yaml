@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+# Base dataset config for the ERA5 -> CARRA2 CorrDiff adapter (datasets/era5_carra2.py).
+# Fields here are passed as kwargs to ERA5CARRA2Dataset (except `type`). Concrete paths /
+# years are set in the top-level training/generate configs.
+
+# Dataset class path (relative to the launch dir == training_mini/).
+type: datasets/era5_carra2.py::ERA5CARRA2Dataset
+# Directory holding shard_YYYY.zarr (or a single .zarr store). Must be overridden.
+data_path: ???
+# Train-only normalization stats JSON (tools/make_stats.py). Must be overridden.
+stats_path: ???
+# Years to include (selects shard_YYYY.zarr). Must be overridden.
+years: ???
+# Subset/order of LR channels. null -> all channels in the store (includes `siconc`).
+# For the no-sea-ice model variant, override with the 11-channel list (drop `siconc`).
+lr_channels: null
+# Append the static land-sea mask as an auxiliary input channel (on GPU).
+include_lsm: true

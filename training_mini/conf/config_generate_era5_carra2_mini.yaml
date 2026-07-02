@@ -1,0 +1,40 @@
+# SPDX-License-Identifier: Apache-2.0
+# Generation / inference for the ERA5 -> CARRA2 CorrDiff-Mini model (validation year 2019).
+# Non-patched (full 448x448). Launch from training_mini/:
+#   python generate.py --config-name=config_generate_era5_carra2_mini \
+#       ++generation.io.reg_ckpt_filename=/path/to/regression.mdlus \
+#       ++generation.io.res_ckpt_filename=/path/to/diffusion.mdlus
+# For the no-ice model, add: ++dataset.lr_channels="[t2m,u10,v10,t500,t850,z500,z850,u500,u850,v500,v850]"
+
+hydra:
+    job:
+        chdir: false
+        name: generate_era5_carra2_mini
+    run:
+        dir: ./outputs/${hydra:job.name}
+    searchpath:
+        - pkg://conf/base # Do not modify
+
+defaults:
+    - dataset: era5_carra2
+    - generation: non_patched
+
+dataset:
+    data_path: ./data
+    stats_path: ./data/stats_train_2011_2018.json
+    years: [2019]
+
+generation:
+    num_ensembles: 4
+    # ensemble members per input time
+    seed_batch_size: 1
+    times:
+        - 2019-01-15T00:00:00
+        - 2019-07-15T00:00:00
+    # ISO-8601 target time stamps present in the 2019 shard (3-hourly cadence)
+    io:
+        res_ckpt_filename: <diffusion_checkpoint.mdlus>
+        reg_ckpt_filename: <regression_checkpoint.mdlus>
+
+wandb:
+    mode: offline
