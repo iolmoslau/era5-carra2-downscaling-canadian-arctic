@@ -1,6 +1,6 @@
 {
   "id": "israelolmos/corrdiff-mini-smoke",
-  "title": "CorrDiff-Mini Smoke Test (ERA5->CARRA2)",
+  "title": "corrdiff-mini-smoke",
   "code_file": "corrdiff_mini_smoke.ipynb",
   "language": "python",
   "kernel_type": "notebook",

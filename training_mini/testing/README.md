@@ -53,8 +53,13 @@ Re-push after edits (it versions automatically). Runs are non-interactive — yo
 outputs after completion. GPU sessions cap at ~12 h with a weekly quota.
 
 ## Notes
-- The notebook auto-locates the `.zarr` under `/kaggle/input`, so the dataset slug only needs to
-  match in `dataset_sources`.
+- **Dataset attachment:** the slug in `dataset_sources` must exactly match your real dataset
+  slug — check with `kaggle datasets list -m`. If it doesn't match/attach, the notebook stops
+  at "No .zarr found under /kaggle/input". The notebook then auto-locates the `.zarr`, so only
+  the slug needs to be right.
+- **Output size:** the notebook clones the repo into `/tmp` (not persisted), so
+  `kaggle kernels output` returns just the run log, the rendered notebook, and
+  `smoke_prediction.png` — not the whole repo/checkpoints.
 - `enable_internet: true` is required so the kernel can `pip install nvidia-physicsnemo` and
   `git clone` the repo.
 - physicsnemo needs `torch>=2.10` (already on the Kaggle image) — so we do **not** reinstall
