@@ -30,15 +30,22 @@ JSON
 
 kaggle datasets create -p /tmp/shard-2011-smoke --dir-mode zip
 ```
-
 ## 2. Edit `kernel-metadata.json`
 Replace `KAGGLE_USERNAME` in **both** `id` and `dataset_sources` with your Kaggle username
 (and match the dataset slug from step 1). Also update `REPO_URL` / `BRANCH` in the notebook's
 Parameters cell, and make sure that branch is pushed to a reachable (public) GitHub repo.
 
 ## 3. Push + run + fetch results
+
+**Use a T4, not a P100.** physicsnemo needs `torch>=2.10`, and torch 2.10 dropped Tesla P100
+(sm_60) support — so a P100 fails fast in the notebook's GPU-check cell. **An API push defaults
+to P100**, so force T4:
 ```bash
-kaggle kernels push -p training_mini/testing
+# if your kaggle CLI supports it (check `kaggle kernels push --help`):
+kaggle kernels push -p training_mini/testing --accelerator NvidiaTeslaT4
+# otherwise: push once, then in the kernel's Settings on kaggle.com set
+#   Accelerator = "GPU T4 x2" (it persists across re-pushes), and re-run.
+
 kaggle kernels status  KAGGLE_USERNAME/corrdiff-mini-smoke        # QUEUED/RUNNING/COMPLETE/ERROR
 kaggle kernels output  KAGGLE_USERNAME/corrdiff-mini-smoke -p ./kaggle_out   # logs + artifacts
 ```
@@ -50,5 +57,6 @@ outputs after completion. GPU sessions cap at ~12 h with a weekly quota.
   match in `dataset_sources`.
 - `enable_internet: true` is required so the kernel can `pip install nvidia-physicsnemo` and
   `git clone` the repo.
-- If physicsnemo clashes with Kaggle's preinstalled torch (the issue you hit before), pin
-  `PHYSICSNEMO_SPEC` in the notebook's Parameters cell and re-run.
+- physicsnemo needs `torch>=2.10` (already on the Kaggle image) — so we do **not** reinstall
+  torch. Pin `PHYSICSNEMO_SPEC` in the notebook's Parameters cell only if a specific physicsnemo
+  release is needed.
