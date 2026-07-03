@@ -1,18 +1,21 @@
 #!/bin/bash
 # CorrDiff-Mini STAGE 2 (diffusion / residual predictor) on the Fir GPU cluster.
 # Requires a trained regression checkpoint from stage 1.
-# Submit:   sbatch training_mini/slurm/train_diffusion.sh /path/to/regression.mdlus
-#   (or set REG_CKPT=... in the environment)
-# No-ice variant:
-#   CONFIG=config_training_era5_carra2_mini_diffusion_noice \
-#     sbatch training_mini/slurm/train_diffusion.sh /path/to/regression_noice.mdlus
 #
-# ====================== FILL THESE IN ======================
-#SBATCH --account=def-stockie          # <-- your allocation
-#SBATCH --mail-user=ioa4@sfu.ca        # <-- or delete the mail lines
-# ===========================================================
+# Submit (auto-finds the newest regression ckpt in $OUTPUT_DIR/checkpoints_regression):
+#     sbatch training_mini/slurm/train_diffusion.sh
+# Or point it explicitly:
+#     sbatch training_mini/slurm/train_diffusion.sh /path/to/CorrDiffRegressionUNet.0.NNN.mdlus
+# No-sea-ice variant:
+#     CONFIG=config_training_era5_carra2_mini_diffusion_noice \
+#         sbatch training_mini/slurm/train_diffusion.sh /path/to/regression_noice.mdlus
+#
+# ============ FILL THESE IN ============
+#SBATCH --account=def-stockie
+#SBATCH --mail-user=ioa4@sfu.ca
+#SBATCH --gpus-per-node=1                # <-- same as regression (type may be required)
+# =======================================
 #SBATCH --job-name=corrdiff_diff
-#SBATCH --gpus-per-node=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G
 #SBATCH --time=24:00:00
@@ -22,32 +25,33 @@
 
 set -euo pipefail
 
-# ---- config (FILL/CHECK) ---------------------------------------------------
 REPO="$HOME/thesis/era5-carra2-downscaling-canadian-arctic"
 TRAIN_DIR="$REPO/training_mini"
 DATA_DIR="${DATA_DIR:-$PROJECT/data}"
+OUTPUT_DIR="${OUTPUT_DIR:-$SCRATCH/corrdiff_mini}"
 CONFIG="${CONFIG:-config_training_era5_carra2_mini_diffusion}"
 STATS="${STATS:-$DATA_DIR/stats_train_2011_2018.json}"
-REG_CKPT="${1:-${REG_CKPT:?ERROR: pass the regression .mdlus as arg 1 or set REG_CKPT}}"
 NPROC="${SLURM_GPUS_ON_NODE:-1}"
 
-# ---- environment -----------------------------------------------------------
-module load python/3.11 cuda cudnn     # <-- adjust to `module avail` on Fir
-source ~/ENV/bin/activate
-
-cd "$TRAIN_DIR"
-mkdir -p logs
-ln -sfn "$DATA_DIR" ./data
-
-if [[ ! -f "$STATS" ]]; then
-  echo "Computing train stats -> $STATS"
-  python tools/make_stats.py --data-dir "$DATA_DIR" \
-     --years 2011 2012 2013 2014 2015 2016 2017 2018 --out "$STATS"
+# regression checkpoint: arg 1, else $REG_CKPT, else newest in $OUTPUT_DIR/checkpoints_regression
+REG_CKPT="${1:-${REG_CKPT:-$(ls -t "$OUTPUT_DIR"/checkpoints_regression/*.mdlus 2>/dev/null | head -1)}}"
+if [[ -z "${REG_CKPT:-}" || ! -f "$REG_CKPT" ]]; then
+  echo "ERROR: no regression checkpoint found. Pass it as arg 1 or set REG_CKPT." >&2
+  exit 1
 fi
 
-echo "Launching diffusion training ($CONFIG) on $NPROC GPU(s); reg ckpt: $REG_CKPT"
+module load python/3.11 cuda cudnn
+source ~/corrdiff-env/bin/activate
+
+cd "$TRAIN_DIR"
+mkdir -p logs "$OUTPUT_DIR"
+ln -sfn "$DATA_DIR" ./data
+
+echo "Launching diffusion ($CONFIG) on $NPROC GPU(s); reg ckpt: $REG_CKPT"
 torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC" \
   train.py --config-name="$CONFIG" \
+  ++dataset.stats_path="$STATS" \
+  ++training.io.checkpoint_dir="$OUTPUT_DIR" \
   ++training.io.regression_checkpoint_path="$REG_CKPT"
 
-echo "DONE. Diffusion checkpoints under $TRAIN_DIR (see checkpoints_diffusion/ *.mdlus)"
+echo "DONE. Diffusion checkpoints in $OUTPUT_DIR/checkpoints_diffusion/ (EDMPrecondSuperResolution.*.mdlus)"
