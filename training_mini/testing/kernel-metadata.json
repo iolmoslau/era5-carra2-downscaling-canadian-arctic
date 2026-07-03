@@ -1,0 +1,16 @@
+{
+  "id": "israelolmos/corrdiff-mini-smoke",
+  "title": "CorrDiff-Mini Smoke Test (ERA5->CARRA2)",
+  "code_file": "corrdiff_mini_smoke.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [
+    "israelolmos/shard-2011-smoke"
+  ],
+  "competition_sources": [],
+  "kernel_sources": []
+}

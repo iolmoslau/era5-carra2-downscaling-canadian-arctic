@@ -6,6 +6,9 @@ data_acquisition/_scratch_data/
 *.zarr/
 *.idx
 
+# Kaggle dataset upload staging (generated; the .zarr is already ignored above)
+dataset-metadata.json
+
 # Figures / outputs
 *.png
 *.pdf
