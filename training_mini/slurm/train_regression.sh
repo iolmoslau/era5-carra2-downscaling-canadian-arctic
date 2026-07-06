@@ -38,8 +38,8 @@ STAGE="${STAGE:-1}"                                   # 1 = copy shards to fast 
 NPROC="${SLURM_GPUS_ON_NODE:-1}"
 
 # ---- environment -----------------------------------------------------------
-module load python/3.11        # add `cuda/12.6` here only if physicsnemo/warp errors on CUDA
-source "$ENV_DIR/bin/activate"
+module load python/3.11 mpi4py/4.1.0   # mpi4py BEFORE activating (Alliance netCDF4 needs it);
+source "$ENV_DIR/bin/activate"         # add cuda/12.6 above only if physicsnemo/warp errors on CUDA
 
 cd "$TRAIN_DIR"
 mkdir -p logs "$OUTPUT_DIR"
