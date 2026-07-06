@@ -13,6 +13,8 @@
 # Resumable: re-submitting continues from the last diffusion checkpoint in $OUTPUT_DIR.
 
 #SBATCH --account=def-stockie_gpu
+# Multi-GPU speedup: override on submit, e.g. `sbatch --gpus=h100:4 <script>` (torchrun scales
+# automatically via SLURM_GPUS_ON_NODE). 1 GPU backfills faster on the opportunistic queue.
 #SBATCH --gpus=h100:1
 #SBATCH --job-name=corrdiff_diff
 #SBATCH --cpus-per-task=8
@@ -25,7 +27,7 @@
 
 set -euo pipefail
 
-REPO="$HOME/thesis/era5-carra2-downscaling-canadian-arctic"
+REPO="${REPO:-$HOME/thesis/era5-carra2-downscaling-canadian-arctic}"   # respects an existing $REPO
 TRAIN_DIR="$REPO/training_mini"
 ENV_DIR="${ENV_DIR:-$HOME/corrdiff-env}"
 DATA_DIR="${DATA_DIR:-$PROJECT/data}"
