@@ -40,16 +40,17 @@ def main():
         exp = pd.date_range(f"{yr}-01-01", f"{yr}-12-31 21:00", freq="3h")
         missing = sorted(set(exp) - set(t))
         dups = len(t) - len(set(t))
-        hr_nan = int(np.isnan(z["hr"]).sum())
-        lr_nan = int(np.isnan(z["lr"]).sum())
-        ok = not missing and dups == 0 and hr_nan == 0 and lr_nan == 0
+        # ~isfinite catches NaN AND +/-Inf (np.isnan alone misses infs)
+        hr_bad = int((~np.isfinite(z["hr"])).sum())
+        lr_bad = int((~np.isfinite(z["lr"])).sum())
+        ok = not missing and dups == 0 and hr_bad == 0 and lr_bad == 0
         all_ok &= ok
         total += len(t)
         total_exp += len(exp)
 
         flag = "OK " if ok else "!! "
         print(f"{flag}{name:20s} {len(t):5d}/{len(exp)} steps  "
-              f"missing={len(missing)} dups={dups} hr_nan={hr_nan} lr_nan={lr_nan}"
+              f"missing={len(missing)} dups={dups} hr_nonfinite={hr_bad} lr_nonfinite={lr_bad}"
               + (f"  first_missing={str(missing[0])[:13]}" if missing else ""))
 
         # cross-shard consistency vs the first shard
