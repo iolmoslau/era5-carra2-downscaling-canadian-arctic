@@ -31,8 +31,10 @@ pip install --no-index torch torchvision
 # physicsnemo (+ warp-lang) from PyPI. This may swap torch for a PyPI build -- we fix it below.
 pip install nvidia-physicsnemo
 
-# Our light deps.
-pip install "zarr>=3" dask "netCDF4>=1.7" xarray pandas numpy scipy numba \
+# Our deps + the vendored CorrDiff example's imports the kept code pulls in:
+#   psutil (train.py); opencv-python-HEADLESS for cv2 (cwb/gefs_hrrr are imported by the
+#   dataset registry even though we don't use them; headless avoids the libGL.so.1 dep).
+pip install "zarr>=3" dask "netCDF4>=1.7" xarray pandas numpy scipy numba psutil opencv-python-headless \
             "hydra-core>=1.2" "omegaconf>=2.3" nvtx "cftime>=1.6" wandb tensorboard
 
 # Restore the Alliance-optimized torch so it's the one that sticks (>=2.10 keeps physicsnemo happy).
@@ -40,7 +42,7 @@ pip install --no-index --force-reinstall torch torchvision
 
 # ---- verify ----
 python - <<'PY'
-import torch, physicsnemo, hydra, zarr, xarray, netCDF4, wandb
+import torch, physicsnemo, hydra, zarr, xarray, netCDF4, wandb, psutil, cv2
 print("torch", torch.__version__, "| cuda build:", torch.version.cuda)
 v = tuple(int(x) for x in torch.__version__.split("+")[0].split(".")[:2])
 assert v >= (2, 10), f"torch {torch.__version__} < 2.10 (physicsnemo needs >=2.10)"
