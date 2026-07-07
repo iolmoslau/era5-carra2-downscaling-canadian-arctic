@@ -19,8 +19,11 @@ name: regression
 hr_mean_conditioning: false
 # No high-res conditioning for regression.
 
-# Default regression model parameters. Do not modify.
+# Default regression model parameters.
 model_args:
+  gridtype: "sinusoidal_octave"
+  # Positional grid formula; 'sinusoidal_octave' is the corrected formula for NEW models
+  # (plain 'sinusoidal' is legacy, only for loading old checkpoints).
   "N_grid_channels": 4
   # Number of channels for positional grid embeddings
   "embedding_type": "zero"
