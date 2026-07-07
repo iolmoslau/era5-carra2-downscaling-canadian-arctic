@@ -16,7 +16,7 @@
 # automatically via SLURM_GPUS_ON_NODE). 1 GPU backfills faster on the opportunistic queue.
 #SBATCH --gpus=h100:2
 #SBATCH --job-name=corrdiff_reg
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=16
 #SBATCH --mem=48G
 #SBATCH --time=12:00:00
 #SBATCH --output=logs/corrdiff_reg_%j.out
