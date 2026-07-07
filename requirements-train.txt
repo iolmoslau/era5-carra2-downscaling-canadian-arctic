@@ -21,7 +21,6 @@ cftime>=1.6.2
 numba>=0.61.0
 scipy>=1.15.1
 psutil>=6.0.0
-opencv-python-headless>=4.11   # cv2, imported by the vendored cwb/gefs_hrrr dataset readers
 tensorboard
 zarr>=3                        # our sample stores are zarr v3
 xarray

@@ -24,14 +24,15 @@ import torch
 from physicsnemo.diffusion.utils import InfiniteSampler
 from physicsnemo.distributed import DistributedManager
 
-from datasets import base, cwb, hrrrmini, gefs_hrrr
+# NOTE (thesis): dropped the cwb/gefs_hrrr built-in readers from the registry. We only use our
+# file-path-registered `era5_carra2` dataset, and cwb/gefs_hrrr import cv2 (opencv), an awkward
+# dependency to satisfy on the Alliance wheelhouse. hrrr_mini is kept (no cv2) as the reference.
+from datasets import base, hrrrmini
 
 
 # this maps all known dataset types to the corresponding init function
 known_datasets = {
-    "cwb": cwb.get_zarr_dataset,
     "hrrr_mini": hrrrmini.HRRRMiniDataset,
-    "gefs_hrrr": gefs_hrrr.HrrrForecastGEFSDataset,
 }
 
 
