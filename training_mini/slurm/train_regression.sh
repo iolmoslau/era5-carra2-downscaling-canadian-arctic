@@ -14,7 +14,7 @@
 #SBATCH --account=def-stockie_gpu
 # Multi-GPU speedup: override on submit, e.g. `sbatch --gpus=h100:4 <script>` (torchrun scales
 # automatically via SLURM_GPUS_ON_NODE). 1 GPU backfills faster on the opportunistic queue.
-#SBATCH --gpus=h100:1
+#SBATCH --gpus=h100:2
 #SBATCH --job-name=corrdiff_reg
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G
