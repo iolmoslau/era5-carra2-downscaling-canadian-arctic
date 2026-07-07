@@ -60,11 +60,18 @@ else
 fi
 ln -sfn "$RUN_DATA" ./data
 
+# optional overrides for a quick env-test or tuning, e.g. TRAIN_DURATION=2000
+CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
+     train.py --config-name="$CONFIG"
+     ++dataset.stats_path="$STATS"
+     ++training.io.checkpoint_dir="$OUTPUT_DIR"
+     ++training.io.regression_checkpoint_path="$REG_CKPT")
+[[ -n "${TRAIN_DURATION:-}" ]] && CMD+=("++training.hp.training_duration=$TRAIN_DURATION")
+[[ -n "${TOTAL_BATCH:-}"    ]] && CMD+=("++training.hp.total_batch_size=$TOTAL_BATCH")
+[[ -n "${BATCH_PER_GPU:-}"  ]] && CMD+=("++training.hp.batch_size_per_gpu=$BATCH_PER_GPU")
+
 echo "Launching diffusion ($CONFIG) on $NPROC H100; reg ckpt: $REG_CKPT"
-torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC" \
-  train.py --config-name="$CONFIG" \
-  ++dataset.stats_path="$STATS" \
-  ++training.io.checkpoint_dir="$OUTPUT_DIR" \
-  ++training.io.regression_checkpoint_path="$REG_CKPT"
+echo "  ${CMD[*]}"
+"${CMD[@]}"
 
 echo "DONE. Diffusion checkpoints in $OUTPUT_DIR/checkpoints_diffusion/ (EDMPrecondSuperResolution.*.mdlus)"

@@ -62,10 +62,17 @@ if [[ ! -f "$STATS" ]]; then
      --years 2011 2012 2013 2014 2015 2016 2017 2018 --out "$STATS"
 fi
 
+# optional overrides for a quick env-test or tuning, e.g. TRAIN_DURATION=2000
+CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
+     train.py --config-name="$CONFIG"
+     ++dataset.stats_path="$STATS"
+     ++training.io.checkpoint_dir="$OUTPUT_DIR")
+[[ -n "${TRAIN_DURATION:-}" ]] && CMD+=("++training.hp.training_duration=$TRAIN_DURATION")
+[[ -n "${TOTAL_BATCH:-}"    ]] && CMD+=("++training.hp.total_batch_size=$TOTAL_BATCH")
+[[ -n "${BATCH_PER_GPU:-}"  ]] && CMD+=("++training.hp.batch_size_per_gpu=$BATCH_PER_GPU")
+
 echo "Launching regression ($CONFIG) on $NPROC H100; checkpoints -> $OUTPUT_DIR"
-torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC" \
-  train.py --config-name="$CONFIG" \
-  ++dataset.stats_path="$STATS" \
-  ++training.io.checkpoint_dir="$OUTPUT_DIR"
+echo "  ${CMD[*]}"
+"${CMD[@]}"
 
 echo "DONE. Regression checkpoints in $OUTPUT_DIR/checkpoints_regression/ (CorrDiffRegressionUNet.*.mdlus)"
