@@ -44,7 +44,10 @@ cd "$TRAIN_DIR"
 mkdir -p logs
 ln -sfn "$DATA_DIR" ./data
 
-CMD=(python generate.py --config-name="$CONFIG"
+# generate.py (like train.py) needs torchrun so physicsnemo's DistributedManager can read
+# RANK/WORLD_SIZE; plain `python generate.py` crashes in DistributedManager.initialize().
+CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
+     generate.py --config-name="$CONFIG"
      ++generation.inference_mode="$MODE"
      ++generation.num_ensembles="$NUM_ENS"
      ++dataset.stats_path="$STATS"
