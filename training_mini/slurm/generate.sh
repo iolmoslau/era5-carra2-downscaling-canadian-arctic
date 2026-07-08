@@ -50,6 +50,7 @@ CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
      generate.py --config-name="$CONFIG"
      ++generation.inference_mode="$MODE"
      ++generation.num_ensembles="$NUM_ENS"
+     ++dataset.data_path="$DATA_DIR"
      ++dataset.stats_path="$STATS"
      ++generation.io.reg_ckpt_filename="$REG_CKPT")
 [[ -n "$RES_CKPT" ]] && CMD+=("++generation.io.res_ckpt_filename=$RES_CKPT")
