@@ -11,6 +11,11 @@ per-channel row: truth, prediction, and the signed difference, and prints per-ch
 from __future__ import annotations
 
 import argparse
+import os
+
+# On network filesystems ($HOME/scratch) HDF5 file locking fails -> "NetCDF: HDF error [-101]".
+# Disable it before netCDF4/HDF5 loads. Must be set prior to importing xarray/netCDF4.
+os.environ.setdefault("HDF5_USE_FILE_LOCKING", "FALSE")
 
 import numpy as np
 import xarray as xr

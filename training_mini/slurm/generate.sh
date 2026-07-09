@@ -46,6 +46,7 @@ fi
 module load python/3.11 mpi4py/4.1.0
 source "$ENV_DIR/bin/activate"
 export PYTHONUNBUFFERED=1              # flush logs promptly so SLURM output isn't lost on exit
+export HDF5_USE_FILE_LOCKING=FALSE    # network FS: avoid NetCDF/HDF5 file-locking errors
 
 cd "$TRAIN_DIR"
 mkdir -p logs
