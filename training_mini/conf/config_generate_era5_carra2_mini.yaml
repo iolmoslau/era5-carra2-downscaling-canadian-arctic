@@ -35,6 +35,11 @@ generation:
     io:
         res_ckpt_filename: <diffusion_checkpoint.mdlus>
         reg_ckpt_filename: <regression_checkpoint.mdlus>
+    perf:
+        # Write the NetCDF synchronously in the main thread. The default (true) writes in a
+        # background thread, which corrupts the file with the Alliance MPI/parallel netCDF4
+        # (not thread-safe) -> "incorrect metadata checksum" on read.
+        io_synchronous: false
 
 wandb:
     mode: offline
