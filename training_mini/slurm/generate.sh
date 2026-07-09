@@ -29,6 +29,7 @@ STATS="${STATS:-$DATA_DIR/stats_train_2011_2018.json}"
 MODE="${MODE:-regression}"                 # regression | diffusion | all
 NUM_ENS="${NUM_ENS:-1}"                     # ensemble members (use >1 for diffusion/all)
 CONFIG="${CONFIG:-config_generate_era5_carra2_mini}"
+NPROC="${SLURM_GPUS_ON_NODE:-1}"           # torchrun processes = GPUs on the node
 
 # Newest regression checkpoint. Avoid `ls | head`: with hundreds of .mdlus files and
 # `set -o pipefail`, head closing the pipe makes ls die on SIGPIPE and silently aborts the job.
