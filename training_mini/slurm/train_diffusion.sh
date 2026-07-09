@@ -37,8 +37,15 @@ STATS="${STATS:-$DATA_DIR/stats_train_2011_2018.json}"
 STAGE="${STAGE:-1}"
 NPROC="${SLURM_GPUS_ON_NODE:-1}"
 
-# regression checkpoint: arg 1, else $REG_CKPT, else newest in $OUTPUT_DIR/checkpoints_regression
-REG_CKPT="${1:-${REG_CKPT:-$(ls -t "$OUTPUT_DIR"/checkpoints_regression/*.mdlus 2>/dev/null | head -1)}}"
+# regression checkpoint: arg 1, else $REG_CKPT, else newest in $OUTPUT_DIR/checkpoints_regression.
+# Avoid `ls | head` under `set -o pipefail`: with hundreds of .mdlus files, head closing the pipe
+# makes ls die on SIGPIPE and silently aborts the job.
+if [[ -n "${1:-}" ]]; then
+  REG_CKPT="$1"
+elif [[ -z "${REG_CKPT:-}" ]]; then
+  mapfile -t _ckpts < <(ls -t "$OUTPUT_DIR"/checkpoints_regression/*.mdlus 2>/dev/null || true)
+  REG_CKPT="${_ckpts[0]:-}"
+fi
 if [[ -z "${REG_CKPT:-}" || ! -f "$REG_CKPT" ]]; then
   echo "ERROR: no regression checkpoint found. Pass it as arg 1 or set REG_CKPT." >&2
   exit 1

@@ -30,7 +30,12 @@ MODE="${MODE:-regression}"                 # regression | diffusion | all
 NUM_ENS="${NUM_ENS:-1}"                     # ensemble members (use >1 for diffusion/all)
 CONFIG="${CONFIG:-config_generate_era5_carra2_mini}"
 
-REG_CKPT="${REG_CKPT:-$(ls -t "$OUTPUT_DIR"/checkpoints_regression/*.mdlus 2>/dev/null | head -1)}"
+# Newest regression checkpoint. Avoid `ls | head`: with hundreds of .mdlus files and
+# `set -o pipefail`, head closing the pipe makes ls die on SIGPIPE and silently aborts the job.
+if [[ -z "${REG_CKPT:-}" ]]; then
+  mapfile -t _ckpts < <(ls -t "$OUTPUT_DIR"/checkpoints_regression/*.mdlus 2>/dev/null || true)
+  REG_CKPT="${_ckpts[0]:-}"
+fi
 RES_CKPT="${RES_CKPT:-}"                    # required only for MODE=diffusion|all
 if [[ -z "${REG_CKPT:-}" || ! -f "$REG_CKPT" ]]; then
   echo "ERROR: no regression checkpoint found in $OUTPUT_DIR/checkpoints_regression" >&2
@@ -39,6 +44,7 @@ fi
 
 module load python/3.11 mpi4py/4.1.0
 source "$ENV_DIR/bin/activate"
+export PYTHONUNBUFFERED=1              # flush logs promptly so SLURM output isn't lost on exit
 
 cd "$TRAIN_DIR"
 mkdir -p logs
