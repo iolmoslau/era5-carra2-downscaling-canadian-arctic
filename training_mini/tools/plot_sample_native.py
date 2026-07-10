@@ -46,6 +46,21 @@ def _pred_field(pred, v, t, ens):
     return np.asarray(da.isel(time=t).values)
 
 
+def error_field(p, t, mode):
+    """Return (error_map, colorbar_label, symmetric_color_limit) for the chosen error mode."""
+    if mode == "abs":
+        e, label = p - t, "pred - truth"
+    elif mode == "sigma":
+        s = float(np.nanstd(t)) or 1.0
+        e, label = (p - t) / s, "error / σ(truth)"
+    else:  # percent: mask where |truth| is tiny (winds cross zero) to avoid blow-ups
+        scale = float(np.nanmax(np.abs(t))) or 1.0
+        t_safe = np.where(np.abs(t) < 0.02 * scale, np.nan, t)
+        e, label = 100.0 * (p - t) / t_safe, "relative error (%)"
+    lim = float(np.nanpercentile(np.abs(e), 98)) or 1.0   # robust symmetric limits
+    return e, label, lim
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--nc", required=True)
@@ -54,6 +69,10 @@ def main():
     ap.add_argument("--ensemble", type=int, default=0)
     ap.add_argument("--cmap", default="turbo")
     ap.add_argument("--no-stations", action="store_true")
+    ap.add_argument("--no-input", action="store_true", help="omit the LR input column")
+    ap.add_argument("--error", choices=["percent", "sigma", "abs"], default="percent",
+                    help="error panel: percent=100*(p-t)/t (masked near 0); "
+                         "sigma=(p-t)/std(truth); abs=p-t")
     args = ap.parse_args()
 
     root = xr.open_dataset(args.nc)                 # 2-D lat/lon live at the root
@@ -71,26 +90,49 @@ def main():
     common = dict(lat_o=lat_o, lon_o=lon_o, fx=fx, fy=fy, extent_ll=extent_ll,
                   spacing_km=spacing_km, stations=stations)
 
+    # The "input" group holds the conditioned LR (ERA5 upsampled to the patch grid), named the
+    # same as the output channels -- show it as the first column (coarse in -> sharp out).
+    inp = None
+    if not args.no_input:
+        try:
+            inp = xr.open_dataset(args.nc, group="input")
+        except (OSError, KeyError):
+            inp = None
+
     channels = list(truth.data_vars)
     n = len(channels)
-    fig, axes = plt.subplots(n, 3, figsize=(15, 5.4 * n), squeeze=False)
+    ncols = 4 if inp is not None else 3
+    fig, axes = plt.subplots(n, ncols, figsize=(5.0 * ncols, 5.4 * n), squeeze=False)
     for i, v in enumerate(channels):
         t = apply_orientation(np.asarray(truth[v].isel(time=args.time).values), o)
         p = apply_orientation(_pred_field(pred, v, args.time, args.ensemble), o)
-        d = p - t
         vmin, vmax = float(np.nanmin(t)), float(np.nanmax(t))
-        dm = float(np.nanmax(np.abs(d))) or 1.0
-        rmse = float(np.sqrt(np.nanmean(d ** 2)))
-        print(f"{v}: RMSE={rmse:.4g}  truth[{vmin:.3g},{vmax:.3g}]")
+        rmse = float(np.sqrt(np.nanmean((p - t) ** 2)))          # absolute RMSE (physical units)
+        nrmse = 100.0 * rmse / (float(np.nanstd(t)) or 1.0)      # normalized by field variability
+        err, elabel, elim = error_field(p, t, args.error)
+        print(f"{v}: RMSE={rmse:.4g}  RMSE/σ={nrmse:.1f}%  truth[{vmin:.3g},{vmax:.3g}]")
 
-        mt = plot_native_panel(axes[i, 0], t, **common, vmin=vmin, vmax=vmax,
+        c = 0
+        if inp is not None:
+            if v in inp.data_vars:
+                lr = apply_orientation(np.asarray(inp[v].isel(time=args.time).values), o)
+                plot_native_panel(axes[i, c], lr, **common, vmin=vmin, vmax=vmax,
+                                  cmap=args.cmap, title=f"input LR  {v}  (ERA5 → grid)")
+            else:
+                axes[i, c].axis("off")
+            c += 1
+
+        mt = plot_native_panel(axes[i, c], t, **common, vmin=vmin, vmax=vmax,
                                cmap=args.cmap, title=f"truth  {v}")
-        plot_native_panel(axes[i, 1], p, **common, vmin=vmin, vmax=vmax,
+        plot_native_panel(axes[i, c + 1], p, **common, vmin=vmin, vmax=vmax,
                           cmap=args.cmap, title=f"prediction  {v}")
-        md = plot_native_panel(axes[i, 2], d, **common, vmin=-dm, vmax=dm,
-                               cmap="RdBu_r", title=f"pred - truth  {v}  (RMSE {rmse:.3g})")
-        fig.colorbar(mt, ax=axes[i, :2].tolist(), orientation="vertical", fraction=0.025, pad=0.02)
-        fig.colorbar(md, ax=axes[i, 2], fraction=0.046, pad=0.04)
+        md = plot_native_panel(axes[i, c + 2], err, **common, vmin=-elim, vmax=elim,
+                               cmap="RdBu_r", title=f"{elabel}  {v}  (RMSE {rmse:.3g})")
+        # shared colorbar for the physical-unit panels (input/truth/prediction), separate for error
+        fig.colorbar(mt, ax=axes[i, :c + 2].tolist(), orientation="vertical",
+                     fraction=0.025, pad=0.02)
+        cbe = fig.colorbar(md, ax=axes[i, c + 2], fraction=0.046, pad=0.04)
+        cbe.set_label(elabel)
 
     fig.savefig(args.out, dpi=130, bbox_inches="tight")
     print("wrote", args.out)
