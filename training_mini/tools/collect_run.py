@@ -29,7 +29,7 @@ HERE = Path(__file__).resolve().parent          # training_mini/tools
 TRAIN_DIR = HERE.parent                          # training_mini
 RESULTS = TRAIN_DIR / "results"
 CSV_PATH = RESULTS / "runs.csv"
-FIELDS = ["run", "stage", "date", "checkpoint", "git", "notes",
+FIELDS = ["run", "stage", "date", "train_samples", "checkpoint", "git", "notes",
           "rmse_t2m", "nrmse_t2m_pct", "bias_t2m",
           "rmse_u10", "nrmse_u10_pct", "bias_u10",
           "rmse_v10", "nrmse_v10_pct", "bias_v10"]
@@ -64,6 +64,7 @@ def main():
     ap.add_argument("--tensorboard", help="TensorBoard log dir (usually OUTPUT_DIR/tensorboard)")
     ap.add_argument("--nc", help="generate.py output NetCDF (for the sample plot + metrics)")
     ap.add_argument("--checkpoint", default="", help="checkpoint path, for the record")
+    ap.add_argument("--train-samples", default="", help="training length in processed samples")
     ap.add_argument("--notes", default="", help="free-text notes")
     ap.add_argument("--error", default="sigma", help="error mode for the sample plot")
     ap.add_argument("--time", type=int, default=0, help="time index for the sample")
@@ -98,7 +99,8 @@ def main():
     def g(ch, k):
         return metrics.get(ch, {}).get(k, "")
     row = {"run": args.name, "stage": stage, "date": info["date"],
-           "checkpoint": args.checkpoint, "git": info["git"], "notes": args.notes}
+           "train_samples": args.train_samples, "checkpoint": args.checkpoint,
+           "git": info["git"], "notes": args.notes}
     for ch in ["t2m", "u10", "v10"]:
         row[f"rmse_{ch}"] = g(ch, "rmse")
         row[f"nrmse_{ch}_pct"] = g(ch, "rmse_over_sigma_pct")

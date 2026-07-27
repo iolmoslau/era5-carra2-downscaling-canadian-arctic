@@ -26,8 +26,8 @@ python tools/collect_run.py --name regression_1 \
   --tensorboard $SCRATCH/corrdiff_mini_derot/tensorboard \
   --nc corrdiff_output.nc \
   --checkpoint $SCRATCH/corrdiff_mini_derot/checkpoints_regression/CorrDiffRegressionUNet.0.800000.mdlus \
-  --error sigma \
-  --notes "de-rotated winds; train 2011-18 / val 2019; 800k samples; 2x H100"
+  --train-samples 800000 --error sigma \
+  --notes "de-rotated winds; train 2011-18 / val 2019; 2x H100"
 ```
 
 This creates `results/regression_1/` with the three artifacts and upserts the `runs.csv` row
@@ -36,7 +36,8 @@ its own `OUTPUT_DIR/tensorboard` (train.py writes them under `checkpoint_dir`), 
 are per-run.
 
 ## runs.csv columns
-- `run, stage, date, checkpoint, git, notes` — identity + your free-text notes.
+- `run, stage, date, train_samples, checkpoint, git, notes` — identity, training length (in
+  processed samples), and your free-text notes.
 - `rmse_<ch>, nrmse_<ch>_pct, bias_<ch>` — per-channel absolute RMSE, RMSE/σ (%), and mean bias
   for t2m / u10 / v10, auto-filled from `metrics.json`.
 

@@ -1,0 +1,35 @@
+{
+  "run": "regression_1",
+  "stage": "regression",
+  "date": "2026-07-08",
+  "train_samples": 2000000,
+  "checkpoint": "/scratch/iolmos/corrdiff_mini/checkpoints_regression/CorrDiffRegressionUNet.0.2000000.mdlus",
+  "config": "config_training_era5_carra2_mini_regression",
+  "data": "$PROJECT/data (original, grid-relative CARRA2 winds)",
+  "eval_time": "2019-01-15T00:00:00",
+  "git": "",
+  "notes": "First regression run. GRID-RELATIVE CARRA2 winds (before the de-rotation fix): t2m valid; u10/v10 learned the ~100deg grid rotation. 2M samples, 2x H100, ~24h. Validation loss plateaued ~500k. Superseded by the de-rotated retrain.",
+  "metrics": {
+    "t2m": {
+      "rmse": 3.041,
+      "rmse_over_sigma_pct": 39.3,
+      "bias": null,
+      "truth_min": 229.0,
+      "truth_max": 269.0
+    },
+    "u10": {
+      "rmse": 0.6996,
+      "rmse_over_sigma_pct": 35.3,
+      "bias": null,
+      "truth_min": -8.52,
+      "truth_max": 14.8
+    },
+    "v10": {
+      "rmse": 0.7619,
+      "rmse_over_sigma_pct": 23.1,
+      "bias": null,
+      "truth_min": -11.5,
+      "truth_max": 15.8
+    }
+  }
+}

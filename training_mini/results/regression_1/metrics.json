@@ -1,0 +1,28 @@
+{
+  "time_index": 0,
+  "ensemble": 0,
+  "error_mode": "percent",
+  "channels": {
+    "t2m": {
+      "rmse": 3.041,
+      "rmse_over_sigma_pct": 39.3,
+      "bias": null,
+      "truth_min": 229.0,
+      "truth_max": 269.0
+    },
+    "u10": {
+      "rmse": 0.6996,
+      "rmse_over_sigma_pct": 35.3,
+      "bias": null,
+      "truth_min": -8.52,
+      "truth_max": 14.8
+    },
+    "v10": {
+      "rmse": 0.7619,
+      "rmse_over_sigma_pct": 23.1,
+      "bias": null,
+      "truth_min": -11.5,
+      "truth_max": 15.8
+    }
+  }
+}
