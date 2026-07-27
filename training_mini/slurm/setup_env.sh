@@ -34,7 +34,8 @@ pip install nvidia-physicsnemo
 # Our deps + psutil (imported by train.py). cv2/opencv is intentionally NOT required: we dropped
 # the cwb/gefs_hrrr readers from datasets/dataset.py (they were the only cv2 importers).
 pip install "zarr>=3" dask "netCDF4>=1.7" xarray pandas numpy scipy numba psutil matplotlib \
-            "hydra-core>=1.2" "omegaconf>=2.3" nvtx "cftime>=1.6" wandb tensorboard
+            cartopy "hydra-core>=1.2" "omegaconf>=2.3" nvtx "cftime>=1.6" wandb tensorboard
+# cartopy: for the native-grid result plots (tools/plot_sample_native.py, collect_run.py)
 
 # Restore the Alliance-optimized torch so it's the one that sticks (>=2.10 keeps physicsnemo happy).
 pip install --no-index --force-reinstall torch torchvision

@@ -117,7 +117,10 @@ def main(cfg: DictConfig) -> None:
 
     # Initialize loggers
     if dist.rank == 0:
-        writer = SummaryWriter(log_dir="tensorboard")
+        # [thesis] put TensorBoard logs under the run's checkpoint_dir so each run (distinct
+        # OUTPUT_DIR) gets its own loss curves, instead of all runs sharing ./tensorboard.
+        _tb_dir = os.path.join(str(cfg.training.io.get("checkpoint_dir", ".")), "tensorboard")
+        writer = SummaryWriter(log_dir=_tb_dir)
     logger = PythonLogger("main")  # General python logger
     logger0 = RankZeroLoggingWrapper(logger, dist)  # Rank 0 logger
     initialize_wandb(

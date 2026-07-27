@@ -73,6 +73,7 @@ def main():
     ap.add_argument("--error", choices=["percent", "sigma", "abs"], default="percent",
                     help="error panel: percent=100*(p-t)/t (masked near 0); "
                          "sigma=(p-t)/std(truth); abs=p-t")
+    ap.add_argument("--metrics-out", help="also write per-channel diagnostics to this JSON")
     args = ap.parse_args()
 
     root = xr.open_dataset(args.nc)                 # 2-D lat/lon live at the root
@@ -103,14 +104,19 @@ def main():
     n = len(channels)
     ncols = 4 if inp is not None else 3
     fig, axes = plt.subplots(n, ncols, figsize=(5.0 * ncols, 5.4 * n), squeeze=False)
+    metrics = {}
     for i, v in enumerate(channels):
         t = apply_orientation(np.asarray(truth[v].isel(time=args.time).values), o)
         p = apply_orientation(_pred_field(pred, v, args.time, args.ensemble), o)
         vmin, vmax = float(np.nanmin(t)), float(np.nanmax(t))
         rmse = float(np.sqrt(np.nanmean((p - t) ** 2)))          # absolute RMSE (physical units)
         nrmse = 100.0 * rmse / (float(np.nanstd(t)) or 1.0)      # normalized by field variability
+        bias = float(np.nanmean(p - t))                          # mean error (physical units)
         err, elabel, elim = error_field(p, t, args.error)
-        print(f"{v}: RMSE={rmse:.4g}  RMSE/σ={nrmse:.1f}%  truth[{vmin:.3g},{vmax:.3g}]")
+        print(f"{v}: RMSE={rmse:.4g}  RMSE/σ={nrmse:.1f}%  bias={bias:+.3g}  truth[{vmin:.3g},{vmax:.3g}]")
+        metrics[v] = {"rmse": round(rmse, 4), "rmse_over_sigma_pct": round(nrmse, 2),
+                      "bias": round(bias, 4), "truth_min": round(vmin, 3),
+                      "truth_max": round(vmax, 3)}
 
         c = 0
         if inp is not None:
@@ -136,6 +142,14 @@ def main():
 
     fig.savefig(args.out, dpi=130, bbox_inches="tight")
     print("wrote", args.out)
+
+    if args.metrics_out:
+        import json
+        payload = {"time_index": args.time, "ensemble": args.ensemble,
+                   "error_mode": args.error, "channels": metrics}
+        with open(args.metrics_out, "w") as f:
+            json.dump(payload, f, indent=2)
+        print("wrote", args.metrics_out)
 
 
 if __name__ == "__main__":

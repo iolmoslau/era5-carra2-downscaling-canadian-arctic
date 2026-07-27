@@ -12,6 +12,8 @@ dataset-metadata.json
 # Figures / outputs
 *.png
 *.pdf
+# ...but DO keep the tracked per-run result artifacts (loss curves, samples)
+!training_mini/results/**/*.png
 
 # Python
 __pycache__/

@@ -1,0 +1,1 @@
+run,stage,date,checkpoint,git,notes,rmse_t2m,nrmse_t2m_pct,bias_t2m,rmse_u10,nrmse_u10_pct,bias_u10,rmse_v10,nrmse_v10_pct,bias_v10
