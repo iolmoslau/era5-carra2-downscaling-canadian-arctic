@@ -56,9 +56,10 @@ REG=$(ls -t $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression/*.mdlus |
 DATA_DIR=$DATA  STATS=$DATA/stats_train_2011_2018.json  OUTPUT_DIR=$OUT  TRAIN_DURATION=2000000 \
   sbatch --gpus=h100:2 training_mini/slurm/train_diffusion.sh "$REG"
 
-# 2. GENERATE an ensemble (regression mean + diffusion residual)
+# 2. GENERATE an ensemble (regression mean + diffusion residual). NUM_ENS members per input
+#    time gives the spread -> per-channel variance in metrics.json / runs.csv.
 RES=$(ls -t $OUT/checkpoints_diffusion/*.mdlus | head -1)
-MODE=all  NUM_ENS=4  REG_CKPT="$REG"  RES_CKPT="$RES"  DATA_DIR=$DATA \
+MODE=all  NUM_ENS=15  REG_CKPT="$REG"  RES_CKPT="$RES"  DATA_DIR=$DATA \
   sbatch training_mini/slurm/generate.sh
 
 # 3. COLLECT (login node)

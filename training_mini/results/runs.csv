@@ -1,2 +1,2 @@
-run,stage,date,train_samples,checkpoint,git,notes,rmse_t2m,nrmse_t2m_pct,bias_t2m,rmse_u10,nrmse_u10_pct,bias_u10,rmse_v10,nrmse_v10_pct,bias_v10
-regression_1,regression,2026-07-08,2000000,/scratch/iolmos/corrdiff_mini/checkpoints_regression/CorrDiffRegressionUNet.0.2000000.mdlus,,grid-relative winds (pre de-rotation); 2x H100 ~24h; val plateau ~500k; superseded,3.041,39.3,,0.6996,35.3,,0.7619,23.1,
+run,stage,date,train_samples,checkpoint,git,notes,rmse_t2m,nrmse_t2m_pct,bias_t2m,rmse_u10,nrmse_u10_pct,bias_u10,rmse_v10,nrmse_v10_pct,bias_v10,ens_members,ens_meanvar_t2m,ens_meanvar_u10,ens_meanvar_v10
+regression_1,regression,2026-07-08,2000000,/scratch/iolmos/corrdiff_mini/checkpoints_regression/CorrDiffRegressionUNet.0.2000000.mdlus,,grid-relative winds (pre de-rotation); 2x H100 ~24h; val plateau ~500k; superseded,3.041,39.3,,0.6996,35.3,,0.7619,23.1,,,,,

@@ -32,7 +32,8 @@ CSV_PATH = RESULTS / "runs.csv"
 FIELDS = ["run", "stage", "date", "train_samples", "checkpoint", "git", "notes",
           "rmse_t2m", "nrmse_t2m_pct", "bias_t2m",
           "rmse_u10", "nrmse_u10_pct", "bias_u10",
-          "rmse_v10", "nrmse_v10_pct", "bias_v10"]
+          "rmse_v10", "nrmse_v10_pct", "bias_v10",
+          "ens_members", "ens_meanvar_t2m", "ens_meanvar_u10", "ens_meanvar_v10"]
 
 
 def git_hash() -> str:
@@ -105,6 +106,9 @@ def main():
         row[f"rmse_{ch}"] = g(ch, "rmse")
         row[f"nrmse_{ch}_pct"] = g(ch, "rmse_over_sigma_pct")
         row[f"bias_{ch}"] = g(ch, "bias")
+        row[f"ens_meanvar_{ch}"] = g(ch, "ensemble_mean_var")   # blank for deterministic runs
+    row["ens_members"] = next((metrics[ch]["ensemble_n"] for ch in ["t2m", "u10", "v10"]
+                               if metrics.get(ch, {}).get("ensemble_n")), "")
     upsert_csv(row)
 
     print(f"\ncollected -> {rdir}")

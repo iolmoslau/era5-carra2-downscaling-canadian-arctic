@@ -102,7 +102,10 @@ def main():
 
     channels = list(truth.data_vars)
     n = len(channels)
-    ncols = 4 if inp is not None else 3
+    # ensemble spread (diffusion): if the prediction has >1 member, add an ensemble-std column
+    n_ens = int(pred[channels[0]].sizes.get("ensemble", 1)) if "ensemble" in pred[channels[0]].dims else 1
+    base_cols = 4 if inp is not None else 3
+    ncols = base_cols + (1 if n_ens > 1 else 0)
     fig, axes = plt.subplots(n, ncols, figsize=(5.0 * ncols, 5.4 * n), squeeze=False)
     metrics = {}
     for i, v in enumerate(channels):
@@ -139,6 +142,24 @@ def main():
                      fraction=0.025, pad=0.02)
         cbe = fig.colorbar(md, ax=axes[i, c + 2], fraction=0.046, pad=0.04)
         cbe.set_label(elabel)
+
+        # ensemble spread across all members (variance of the generated distribution)
+        if n_ens > 1:
+            ens = np.asarray(pred[v].isel(time=args.time).values)   # (ensemble, y, x)
+            var_map = np.nanvar(ens, axis=0, ddof=1)                # unbiased per-pixel variance
+            mean_var = float(np.nanmean(var_map))
+            std_map = apply_orientation(np.sqrt(var_map), o)
+            metrics[v]["ensemble_n"] = n_ens
+            metrics[v]["ensemble_mean_var"] = round(mean_var, 5)
+            metrics[v]["ensemble_mean_std"] = round(float(np.sqrt(mean_var)), 4)
+            print(f"   {v}: ensemble mean var={mean_var:.4g} "
+                  f"(std {np.sqrt(mean_var):.3g}) over {n_ens} members")
+            smax = float(np.nanpercentile(std_map, 99)) or 1.0
+            ms = plot_native_panel(axes[i, c + 3], std_map, **common, vmin=0.0, vmax=smax,
+                                   cmap="viridis",
+                                   title=f"ensemble std  {v}  (mean {np.sqrt(mean_var):.3g})")
+            cbs = fig.colorbar(ms, ax=axes[i, c + 3], fraction=0.046, pad=0.04)
+            cbs.set_label(f"std over {n_ens} members")
 
     fig.savefig(args.out, dpi=130, bbox_inches="tight")
     print("wrote", args.out)

@@ -40,6 +40,9 @@ are per-run.
   processed samples), and your free-text notes.
 - `rmse_<ch>, nrmse_<ch>_pct, bias_<ch>` — per-channel absolute RMSE, RMSE/σ (%), and mean bias
   for t2m / u10 / v10, auto-filled from `metrics.json`.
+- `ens_members, ens_meanvar_<ch>` — ensemble size and the per-channel spatial-mean variance of the
+  generated distribution (diffusion runs with `NUM_ENS>1`; blank for deterministic runs). The
+  `sample_native.png` also gets an "ensemble std" column showing where the model is uncertain.
 
 ## Adding diagnostics later
 `metrics.json` is an extensible dict keyed by channel. To add a metric (e.g. spatial-spectrum

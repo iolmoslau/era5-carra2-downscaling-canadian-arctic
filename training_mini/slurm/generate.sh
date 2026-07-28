@@ -3,9 +3,13 @@
 #
 # Regression only (deterministic mean; works before diffusion is trained -- the default):
 #     sbatch training_mini/slurm/generate.sh
-# Full pipeline once diffusion is trained (regression mean + diffusion residual, ensemble):
+# Full pipeline once diffusion is trained (regression mean + diffusion residual):
 #     MODE=all NUM_ENS=4 RES_CKPT=$SCRATCH/corrdiff_mini/checkpoints_diffusion/EDMPrecondSuperResolution.0.NNN.mdlus \
 #         sbatch training_mini/slurm/generate.sh
+# Ensemble spread: NUM_ENS>1 draws that many stochastic diffusion samples per input time, so the
+# prediction group gets an `ensemble` dim -> plot_sample_native/collect_run compute the per-pixel
+# and per-channel-mean variance. e.g. for a 15-member spread estimate:
+#     MODE=all NUM_ENS=15 REG_CKPT=... RES_CKPT=... sbatch training_mini/slurm/generate.sh
 #
 # Output NetCDF (truth/prediction/input groups) lands in training_mini/ as corrdiff_output.nc.
 
