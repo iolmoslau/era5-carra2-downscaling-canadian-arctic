@@ -1,15 +1,16 @@
 #!/bin/bash
 # Generate samples with the trained CorrDiff-Mini model on Fir (short GPU job).
 #
+# Always submit via slurm/submit.sh so job logs land in $REPO/logs regardless of your CWD.
 # Regression only (deterministic mean; works before diffusion is trained -- the default):
-#     sbatch training_mini/slurm/generate.sh
+#     bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
 # Full pipeline once diffusion is trained (regression mean + diffusion residual):
-#     MODE=all NUM_ENS=4 RES_CKPT=$SCRATCH/corrdiff_mini/checkpoints_diffusion/EDMPrecondSuperResolution.0.NNN.mdlus \
-#         sbatch training_mini/slurm/generate.sh
+#     MODE=all NUM_ENS=4 RES_CKPT=$OUTPUT_DIR/checkpoints_diffusion/EDMPrecondSuperResolution.0.NNN.mdlus \
+#         bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
 # Ensemble spread: NUM_ENS>1 draws that many stochastic diffusion samples per input time, so the
 # prediction group gets an `ensemble` dim -> plot_sample_native/collect_run compute the per-pixel
 # and per-channel-mean variance. e.g. for a 15-member spread estimate:
-#     MODE=all NUM_ENS=15 REG_CKPT=... RES_CKPT=... sbatch training_mini/slurm/generate.sh
+#     MODE=all NUM_ENS=15 REG_CKPT=... RES_CKPT=... bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
 #
 # Output NetCDF (truth/prediction/input groups) lands in training_mini/ as corrdiff_output.nc.
 
@@ -62,13 +63,15 @@ export PYTHONUNBUFFERED=1              # flush logs promptly so SLURM output isn
 export HDF5_USE_FILE_LOCKING=FALSE    # network FS: avoid NetCDF/HDF5 file-locking errors
 
 cd "$TRAIN_DIR"
-mkdir -p logs
+export CORRDIFF_LOG_DIR="$REPO/logs"   # Hydra run dir + generate.log go here (not the CWD)
+mkdir -p "$CORRDIFF_LOG_DIR"
 ln -sfn "$DATA_DIR" ./data
 
 # generate.py (like train.py) needs torchrun so physicsnemo's DistributedManager can read
 # RANK/WORLD_SIZE; plain `python generate.py` crashes in DistributedManager.initialize().
 CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
      generate.py --config-name="$CONFIG"
+     hydra.run.dir="$CORRDIFF_LOG_DIR/hydra/${SLURM_JOB_ID:-manual}"
      ++generation.inference_mode="$MODE"
      ++generation.num_ensembles="$NUM_ENS"
      ++dataset.data_path="$DATA_DIR"

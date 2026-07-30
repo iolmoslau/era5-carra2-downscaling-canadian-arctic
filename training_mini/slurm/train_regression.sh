@@ -2,10 +2,14 @@
 # CorrDiff-Mini STAGE 1 (regression / mean predictor) on Fir (H100).
 #
 # One-time env setup first:  bash training_mini/slurm/setup_env.sh
-# Submit:                    sbatch training_mini/slurm/train_regression.sh
-# Quick env test on Fir:     TRAIN_DURATION=2000 STAGE=0 sbatch training_mini/slurm/train_regression.sh
+# Submit:                    bash training_mini/slurm/submit.sh --gpus=h100:2 training_mini/slurm/train_regression.sh
+# Quick env test on Fir:     TRAIN_DURATION=2000 STAGE=0 bash training_mini/slurm/submit.sh training_mini/slurm/train_regression.sh
 # No-sea-ice variant:        CONFIG=config_training_era5_carra2_mini_regression_noice \
-#                                sbatch training_mini/slurm/train_regression.sh
+#                                bash training_mini/slurm/submit.sh training_mini/slurm/train_regression.sh
+#
+# Always submit via slurm/submit.sh so job logs land in $REPO/logs regardless of your CWD (a bare
+# `sbatch` would drop them wherever you ran it from -- see slurm/submit.sh). All other run logs
+# (Hydra config snapshot, wandb offline, generate.log) are pointed at $REPO/logs below.
 #
 # Opportunistic (no allocation) => keep --time modest for backfill priority. Training is
 # resumable: if the job hits the time limit, just re-submit and it continues from the last
@@ -52,7 +56,8 @@ module load python/3.11 mpi4py/4.1.0   # mpi4py BEFORE activating (Alliance netC
 source "$ENV_DIR/bin/activate"         # add cuda/12.6 above only if physicsnemo/warp errors on CUDA
 
 cd "$TRAIN_DIR"
-mkdir -p logs "$OUTPUT_DIR"
+export CORRDIFF_LOG_DIR="$REPO/logs"   # Hydra run dir, wandb offline, generate.log all go here
+mkdir -p "$CORRDIFF_LOG_DIR" "$OUTPUT_DIR"
 
 # ---- stage zarr shards to node-local storage (many tiny files -> avoid /project thrash) ----
 if [[ "$STAGE" == "1" ]]; then
@@ -76,7 +81,9 @@ fi
 CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
      train.py --config-name="$CONFIG"
      ++dataset.stats_path="$STATS"
-     ++training.io.checkpoint_dir="$OUTPUT_DIR")
+     ++training.io.checkpoint_dir="$OUTPUT_DIR"
+     hydra.run.dir="$CORRDIFF_LOG_DIR/hydra/${SLURM_JOB_ID:-manual}"
+     ++wandb.results_dir="$CORRDIFF_LOG_DIR/wandb")
 [[ -n "${TRAIN_DURATION:-}" ]] && CMD+=("++training.hp.training_duration=$TRAIN_DURATION")
 [[ -n "${TOTAL_BATCH:-}"    ]] && CMD+=("++training.hp.total_batch_size=$TOTAL_BATCH")
 [[ -n "${BATCH_PER_GPU:-}"  ]] && CMD+=("++training.hp.batch_size_per_gpu=$BATCH_PER_GPU")

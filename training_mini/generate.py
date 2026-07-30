@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import contextlib
+import os
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
@@ -64,7 +65,11 @@ def main(cfg: DictConfig) -> None:
     # Initialize logger
     logger = PythonLogger("generate")  # General python logger
     logger0 = RankZeroLoggingWrapper(logger, dist)
-    logger.file_logging("generate.log")
+    # [thesis] keep generate.log with the other run logs ($REPO/logs) instead of dropping it in
+    # the CWD; the SLURM scripts export CORRDIFF_LOG_DIR. Falls back to CWD when unset.
+    _log_dir = os.environ.get("CORRDIFF_LOG_DIR", ".")
+    os.makedirs(_log_dir, exist_ok=True)
+    logger.file_logging(os.path.join(_log_dir, "generate.log"))
 
     # Handle the batch size
     seeds = list(np.arange(cfg.generation.num_ensembles))

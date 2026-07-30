@@ -3,13 +3,14 @@
 # Requires a trained regression checkpoint from stage 1.
 #
 # Submit (auto-finds newest regression ckpt in $OUTPUT_DIR/checkpoints_regression):
-#     sbatch training_mini/slurm/train_diffusion.sh
+#     bash training_mini/slurm/submit.sh --gpus=h100:2 training_mini/slurm/train_diffusion.sh
 # Or point it explicitly:
-#     sbatch training_mini/slurm/train_diffusion.sh $SCRATCH/corrdiff_mini/checkpoints_regression/CorrDiffRegressionUNet.0.NNN.mdlus
+#     bash training_mini/slurm/submit.sh training_mini/slurm/train_diffusion.sh $OUTPUT_DIR/checkpoints_regression/CorrDiffRegressionUNet.0.NNN.mdlus
 # No-sea-ice variant:
 #     CONFIG=config_training_era5_carra2_mini_diffusion_noice \
-#         sbatch training_mini/slurm/train_diffusion.sh <regression_noice.mdlus>
+#         bash training_mini/slurm/submit.sh training_mini/slurm/train_diffusion.sh <regression_noice.mdlus>
 #
+# Always submit via slurm/submit.sh so job logs land in $REPO/logs regardless of your CWD.
 # Resumable: re-submitting continues from the last diffusion checkpoint in $OUTPUT_DIR.
 
 #SBATCH --account=def-stockie_gpu
@@ -65,7 +66,8 @@ module load python/3.11 mpi4py/4.1.0   # mpi4py BEFORE activating (Alliance netC
 source "$ENV_DIR/bin/activate"         # add cuda/12.6 above only if physicsnemo/warp errors on CUDA
 
 cd "$TRAIN_DIR"
-mkdir -p logs "$OUTPUT_DIR"
+export CORRDIFF_LOG_DIR="$REPO/logs"   # Hydra run dir, wandb offline, generate.log all go here
+mkdir -p "$CORRDIFF_LOG_DIR" "$OUTPUT_DIR"
 
 if [[ "$STAGE" == "1" ]]; then
   echo "Staging shards -> $SLURM_TMPDIR/data"
@@ -82,7 +84,9 @@ CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
      train.py --config-name="$CONFIG"
      ++dataset.stats_path="$STATS"
      ++training.io.checkpoint_dir="$OUTPUT_DIR"
-     ++training.io.regression_checkpoint_path="$REG_CKPT")
+     ++training.io.regression_checkpoint_path="$REG_CKPT"
+     hydra.run.dir="$CORRDIFF_LOG_DIR/hydra/${SLURM_JOB_ID:-manual}"
+     ++wandb.results_dir="$CORRDIFF_LOG_DIR/wandb")
 [[ -n "${TRAIN_DURATION:-}" ]] && CMD+=("++training.hp.training_duration=$TRAIN_DURATION")
 [[ -n "${TOTAL_BATCH:-}"    ]] && CMD+=("++training.hp.total_batch_size=$TOTAL_BATCH")
 [[ -n "${BATCH_PER_GPU:-}"  ]] && CMD+=("++training.hp.batch_size_per_gpu=$BATCH_PER_GPU")
