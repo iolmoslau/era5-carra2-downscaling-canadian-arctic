@@ -18,6 +18,18 @@ import os
 # Network-FS NetCDF reads: disable HDF5 file locking before xarray/netCDF4 load.
 os.environ.setdefault("HDF5_USE_FILE_LOCKING", "FALSE")
 
+# Point pyproj/cartopy at their bundled PROJ data if the environment doesn't set it (the Alliance
+# wheelhouse pyproj can leave PROJ_DATA unset -> cartopy CRS init raises DataDirError). Must run
+# before cartopy (imported via visualization.plotting) loads pyproj.
+if not (os.environ.get("PROJ_DATA") or os.environ.get("PROJ_LIB")):
+    try:
+        import pyproj
+        _cand = os.path.join(os.path.dirname(pyproj.__file__), "proj_dir", "share", "proj")
+        if os.path.exists(os.path.join(_cand, "proj.db")):
+            os.environ["PROJ_DATA"] = _cand
+    except Exception:
+        pass
+
 import argparse
 import sys
 from pathlib import Path
