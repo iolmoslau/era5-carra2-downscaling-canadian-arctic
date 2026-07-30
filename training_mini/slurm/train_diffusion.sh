@@ -37,6 +37,16 @@ STATS="${STATS:-$DATA_DIR/stats_train_2011_2018.json}"
 STAGE="${STAGE:-1}"
 NPROC="${SLURM_GPUS_ON_NODE:-1}"
 
+# ---- sanity: log resolved paths, fail fast on a bad OUTPUT_DIR/DATA_DIR --------------------
+echo "[paths] OUTPUT_DIR=$OUTPUT_DIR"
+echo "[paths] DATA_DIR=$DATA_DIR  STATS=$STATS  (SCRATCH=${SCRATCH:-<unset>} PROJECT=${PROJECT:-<unset>})"
+for p in "$OUTPUT_DIR" "$DATA_DIR"; do
+  case "$p" in
+    /scratch/*|/project/*|/home/*) : ;;
+    *) echo "ERROR: path '$p' is not a valid absolute location -- is \$SCRATCH/\$PROJECT set when you run sbatch?" >&2; exit 1 ;;
+  esac
+done
+
 # regression checkpoint: arg 1, else $REG_CKPT, else newest in $OUTPUT_DIR/checkpoints_regression.
 # Avoid `ls | head` under `set -o pipefail`: with hundreds of .mdlus files, head closing the pipe
 # makes ls die on SIGPIPE and silently aborts the job.

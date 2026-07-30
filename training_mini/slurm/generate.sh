@@ -35,6 +35,15 @@ NUM_ENS="${NUM_ENS:-1}"                     # ensemble members (use >1 for diffu
 CONFIG="${CONFIG:-config_generate_era5_carra2_mini}"
 NPROC="${SLURM_GPUS_ON_NODE:-1}"           # torchrun processes = GPUs on the node
 
+# ---- sanity: log resolved paths, fail fast if $SCRATCH/$PROJECT were unset at submit -------
+echo "[paths] OUTPUT_DIR=$OUTPUT_DIR  DATA_DIR=$DATA_DIR  (SCRATCH=${SCRATCH:-<unset>} PROJECT=${PROJECT:-<unset>})"
+for p in "$OUTPUT_DIR" "$DATA_DIR"; do
+  case "$p" in
+    /scratch/*|/project/*|/home/*) : ;;
+    *) echo "ERROR: path '$p' is not a valid absolute location -- is \$SCRATCH/\$PROJECT set when you run sbatch?" >&2; exit 1 ;;
+  esac
+done
+
 # Newest regression checkpoint. Avoid `ls | head`: with hundreds of .mdlus files and
 # `set -o pipefail`, head closing the pipe makes ls die on SIGPIPE and silently aborts the job.
 if [[ -z "${REG_CKPT:-}" ]]; then

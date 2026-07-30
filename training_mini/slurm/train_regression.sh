@@ -37,6 +37,16 @@ STATS="${STATS:-$DATA_DIR/stats_train_2011_2018.json}"
 STAGE="${STAGE:-1}"                                   # 1 = copy shards to fast node-local $SLURM_TMPDIR
 NPROC="${SLURM_GPUS_ON_NODE:-1}"
 
+# ---- sanity: log resolved paths, fail fast on a bad OUTPUT_DIR/DATA_DIR --------------------
+echo "[paths] OUTPUT_DIR=$OUTPUT_DIR"
+echo "[paths] DATA_DIR=$DATA_DIR  STATS=$STATS  (SCRATCH=${SCRATCH:-<unset>} PROJECT=${PROJECT:-<unset>})"
+for p in "$OUTPUT_DIR" "$DATA_DIR"; do
+  case "$p" in
+    /scratch/*|/project/*|/home/*) : ;;
+    *) echo "ERROR: path '$p' is not a valid absolute location -- is \$SCRATCH/\$PROJECT set when you run sbatch?" >&2; exit 1 ;;
+  esac
+done
+
 # ---- environment -----------------------------------------------------------
 module load python/3.11 mpi4py/4.1.0   # mpi4py BEFORE activating (Alliance netCDF4 needs it);
 source "$ENV_DIR/bin/activate"         # add cuda/12.6 above only if physicsnemo/warp errors on CUDA
