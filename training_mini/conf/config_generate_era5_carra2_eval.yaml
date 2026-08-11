@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: Apache-2.0
+# EVALUATION generation for the ERA5 -> CARRA2 CorrDiff-Mini model: sweep MANY 2019 validation
+# times (via times_range) so evaluate/eval_crps_mae.py can compute CRPS/MAE over a real sample
+# rather than one or two handpicked days. Same model/dataset as config_generate_era5_carra2_mini.
+#
+# Lives here (not in thesis/evaluate/) because generate.py resolves --config-name from
+# training_mini/conf. The driver evaluate/run_eval.sh overrides the stride
+# (generation.times_range.2), inference_mode, num_ensembles, checkpoints, and output_filename.
+
+hydra:
+    job:
+        chdir: false
+        name: generate_era5_carra2_eval
+    run:
+        dir: ./outputs/${hydra:job.name}
+    searchpath:
+        - pkg://conf/base # Do not modify
+
+defaults:
+    - dataset: era5_carra2
+    - generation: non_patched
+
+dataset:
+    data_path: ./data
+    stats_path: ./data/stats_train_2011_2018.json
+    years: [2019]
+
+generation:
+    num_ensembles: 15
+    # members per input time for the FULL model; run_eval.sh sets 1 for the regression pass
+    seed_batch_size: 1
+    times: null                     # use times_range instead of an explicit list
+    times_range:
+        - 2019-01-01T00:00:00       # first 2019 timestamp (3-hourly shard, on the 00:00 grid)
+        - 2019-12-31T21:00:00       # last 2019 timestamp
+        - 72                        # interval in HOURS; run_eval.sh overrides element .2 from N
+    io:
+        res_ckpt_filename: <diffusion_checkpoint.mdlus>
+        reg_ckpt_filename: <regression_checkpoint.mdlus>
+        output_filename: corrdiff_output.nc   # run_eval.sh points this at full.nc / reg.nc
+    perf:
+        # Synchronous NetCDF write in the main thread; the threaded default corrupts the file
+        # with Alliance's non-thread-safe MPI netCDF4 ("incorrect metadata checksum" on read).
+        io_synchronous: false
+
+wandb:
+    mode: offline
