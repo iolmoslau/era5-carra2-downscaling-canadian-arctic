@@ -77,6 +77,35 @@ python tools/collect_run.py --name $NAME \
 git add results/$NAME && git commit -m "$NAME results" && git push
 ```
 
+## C. Archive a run's checkpoint  (only for runs worth keeping)
+
+`$SCRATCH` is **purged by file age (~60 days) and is not backed up**, so checkpoints left there
+disappear. The `results/<name>/` diagnostics are safe (they're in git), but the model weights are
+not. Do this for any run you want to preserve — you don't have to keep them all, and you only need
+the **final** checkpoint, not the whole history.
+
+```bash
+NAME=regression_2                 # or diffusion_1, regression_2_extended, ...
+SRC=$(echo $SCRATCH/corrdiff_runs/$NAME/checkpoints_*)   # checkpoints_regression | _diffusion
+DST=$PROJECT/corrdiff_checkpoints/$NAME
+mkdir -p "$DST"
+
+# final checkpoint = highest sample-count (nimg encoded in the filename), robust to copy mtimes
+last=$(ls "$SRC"/*.mdlus | sort -t. -k3 -n | tail -1)
+nimg=$(basename "$last" | cut -d. -f3)
+cp "$SRC"/*."$nimg".mdlus "$SRC"/*."$nimg".pt "$DST"/    # .mdlus = weights, .pt = optimizer
+echo "archived step $nimg -> $DST" && ls -la "$DST"
+```
+
+- The `.pt` (optimizer) is only needed if you might **resume/extend** training later. For pure
+  inference/generation you can keep just the `.mdlus` and drop the `.pt` to save space.
+- **Diffusion runs need their base regression checkpoint too**: generation is `reg + residual`,
+  so archiving a `diffusion_n` alone isn't reproducible — make sure the `regression_n` it was built
+  on is also archived.
+- **Restore** is the reverse copy back into a scratch `OUT/checkpoints_*` dir; then generate (or
+  resume) exactly as above. Run training/generation from `$SCRATCH`, not `$PROJECT` — `$PROJECT`
+  is cold storage, `$SCRATCH` is the fast filesystem.
+
 ---
 
 ## Where the logs go
