@@ -32,14 +32,13 @@ OUTPUT_DIR="${OUTPUT_DIR:-$SCRATCH/corrdiff_mini}"     # holds checkpoints_regre
 STATS="${STATS:-$DATA_DIR/stats_train_2011_2018.json}"
 CONFIG="${CONFIG:-config_generate_era5_carra2_eval}"
 NUM_ENS="${NUM_ENS:-15}"                               # ensemble members for the FULL model
-N="${N:-${1:-50}}"                                     # approx number of 2019 eval times
+N="${N:-${1:-50}}"                                     # number of RANDOM eval times to draw
+SEED="${SEED:-0}"                                      # RNG seed: reproducible; both passes share it
+YEARS="${YEARS:-2019}"                                 # space-separated year(s) to sample from
 RESULT_DIR="${RESULT_DIR:-$OUTPUT_DIR/eval}"           # full.nc / reg.nc / metrics land here
 NPROC="${SLURM_GPUS_ON_NODE:-1}"
-
-# 2019 is 3-hourly (2920 steps). Pick an interval (multiple of 3 h) that yields ~N times.
 (( N < 1 )) && N=1
-STEPS=$(( 2920 / N )); (( STEPS < 1 )) && STEPS=1
-INTERVAL=$(( STEPS * 3 ))
+YEARS_CSV=$(echo "$YEARS" | tr ' ' ',')                # "2018 2019" -> "2018,2019" for Hydra
 
 # ---- sanity: log resolved paths, fail fast if $SCRATCH/$PROJECT were unset at submit -------
 echo "[paths] OUTPUT_DIR=$OUTPUT_DIR  DATA_DIR=$DATA_DIR  RESULT_DIR=$RESULT_DIR"
@@ -75,17 +74,25 @@ mkdir -p "$CORRDIFF_LOG_DIR" "$RESULT_DIR"
 cd "$TRAIN_DIR"
 ln -sfn "$DATA_DIR" ./data
 
-echo "[eval] N~=$N -> interval ${INTERVAL}h  |  NUM_ENS=$NUM_ENS"
+# Draw N random times from the requested year(s). Computed ONCE and reused for both the full
+# and regression passes, so the two predictions are scored on identical times.
+echo "[eval] sampling $N random times from year(s) {$YEARS}, seed $SEED"
+TIMES=$(python "$EVAL_DIR/sample_times.py" --data-dir "$DATA_DIR" --years $YEARS --n "$N" --seed "$SEED")
+echo "[eval] NUM_ENS=$NUM_ENS"
+echo "[eval] times=$TIMES"
 echo "[eval] REG_CKPT=$REG_CKPT"
 echo "[eval] RES_CKPT=$RES_CKPT"
 
-# shared generate.py args (torchrun so physicsnemo's DistributedManager sees RANK/WORLD_SIZE)
+# shared generate.py args (torchrun so physicsnemo's DistributedManager sees RANK/WORLD_SIZE).
+# Explicit random `times` list; null out times_range so generate.py uses the list.
 COMMON=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
         generate.py --config-name="$CONFIG"
         hydra.run.dir="$CORRDIFF_LOG_DIR/hydra/${SLURM_JOB_ID:-manual}"
         ++dataset.data_path="$DATA_DIR"
         ++dataset.stats_path="$STATS"
-        generation.times_range.2="$INTERVAL")
+        ++dataset.years="[$YEARS_CSV]"
+        ++generation.times="$TIMES"
+        ++generation.times_range=null)
 
 echo "== FULL model (regression + diffusion, $NUM_ENS members) -> $RESULT_DIR/full.nc =="
 "${COMMON[@]}" \

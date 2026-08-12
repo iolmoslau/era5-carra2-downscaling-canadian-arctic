@@ -1,11 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
-# EVALUATION generation for the ERA5 -> CARRA2 CorrDiff-Mini model: sweep MANY 2019 validation
-# times (via times_range) so evaluate/eval_crps_mae.py can compute CRPS/MAE over a real sample
-# rather than one or two handpicked days. Same model/dataset as config_generate_era5_carra2_mini.
+# EVALUATION generation for the ERA5 -> CARRA2 CorrDiff-Mini model: score MANY validation times
+# so evaluate/eval_crps_mae.py can compute CRPS/MAE over a real sample rather than one or two
+# handpicked days. Same model/dataset as config_generate_era5_carra2_mini.
 #
-# Lives here (not in thesis/evaluate/) because generate.py resolves --config-name from
-# training_mini/conf. The driver evaluate/run_eval.sh overrides the stride
-# (generation.times_range.2), inference_mode, num_ensembles, checkpoints, and output_filename.
+# Normally driven by evaluate/run_eval.sh, which injects N RANDOM times (evaluate/sample_times.py)
+# as an explicit `++generation.times=[...]` list and nulls times_range, then also overrides
+# inference_mode, num_ensembles, checkpoints, and output_filename.
+#
+# The `times_range` below is only a fallback for running this config standalone (a regular
+# stride); note a multiple-of-24h interval samples a single time of day, so prefer run_eval.sh's
+# random draw for an unbiased sample. Lives here (not thesis/evaluate/) because generate.py
+# resolves --config-name from training_mini/conf.
 
 hydra:
     job:

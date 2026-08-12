@@ -5,7 +5,8 @@ handpicked days), on the metrics the CorrDiff paper uses: **CRPS** and **MAE**, 
 
 ## What it does
 
-`run_eval.sh` runs `generate.py` twice over the same `N` 2019 times, then `eval_crps_mae.py`:
+`run_eval.sh` draws **`N` random times** from the requested year(s) (`sample_times.py`, seeded),
+runs `generate.py` twice over that **same** set of times, then `eval_crps_mae.py`:
 
 | run | `generate.py` mode | prediction | CRPS reduces to |
 |-----|--------------------|------------|-----------------|
@@ -28,16 +29,19 @@ identity, and the analytic Gaussian CRPS.
 
 ```bash
 # from $REPO, submit via slurm/submit.sh so logs go to $REPO/logs
-N=100 NUM_ENS=15 \
+N=100 NUM_ENS=15 SEED=0 YEARS=2019 \
   OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_2 \
   DATA_DIR=$PROJECT/data/derot \
   bash training_mini/slurm/submit.sh evaluate/run_eval.sh
 ```
+- **`N`** random times are drawn (without replacement) from **`YEARS`** (space-separated,
+  default `2019`), with **`SEED`** for reproducibility — the full and regression passes use the
+  identical set. Sampling reads the shard's real time index, so every pick is valid and times of
+  day are unbiased (a fixed stride would hit only one hour). Cost/disk scale with `N × NUM_ENS`.
 - Checkpoints are auto-picked as the highest-step `.mdlus` in
   `$OUTPUT_DIR/checkpoints_{regression,diffusion}`. Override with `REG_CKPT=` / `RES_CKPT=` to
   pair a diffusion run with a regression checkpoint from a **different** run dir.
-- `N` is the approximate number of 2019 times (the interval is snapped to a multiple of 3 h).
-  Cost and disk scale with `N × NUM_ENS`.
+- Sampling from multiple years (e.g. `YEARS="2018 2019"`) requires those shards in `$DATA_DIR`.
 - Outputs land in `$RESULT_DIR` (default `$OUTPUT_DIR/eval/`): `full.nc`, `reg.nc`,
   `metrics_crps_mae.json`.
 
