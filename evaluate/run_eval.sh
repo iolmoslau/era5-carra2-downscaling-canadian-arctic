@@ -35,13 +35,19 @@ NUM_ENS="${NUM_ENS:-15}"                               # ensemble members for th
 N="${N:-${1:-50}}"                                     # number of RANDOM eval times to draw
 SEED="${SEED:-0}"                                      # RNG seed: reproducible; both passes share it
 YEARS="${YEARS:-2019}"                                 # space-separated year(s) to sample from
-RESULT_DIR="${RESULT_DIR:-$OUTPUT_DIR/eval}"           # full.nc / reg.nc / metrics land here
+NAME="${NAME:-$(basename "$OUTPUT_DIR")}"              # run name -> results/<name>/eval
+# Small, kept artifacts (metrics JSON) go with the run's tracked results in the repo.
+RESULT_DIR="${RESULT_DIR:-$TRAIN_DIR/results/$NAME/eval}"
+# Bulky NetCDFs (full.nc/reg.nc, several GB) stay on scratch -- too big for the $HOME repo quota,
+# and .nc is gitignored anyway. Set NC_DIR=$RESULT_DIR if you really want them alongside metrics.
+NC_DIR="${NC_DIR:-$OUTPUT_DIR/eval}"
 NPROC="${SLURM_GPUS_ON_NODE:-1}"
 (( N < 1 )) && N=1
 YEARS_CSV=$(echo "$YEARS" | tr ' ' ',')                # "2018 2019" -> "2018,2019" for Hydra
 
 # ---- sanity: log resolved paths, fail fast if $SCRATCH/$PROJECT were unset at submit -------
-echo "[paths] OUTPUT_DIR=$OUTPUT_DIR  DATA_DIR=$DATA_DIR  RESULT_DIR=$RESULT_DIR"
+echo "[paths] OUTPUT_DIR=$OUTPUT_DIR  DATA_DIR=$DATA_DIR"
+echo "        RESULT_DIR=$RESULT_DIR (metrics)  NC_DIR=$NC_DIR (NetCDFs)"
 echo "        (SCRATCH=${SCRATCH:-<unset>} PROJECT=${PROJECT:-<unset>})"
 for p in "$OUTPUT_DIR" "$DATA_DIR"; do
   case "$p" in
@@ -69,7 +75,7 @@ source "$ENV_DIR/bin/activate"
 export PYTHONUNBUFFERED=1
 export HDF5_USE_FILE_LOCKING=FALSE
 export CORRDIFF_LOG_DIR="$REPO/logs"
-mkdir -p "$CORRDIFF_LOG_DIR" "$RESULT_DIR"
+mkdir -p "$CORRDIFF_LOG_DIR" "$RESULT_DIR" "$NC_DIR"
 
 cd "$TRAIN_DIR"
 ln -sfn "$DATA_DIR" ./data
@@ -94,24 +100,24 @@ COMMON=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
         ++generation.times="$TIMES"
         ++generation.times_range=null)
 
-echo "== FULL model (regression + diffusion, $NUM_ENS members) -> $RESULT_DIR/full.nc =="
+echo "== FULL model (regression + diffusion, $NUM_ENS members) -> $NC_DIR/full.nc =="
 "${COMMON[@]}" \
   ++generation.inference_mode=all \
   ++generation.num_ensembles="$NUM_ENS" \
   ++generation.io.reg_ckpt_filename="$REG_CKPT" \
   ++generation.io.res_ckpt_filename="$RES_CKPT" \
-  ++generation.io.output_filename="$RESULT_DIR/full.nc"
+  ++generation.io.output_filename="$NC_DIR/full.nc"
 
-echo "== REGRESSION only (deterministic mean) -> $RESULT_DIR/reg.nc =="
+echo "== REGRESSION only (deterministic mean) -> $NC_DIR/reg.nc =="
 "${COMMON[@]}" \
   ++generation.inference_mode=regression \
   ++generation.num_ensembles=1 \
   ++generation.io.reg_ckpt_filename="$REG_CKPT" \
-  ++generation.io.output_filename="$RESULT_DIR/reg.nc"
+  ++generation.io.output_filename="$NC_DIR/reg.nc"
 
 echo "== CRPS / MAE per channel: full vs reg =="
 python "$EVAL_DIR/eval_crps_mae.py" \
-  --nc full="$RESULT_DIR/full.nc" reg="$RESULT_DIR/reg.nc" \
+  --nc full="$NC_DIR/full.nc" reg="$NC_DIR/reg.nc" \
   --out "$RESULT_DIR/metrics_crps_mae.json"
 
-echo "DONE. NetCDFs + metrics in $RESULT_DIR"
+echo "DONE. metrics -> $RESULT_DIR/metrics_crps_mae.json   |   NetCDFs -> $NC_DIR"

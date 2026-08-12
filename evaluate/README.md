@@ -42,8 +42,14 @@ N=100 NUM_ENS=15 SEED=0 YEARS=2019 \
   `$OUTPUT_DIR/checkpoints_{regression,diffusion}`. Override with `REG_CKPT=` / `RES_CKPT=` to
   pair a diffusion run with a regression checkpoint from a **different** run dir.
 - Sampling from multiple years (e.g. `YEARS="2018 2019"`) requires those shards in `$DATA_DIR`.
-- Outputs land in `$RESULT_DIR` (default `$OUTPUT_DIR/eval/`): `full.nc`, `reg.nc`,
-  `metrics_crps_mae.json`.
+- **Outputs are split by size:**
+  - `metrics_crps_mae.json` (small, the thing you keep) -> **`RESULT_DIR`**, default
+    `training_mini/results/<NAME>/eval/` where `NAME` defaults to `basename $OUTPUT_DIR`
+    (e.g. `results/diffusion_2/eval/`). It's git-trackable — commit it with the run's results.
+  - `full.nc` / `reg.nc` (several GB) -> **`NC_DIR`**, default `$OUTPUT_DIR/eval/` on `$SCRATCH`,
+    since they're too big for the `$HOME` repo quota and `.nc` is gitignored anyway. They're
+    intermediates — safe to delete after the metrics are computed. Set `NC_DIR=$RESULT_DIR` to
+    force them alongside the metrics.
 
 ## Score existing NetCDFs directly
 
