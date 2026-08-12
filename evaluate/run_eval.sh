@@ -73,7 +73,11 @@ if [[ -z "${RES_CKPT:-}" ]]; then
   RES_CKPT=$(ls "$OUTPUT_DIR"/checkpoints_diffusion/*.mdlus 2>/dev/null | sort -t. -k3 -n | tail -1 || true)
 fi
 if [[ -z "${REG_CKPT:-}" || ! -f "$REG_CKPT" ]]; then
-  echo "ERROR: no regression checkpoint (set REG_CKPT or OUTPUT_DIR)" >&2; exit 1
+  echo "ERROR: no regression checkpoint in $OUTPUT_DIR/checkpoints_regression." >&2
+  echo "       A diffusion run dir has only checkpoints_diffusion -- the regression net lives in" >&2
+  echo "       the run it was built on. Point REG_CKPT there, e.g.:" >&2
+  echo "         REG_CKPT=\$(ls \$SCRATCH/corrdiff_runs/regression_2/checkpoints_regression/*.mdlus | sort -t. -k3 -n | tail -1)" >&2
+  exit 1
 fi
 if [[ -z "${RES_CKPT:-}" || ! -f "$RES_CKPT" ]]; then
   echo "ERROR: no diffusion checkpoint (set RES_CKPT or OUTPUT_DIR) -- needed for the full model" >&2; exit 1
