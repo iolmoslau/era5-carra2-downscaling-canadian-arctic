@@ -29,11 +29,14 @@ identity, and the analytic Gaussian CRPS.
 
 ```bash
 # from $REPO, submit via slurm/submit.sh so logs go to $REPO/logs
-N=100 NUM_ENS=15 SEED=0 YEARS=2019 \
+NAME=diffusion_2 N=100 NUM_ENS=15 SEED=0 YEARS=2019 \
   OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_2 \
   DATA_DIR=$PROJECT/data/derot \
   bash training_mini/slurm/submit.sh evaluate/run_eval.sh
 ```
+- **`NAME` is required** — it names the results folder (`results/<NAME>/eval/`). It is *not*
+  guessed from `OUTPUT_DIR`, so an oddly-named scratch dir can't silently write to the wrong
+  place; the job exits immediately if `NAME` is unset.
 - **`N`** random times are drawn (without replacement) from **`YEARS`** (space-separated,
   default `2019`), with **`SEED`** for reproducibility — the full and regression passes use the
   identical set. Sampling reads the shard's real time index, so every pick is valid and times of
@@ -44,8 +47,8 @@ N=100 NUM_ENS=15 SEED=0 YEARS=2019 \
 - Sampling from multiple years (e.g. `YEARS="2018 2019"`) requires those shards in `$DATA_DIR`.
 - **Outputs are split by size:**
   - `metrics_crps_mae.json` (small, the thing you keep) -> **`RESULT_DIR`**, default
-    `training_mini/results/<NAME>/eval/` where `NAME` defaults to `basename $OUTPUT_DIR`
-    (e.g. `results/diffusion_2/eval/`). It's git-trackable — commit it with the run's results.
+    `training_mini/results/<NAME>/eval/` (e.g. `results/diffusion_2/eval/`). It's git-trackable —
+    commit it with the run's results.
   - `full.nc` / `reg.nc` (several GB) -> **`NC_DIR`**, default `$OUTPUT_DIR/eval/` on `$SCRATCH`,
     since they're too big for the `$HOME` repo quota and `.nc` is gitignored anyway. They're
     intermediates — safe to delete after the metrics are computed. Set `NC_DIR=$RESULT_DIR` to

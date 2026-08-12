@@ -5,9 +5,11 @@
 # Runs two generate.py passes (MODE=all, MODE=regression) over the same N times, then
 # evaluate/eval_crps_mae.py. Submit via slurm/submit.sh so logs land in $REPO/logs:
 #
-#   N=100 NUM_ENS=15 OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_2 DATA_DIR=$PROJECT/data/derot \
-#     bash training_mini/slurm/submit.sh evaluate/run_eval.sh
+#   NAME=diffusion_2 N=100 NUM_ENS=15 OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_2 \
+#     DATA_DIR=$PROJECT/data/derot bash training_mini/slurm/submit.sh evaluate/run_eval.sh
 #
+# NAME is REQUIRED: metrics go to training_mini/results/<NAME>/eval/. It is NOT guessed from
+# OUTPUT_DIR, so an oddly-named scratch dir can't silently write to the wrong results folder.
 # Checkpoints: auto-picked as the highest-step .mdlus in $OUTPUT_DIR/checkpoints_{regression,
 # diffusion}; override with REG_CKPT=/path RES_CKPT=/path (e.g. to pair a diffusion run with a
 # regression from a DIFFERENT run dir). Cost/disk scale with N*NUM_ENS.
@@ -35,7 +37,7 @@ NUM_ENS="${NUM_ENS:-15}"                               # ensemble members for th
 N="${N:-${1:-50}}"                                     # number of RANDOM eval times to draw
 SEED="${SEED:-0}"                                      # RNG seed: reproducible; both passes share it
 YEARS="${YEARS:-2019}"                                 # space-separated year(s) to sample from
-NAME="${NAME:-$(basename "$OUTPUT_DIR")}"              # run name -> results/<name>/eval
+NAME="${NAME:-}"                                       # REQUIRED run name -> results/<name>/eval
 # Small, kept artifacts (metrics JSON) go with the run's tracked results in the repo.
 RESULT_DIR="${RESULT_DIR:-$TRAIN_DIR/results/$NAME/eval}"
 # Bulky NetCDFs (full.nc/reg.nc, several GB) stay on scratch -- too big for the $HOME repo quota,
@@ -44,6 +46,13 @@ NC_DIR="${NC_DIR:-$OUTPUT_DIR/eval}"
 NPROC="${SLURM_GPUS_ON_NODE:-1}"
 (( N < 1 )) && N=1
 YEARS_CSV=$(echo "$YEARS" | tr ' ' ',')                # "2018 2019" -> "2018,2019" for Hydra
+
+# ---- sanity: NAME is required so metrics land in the intended results/<NAME>/eval ----------
+if [[ -z "$NAME" ]]; then
+  echo "ERROR: set NAME=<run name> (e.g. NAME=diffusion_2) -- metrics go to results/<NAME>/eval." >&2
+  echo "       (Not derived from OUTPUT_DIR, to avoid silently writing to the wrong folder.)" >&2
+  exit 1
+fi
 
 # ---- sanity: log resolved paths, fail fast if $SCRATCH/$PROJECT were unset at submit -------
 echo "[paths] OUTPUT_DIR=$OUTPUT_DIR  DATA_DIR=$DATA_DIR"
