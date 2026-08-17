@@ -5,6 +5,9 @@
 # Submit:   sbatch scripts/derotate_shards.sh
 # Override via env, e.g.:  DST_DIR=$PROJECT/data/derot sbatch scripts/derotate_shards.sh
 #
+# De-rotate extra TEST years to scratch without touching the fixed train stats (SKIP_STATS=1):
+#   DST_DIR=$SCRATCH/data/derot YEARS="2020 2021 2022" SKIP_STATS=1 sbatch scripts/derotate_shards.sh
+#
 # Resumable: re-submitting skips shards already written to $DST_DIR.
 
 #SBATCH --account=def-stockie_cpu
@@ -49,10 +52,17 @@ for y in $YEARS; do
   python scripts/derotate_winds.py --src "$src" --dst "$dst"
 done
 
-echo "== recomputing train stats -> $STATS"
-python training_mini/tools/make_stats.py --data-dir "$DST_DIR" \
-  --years $TRAIN_YEARS --out "$STATS"
+# Recompute train-only stats -- SKIP when de-rotating extra *test* years into a different DST_DIR
+# that doesn't hold the 2011-2018 train shards (e.g. writing eval years to $SCRATCH). The train
+# stats are fixed and already exist; the new years must NOT enter them anyway.
+if [[ "${SKIP_STATS:-0}" == "1" ]]; then
+  echo "== SKIP_STATS=1: leaving train stats untouched ($STATS)"
+else
+  echo "== recomputing train stats -> $STATS"
+  python training_mini/tools/make_stats.py --data-dir "$DST_DIR" \
+    --years $TRAIN_YEARS --out "$STATS"
+fi
 
-echo "DONE. Corrected (earth-relative wind) shards + stats in $DST_DIR"
+echo "DONE. Corrected (earth-relative wind) shards in $DST_DIR"
 echo "Retrain with: DATA_DIR=$DST_DIR STATS=$STATS OUTPUT_DIR=\$SCRATCH/corrdiff_mini_derot \\"
 echo "              sbatch --gpus=h100:2 training_mini/slurm/train_regression.sh"
