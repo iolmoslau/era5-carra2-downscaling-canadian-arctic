@@ -34,6 +34,17 @@ NAME=diffusion_2 N=100 NUM_ENS=15 SEED=0 YEARS=2019 \
   DATA_DIR=$PROJECT/data/derot \
   bash training_mini/slurm/submit.sh evaluate/run_eval.sh
 ```
+
+## Or specifying regression checkpoint:
+
+```bash
+REG=[path to regression checkpoint here]
+NAME=diffusion_2 N=400 NUM_ENS=32 REG_CKPT=$REG YEARS="2020 2021" \
+  OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_2 \
+  DATA_DIR=$PROJECT/data/derot \
+  bash training_mini/slurm/submit.sh evaluate/run_eval.sh
+```
+
 - **`NAME` is required** — it names the results folder (`results/<NAME>/eval/`). It is *not*
   guessed from `OUTPUT_DIR`, so an oddly-named scratch dir can't silently write to the wrong
   place; the job exits immediately if `NAME` is unset.
@@ -53,6 +64,38 @@ NAME=diffusion_2 N=100 NUM_ENS=15 SEED=0 YEARS=2019 \
     since they're too big for the `$HOME` repo quota and `.nc` is gitignored anyway. They're
     intermediates — safe to delete after the metrics are computed. Set `NC_DIR=$RESULT_DIR` to
     force them alongside the metrics.
+
+## Persisting de-rotated test shards (avoid the `$PROJECT` inode quota)
+
+A loose `shard_YYYY.zarr` is ~5,900 tiny chunk files; a dozen shards exhausts the project
+file-count (inode) quota. Archive each de-rotated test shard to a **single-file zarr ZipStore**
+(1 inode, same ~4.7 GB) — the loader opens `shard_YYYY.zarr.zip` transparently, and reads are
+byte-identical and just as fast (chunks are `ZIP_STORED`, so seek+read with no recompression).
+
+```bash
+# 1. de-rotate the test years to scratch (fast FS; SKIP_STATS keeps the train stats fixed)
+DST_DIR=$SCRATCH/data/derot YEARS="2020 2021 2022" SKIP_STATS=1 \
+  bash training_mini/slurm/submit.sh scripts/derotate_shards.sh
+
+# 2. archive each into $PROJECT as a 1-inode zip, dropping the loose scratch copy (login node OK)
+for y in 2020 2021 2022; do
+  python scripts/zip_shard.py --src $SCRATCH/data/derot/shard_$y.zarr \
+    --dst $PROJECT/data/derot/shard_$y.zarr.zip --remove-src
+done
+
+# 3. eval -- the loader picks up shard_YYYY.zarr.zip automatically; STATS resolves from DATA_DIR
+REG=$(ls $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression/*.mdlus | sort -t. -k3 -n | tail -1)
+NAME=diffusion_2_test_2020_22 N=400 NUM_ENS=32 REG_CKPT=$REG \
+  OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_2 \
+  DATA_DIR=$PROJECT/data/derot YEARS="2020 2021 2022" \
+  bash training_mini/slurm/submit.sh --time=4:00:00 evaluate/run_eval.sh
+```
+
+**The payoff:** the `.zip` shards persist in `$PROJECT` (backed up, not purged), so evaluating a
+**new** model on the same test years is just step 3 — no re-derotating. `_resolve_stores` prefers
+the `.zip` when present but still reads a loose `.zarr` if that's what's there, so a data dir can
+mix archived test shards with loose train shards. `zip_shard.py` works on any shard, so you can
+also archive raw/train shards to reclaim inodes.
 
 ## Score existing NetCDFs directly
 

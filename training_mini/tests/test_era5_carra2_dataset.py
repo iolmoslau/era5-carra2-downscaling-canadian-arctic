@@ -126,3 +126,26 @@ def test_invalid_channel_raises(stats_path):
             data_path=str(TESTING_DATA), stats_path=stats_path, years=[2011],
             lr_channels=["t2m", "not_a_channel"],
         )
+
+
+def test_zip_store_read_matches_loose(stats_path, tmp_path):
+    """A shard archived to a single-file zarr ZipStore (1 inode instead of ~5.9k chunk files)
+    loads identically to the loose directory store: _resolve_stores prefers the .zip, and the
+    samples read through the ZipStore are byte-identical to the loose ones."""
+    import scripts.zip_shard as zs
+
+    zdir = tmp_path / "zipped"
+    zdir.mkdir()
+    zs.zip_store(str(SHARD), str(zdir / "shard_2011.zarr.zip"))
+    assert (zdir / "shard_2011.zarr.zip").exists()
+    assert not (zdir / "shard_2011.zarr").exists()  # only the single-file archive is present
+
+    stores = ERA5CARRA2Dataset._resolve_stores(str(zdir), [2011])
+    assert stores[0].endswith("shard_2011.zarr.zip")  # prefers the archive
+
+    loose = ERA5CARRA2Dataset(data_path=str(TESTING_DATA), stats_path=stats_path, years=[2011])
+    zipped = ERA5CARRA2Dataset(data_path=str(zdir), stats_path=stats_path, years=[2011])
+    assert len(loose) == len(zipped)
+    for i in (0, 1500, len(loose) - 1):
+        (hr_a, lr_a), (hr_b, lr_b) = loose[i], zipped[i]
+        assert torch.equal(hr_a, hr_b) and torch.equal(lr_a, lr_b)

@@ -45,7 +45,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 from datasets.base import ChannelMetadata, DownscalingDataset  # vendored CorrDiff base
 
-from dataloading.dataset import concat_split
+from dataloading.dataset import concat_split, _open_store
 from dataloading.stats import load_norm_stats
 from dataloading.upsample import BilinearUpsampler
 
@@ -151,11 +151,18 @@ class ERA5CARRA2Dataset(DownscalingDataset):
     @staticmethod
     def _resolve_stores(data_path: str, years: Optional[Sequence[int]]) -> List[str]:
         p = Path(data_path)
-        if p.suffix == ".zarr":
+        if p.suffix == ".zarr" or str(p).endswith(".zarr.zip"):
             return [str(p)]
         if not years:
             raise ValueError("`years` is required when `data_path` is a shard directory")
-        return [str(p / f"shard_{int(y)}.zarr") for y in years]
+        # Per year, prefer an archived ``shard_YYYY.zarr.zip`` (1 inode) over the loose directory
+        # store, so a data dir can mix zipped (e.g. archived test years) and loose (train) shards.
+        stores = []
+        for y in years:
+            loose = p / f"shard_{int(y)}.zarr"
+            zipped = p / f"shard_{int(y)}.zarr.zip"
+            stores.append(str(zipped if zipped.exists() else loose))
+        return stores
 
     @staticmethod
     def _check_subset(names: Sequence[str], available: Sequence[str], label: str) -> None:
@@ -195,7 +202,7 @@ class ERA5CARRA2Dataset(DownscalingDataset):
                                self._ref.hr_lat, self._ref.hr_lon)
         lsm = None
         if self.include_lsm:
-            with xr.open_zarr(self.stores[0]) as z:
+            with xr.open_zarr(_open_store(self.stores[0])) as z:
                 mask = np.asarray(z["land_sea_mask"].values, dtype=np.float32)
             lsm = ((mask - self._lsm_mean) / self._lsm_std)[None]  # (1, H, W)
         return LRConditioner(up, lsm)
@@ -225,7 +232,7 @@ class ERA5CARRA2Dataset(DownscalingDataset):
 
         out = []
         for s in self.stores:
-            with xr.open_zarr(s) as z:
+            with xr.open_zarr(_open_store(s)) as z:
                 stamps = pd.to_datetime(np.asarray(z["time"].values))
             out.extend(
                 cftime.DatetimeGregorian(t.year, t.month, t.day, t.hour, t.minute, t.second)

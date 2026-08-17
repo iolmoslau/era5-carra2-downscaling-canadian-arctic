@@ -22,6 +22,23 @@ from torch.utils.data import ConcatDataset, Dataset
 EPS = 1e-6  # guard against zero-variance channels when normalizing
 
 
+def _open_store(store):
+    """Return an ``xr.open_zarr`` store argument for ``store``.
+
+    A ``*.zip`` path is opened as a read-only zarr ``ZipStore`` -- a shard archived to a single
+    file (1 inode instead of the thousands of tiny chunk files a directory store uses, which is
+    what exhausts the project file-count quota). Any other path is returned unchanged so xarray
+    uses its default directory store. A fresh store is returned on each call, so per-worker lazy
+    opens (below) each get their own handle.
+    """
+    s = os.fspath(store)
+    if s.endswith(".zip"):
+        import zarr
+
+        return zarr.storage.ZipStore(s, mode="r")
+    return s
+
+
 class PatchDataset(Dataset):
     """LR/HR sample pairs from one store.
 
@@ -41,7 +58,7 @@ class PatchDataset(Dataset):
         self.store = os.fspath(store)
         self._z: xr.Dataset | None = None  # opened lazily per worker
 
-        meta = xr.open_zarr(self.store)
+        meta = xr.open_zarr(_open_store(self.store))
         n = meta.sizes["time"]
         self.indices = list(range(*time_slice.indices(n))) if time_slice else list(range(n))
         self.lr_channels = list(meta.attrs["lr_channels"])  # names live in attrs (not coords)
@@ -69,7 +86,7 @@ class PatchDataset(Dataset):
     def z(self) -> xr.Dataset:
         # Open inside the worker process (lazy) rather than forking an open handle.
         if self._z is None:
-            self._z = xr.open_zarr(self.store, chunks=None)
+            self._z = xr.open_zarr(_open_store(self.store), chunks=None)
         return self._z
 
     def __len__(self) -> int:
