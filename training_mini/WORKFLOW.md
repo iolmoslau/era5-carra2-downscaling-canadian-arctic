@@ -17,6 +17,11 @@ The repeatable procedure for every training run. Conventions:
   ```bash
   source $REPO/training_mini/slurm/common.sh
   ```
+  This applies wherever *you* name a checkpoint: the diffusion run's regression base (step B.1)
+  and the generate/eval checkpoints. **Resuming a training run needs none of it** —
+  `train_regression.sh` / `train_diffusion.sh` only pass `checkpoint_dir`, and PhysicsNeMo's
+  `load_checkpoint` picks the highest `<nimg>` in that directory itself, so a re-submit always
+  continues from the furthest-trained checkpoint regardless of mtimes.
 
 ---
 
