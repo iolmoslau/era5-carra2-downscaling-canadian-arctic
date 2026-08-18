@@ -26,6 +26,7 @@
 set -euo pipefail
 
 REPO="${REPO:-$HOME/thesis/era5-carra2-downscaling-canadian-arctic}"
+source "$REPO/training_mini/slurm/common.sh"   # latest_ckpt (selects by nimg, not mtime)
 TRAIN_DIR="$REPO/training_mini"
 EVAL_DIR="$REPO/evaluate"
 ENV_DIR="${ENV_DIR:-$HOME/corrdiff-env}"
@@ -67,16 +68,17 @@ done
 
 # ---- resolve checkpoints by highest step (nimg in filename), robust to copy mtimes ----------
 if [[ -z "${REG_CKPT:-}" ]]; then
-  REG_CKPT=$(ls "$OUTPUT_DIR"/checkpoints_regression/*.mdlus 2>/dev/null | sort -t. -k3 -n | tail -1 || true)
+  REG_CKPT=$(latest_ckpt "$OUTPUT_DIR/checkpoints_regression" || true)
 fi
 if [[ -z "${RES_CKPT:-}" ]]; then
-  RES_CKPT=$(ls "$OUTPUT_DIR"/checkpoints_diffusion/*.mdlus 2>/dev/null | sort -t. -k3 -n | tail -1 || true)
+  RES_CKPT=$(latest_ckpt "$OUTPUT_DIR/checkpoints_diffusion" || true)
 fi
 if [[ -z "${REG_CKPT:-}" || ! -f "$REG_CKPT" ]]; then
   echo "ERROR: no regression checkpoint in $OUTPUT_DIR/checkpoints_regression." >&2
   echo "       A diffusion run dir has only checkpoints_diffusion -- the regression net lives in" >&2
   echo "       the run it was built on. Point REG_CKPT there, e.g.:" >&2
-  echo "         REG_CKPT=\$(ls \$SCRATCH/corrdiff_runs/regression_2/checkpoints_regression/*.mdlus | sort -t. -k3 -n | tail -1)" >&2
+  echo "         source \$REPO/training_mini/slurm/common.sh" >&2
+  echo "         REG_CKPT=\$(latest_ckpt \$SCRATCH/corrdiff_runs/regression_2/checkpoints_regression)" >&2
   exit 1
 fi
 if [[ -z "${RES_CKPT:-}" || ! -f "$RES_CKPT" ]]; then

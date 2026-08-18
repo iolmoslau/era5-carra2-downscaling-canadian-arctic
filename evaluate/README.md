@@ -53,8 +53,11 @@ NAME=diffusion_2 N=400 NUM_ENS=32 REG_CKPT=$REG YEARS="2020 2021" \
   identical set. Sampling reads the shard's real time index, so every pick is valid and times of
   day are unbiased (a fixed stride would hit only one hour). Cost/disk scale with `N × NUM_ENS`.
 - Checkpoints are auto-picked as the highest-step `.mdlus` in
-  `$OUTPUT_DIR/checkpoints_{regression,diffusion}`. Override with `REG_CKPT=` / `RES_CKPT=` to
-  pair a diffusion run with a regression checkpoint from a **different** run dir.
+  `$OUTPUT_DIR/checkpoints_{regression,diffusion}` via `latest_ckpt`
+  (`training_mini/slurm/common.sh`), which selects on the `<nimg>` encoded in the filename —
+  *not* on modification time, which a checkpoint archive/restore reorders. Override with
+  `REG_CKPT=` / `RES_CKPT=` to pair a diffusion run with a regression checkpoint from a
+  **different** run dir.
 - Sampling from multiple years (e.g. `YEARS="2018 2019"`) requires those shards in `$DATA_DIR`.
 - **Outputs are split by size:**
   - `metrics_crps_mae.json` (small, the thing you keep) -> **`RESULT_DIR`**, default
@@ -84,7 +87,8 @@ for y in 2020 2021 2022; do
 done
 
 # 3. eval -- the loader picks up shard_YYYY.zarr.zip automatically; STATS resolves from DATA_DIR
-REG=$(ls $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression/*.mdlus | sort -t. -k3 -n | tail -1)
+source $REPO/training_mini/slurm/common.sh
+REG=$(latest_ckpt $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression)
 NAME=diffusion_2_test_2020_22 N=400 NUM_ENS=32 REG_CKPT=$REG \
   OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_2 \
   DATA_DIR=$PROJECT/data/derot YEARS="2020 2021 2022" \

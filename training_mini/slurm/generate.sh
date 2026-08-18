@@ -26,6 +26,7 @@
 set -euo pipefail
 
 REPO="${REPO:-$HOME/thesis/era5-carra2-downscaling-canadian-arctic}"
+source "$REPO/training_mini/slurm/common.sh"   # latest_ckpt (selects by nimg, not mtime)
 TRAIN_DIR="$REPO/training_mini"
 ENV_DIR="${ENV_DIR:-$HOME/corrdiff-env}"
 DATA_DIR="${DATA_DIR:-$PROJECT/data}"
@@ -45,11 +46,10 @@ for p in "$OUTPUT_DIR" "$DATA_DIR"; do
   esac
 done
 
-# Newest regression checkpoint. Avoid `ls | head`: with hundreds of .mdlus files and
-# `set -o pipefail`, head closing the pipe makes ls die on SIGPIPE and silently aborts the job.
+# Furthest-trained regression checkpoint, selected by the nimg in the filename -- NOT by mtime,
+# which a copy/restore reorders (see latest_ckpt in slurm/common.sh).
 if [[ -z "${REG_CKPT:-}" ]]; then
-  mapfile -t _ckpts < <(ls -t "$OUTPUT_DIR"/checkpoints_regression/*.mdlus 2>/dev/null || true)
-  REG_CKPT="${_ckpts[0]:-}"
+  REG_CKPT=$(latest_ckpt "$OUTPUT_DIR/checkpoints_regression" || true)
 fi
 RES_CKPT="${RES_CKPT:-}"                    # required only for MODE=diffusion|all
 if [[ -z "${REG_CKPT:-}" || ! -f "$REG_CKPT" ]]; then

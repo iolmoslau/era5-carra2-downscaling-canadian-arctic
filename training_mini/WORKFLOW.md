@@ -10,6 +10,13 @@ The repeatable procedure for every training run. Conventions:
 - Result name matches the run: `regression_<n>` / `diffusion_<n>`.
 - Train/generate run as GPU jobs; **collect runs on a login node** (cartopy needs internet for
   the Natural Earth shapefiles) in `corrdiff-env` (which must have cartopy + tensorboard).
+- **Pick checkpoints with `latest_ckpt`**, never `ls -t`. Checkpoints are named
+  `<Model>.0.<nimg>.mdlus`, and `latest_ckpt` selects on that `<nimg>` (training progress).
+  Modification times agree with it only until you archive/restore a run (section C), after which
+  `ls -t` silently returns an arbitrary checkpoint. Source it once per shell:
+  ```bash
+  source $REPO/training_mini/slurm/common.sh
+  ```
 
 ---
 
@@ -31,15 +38,16 @@ DATA_DIR=$DATA  OUTPUT_DIR=$OUT \
 
 # 3. COLLECT (login node, corrdiff-env with cartopy)
 module load python/3.11 mpi4py/4.1.0 && source ~/corrdiff-env/bin/activate
+source $REPO/training_mini/slurm/common.sh
 cd $REPO/training_mini
-REG=$(ls -t $OUT/checkpoints_regression/*.mdlus | head -1)
+REG=$(latest_ckpt $OUT/checkpoints_regression)
 module load proj
 python tools/collect_run.py --name $NAME \
   --tensorboard $OUT/tensorboard \
   --nc corrdiff_output.nc \
   --checkpoint "$REG" \
-  --train-samples 800000 --error sigma \
-  --notes "de-rotated winds; train 2011-18 / val 2019; 2x H100"
+  --train-samples 1500000 --error sigma \
+  --notes "Regression two pushed to 1.5 M samples"
 
 # 4. COMMIT the result
 git add results/$NAME && git commit -m "$NAME results" && git push
@@ -51,7 +59,7 @@ git add results/$NAME && git commit -m "$NAME results" && git push
 NAME=diffusion_1
 OUT=$SCRATCH/corrdiff_runs/$NAME
 DATA=$PROJECT/data/derot
-REG=$(ls -t $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression/*.mdlus | head -1)
+REG=$(latest_ckpt $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression)
 
 # 1. TRAIN diffusion on the regression checkpoint (re-submit to resume)
 DATA_DIR=$DATA  STATS=$DATA/stats_train_2011_2018.json  OUTPUT_DIR=$OUT  TRAIN_DURATION=2000000 \
@@ -59,13 +67,15 @@ DATA_DIR=$DATA  STATS=$DATA/stats_train_2011_2018.json  OUTPUT_DIR=$OUT  TRAIN_D
 
 # 2. GENERATE an ensemble (regression mean + diffusion residual). NUM_ENS members per input
 #    time gives the spread -> per-channel variance in metrics.json / runs.csv.
-RES=$(ls -t $OUT/checkpoints_diffusion/*.mdlus | head -1)
+RES=$(latest_ckpt $OUT/checkpoints_diffusion)
 MODE=all  NUM_ENS=15  REG_CKPT="$REG"  RES_CKPT="$RES"  DATA_DIR=$DATA \
   bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
 
 # 3. COLLECT (login node)
 module load python/3.11 mpi4py/4.1.0 && source ~/corrdiff-env/bin/activate
+source $REPO/training_mini/slurm/common.sh
 cd $REPO/training_mini
+module load proj
 python tools/collect_run.py --name $NAME \
   --tensorboard $OUT/tensorboard \
   --nc corrdiff_output.nc \
@@ -91,8 +101,8 @@ DST=$PROJECT/corrdiff_checkpoints/$NAME
 mkdir -p "$DST"
 
 # final checkpoint = highest sample-count (nimg encoded in the filename), robust to copy mtimes
-last=$(ls "$SRC"/*.mdlus | sort -t. -k3 -n | tail -1)
-nimg=$(basename "$last" | cut -d. -f3)
+last=$(latest_ckpt "$SRC")
+nimg=$(ckpt_nimg "$last")
 cp "$SRC"/*."$nimg".mdlus "$SRC"/*."$nimg".pt "$DST"/    # .mdlus = weights, .pt = optimizer
 echo "archived step $nimg -> $DST" && ls -la "$DST"
 ```
