@@ -55,9 +55,14 @@ class BilinearUpsampler(nn.Module):
 
 
 def build_upsampler_from_store(store) -> BilinearUpsampler:
-    """Construct a :class:`BilinearUpsampler` from a built sample store's coordinates."""
+    """Construct a :class:`BilinearUpsampler` from a built sample store's coordinates.
+
+    Accepts a loose ``*.zarr`` or an archived ``*.zarr.zip`` (via ``open_store``).
+    """
     import xarray as xr
 
-    z = xr.open_zarr(store)
-    return BilinearUpsampler(z["lat"].values, z["lon"].values,
-                             z["hr_lat"].values, z["hr_lon"].values)
+    from dataloading.dataset import open_store
+
+    with xr.open_zarr(open_store(store)) as z:
+        return BilinearUpsampler(z["lat"].values, z["lon"].values,
+                                 z["hr_lat"].values, z["hr_lon"].values)

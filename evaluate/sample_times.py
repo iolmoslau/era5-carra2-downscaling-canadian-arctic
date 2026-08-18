@@ -17,28 +17,48 @@ Emits a Hydra list literal by default, for `run_eval.sh` to pass as
 from __future__ import annotations
 
 import argparse
-import glob
-import os
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import xarray as xr
 
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from dataloading.dataset import (  # noqa: E402
+    discover_shards,
+    open_store,
+    shard_path,
+    store_exists,
+)
+
 
 def load_times(data_dir: str, years: list[int]) -> np.ndarray:
-    """All shard timestamps for the requested years, sorted & de-duplicated (datetime64[ns])."""
-    stores = []
-    for y in years:
-        cand = os.path.join(data_dir, f"shard_{y}.zarr")          # dir-of-shards convention
-        if os.path.exists(cand):
-            stores.append(cand)
-    if not stores:                                                # fall back to every store
-        stores = sorted(glob.glob(os.path.join(data_dir, "*.zarr")))
-    if not stores:
-        sys.exit(f"no .zarr shards found under {data_dir}")
+    """All shard timestamps for the requested years, sorted & de-duplicated (datetime64[ns]).
 
-    chunks = [xr.open_zarr(s)["time"].values for s in stores]
+    Locates shards the same way the training dataset does, so an archived
+    ``shard_YYYY.zarr.zip`` is picked up exactly like a loose ``shard_YYYY.zarr`` -- including
+    in a directory that mixes the two (archived test years alongside loose train years).
+    """
+    found = {y: shard_path(data_dir, y) for y in years}
+    missing = [y for y, s in found.items() if not store_exists(s)]
+    if missing:
+        # Loud, because sampling on silently before this point is exactly how an eval ends up
+        # scored over fewer years than the command line asked for.
+        print(f"WARNING: no shard for year(s) {missing} under {data_dir}", file=sys.stderr)
+    stores = [s for y, s in found.items() if y not in missing]
+    if not stores:                                                # fall back to every shard
+        stores = discover_shards(data_dir)
+    if not stores:
+        sys.exit(f"no shard_YYYY.zarr[.zip] stores found under {data_dir}")
+
+    chunks = []
+    for s in stores:
+        with xr.open_zarr(open_store(s)) as z:
+            chunks.append(z["time"].values)
     t = np.unique(np.concatenate(chunks))
     keep = np.isin(pd.DatetimeIndex(t).year, years)
     return np.sort(t[keep])

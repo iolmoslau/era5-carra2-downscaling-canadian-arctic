@@ -6,7 +6,7 @@ A ``*.zarr`` directory holds thousands of tiny chunk files (~5.9k for one of our
 is what exhausts the project file-count (inode) quota. This packs the whole store into
 ``<store>.zip`` using **ZIP_STORED** -- no recompression, because zarr chunks are already
 compressed, so reads stay as fast as the loose store (seek + read + the same decompress). The
-dataset loader opens ``shard_YYYY.zarr.zip`` transparently (``dataloading.dataset._open_store``).
+dataset loader opens ``shard_YYYY.zarr.zip`` transparently (``dataloading.dataset.open_store``).
 
     python zip_shard.py --src shard_2020.zarr                 # -> shard_2020.zarr.zip
     python zip_shard.py --src shard_2020.zarr --remove-src    # and delete the loose store

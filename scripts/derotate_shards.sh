@@ -38,17 +38,24 @@ cd "$REPO"
 mkdir -p logs "$DST_DIR"
 
 for y in $YEARS; do
-  src="$SRC_DIR/shard_${y}.zarr"
   dst="$DST_DIR/shard_${y}.zarr"
-  if [[ -d "$dst" ]]; then
-    echo "== $y: already de-rotated ($dst), skipping"
+  # Done if the loose store OR its archived form is present: zipping a de-rotated shard to
+  # reclaim project inodes (see evaluate/README.md) must not make it look un-de-rotated and
+  # trigger a costly rebuild on the next submission.
+  if [[ -d "$dst" || -f "$dst.zip" ]]; then
+    echo "== $y: already de-rotated ($(basename "$dst")[.zip]), skipping"
     continue
   fi
-  if [[ ! -d "$src" ]]; then
-    echo "== $y: source missing ($src), skipping" >&2
+  # Source: prefer an archived shard_YYYY.zarr.zip, matching how the dataset loader resolves
+  # shards -- derotate_winds.py reads either form.
+  src="$SRC_DIR/shard_${y}.zarr"
+  if [[ -f "$src.zip" ]]; then
+    src="$src.zip"
+  elif [[ ! -d "$src" ]]; then
+    echo "== $y: source missing ($src[.zip]), skipping" >&2
     continue
   fi
-  echo "== de-rotating $y -> $dst"
+  echo "== de-rotating $y ($(basename "$src")) -> $dst"
   python scripts/derotate_winds.py --src "$src" --dst "$dst"
 done
 

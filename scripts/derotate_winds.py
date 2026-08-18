@@ -17,10 +17,17 @@ through unchanged. Writes a NEW store (safe); replace the original yourself once
 from __future__ import annotations
 
 import argparse
-import os
+import sys
+from pathlib import Path
 
 import numpy as np
 import xarray as xr
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from dataloading.dataset import open_store, store_exists  # noqa: E402
 
 
 def grid_convergence(lat2d: np.ndarray, lon2d: np.ndarray) -> np.ndarray:
@@ -52,10 +59,12 @@ def derotate_store(src: str, dst: str, overwrite: bool = False) -> dict:
 
     Returns a small summary dict (mean convergence, channel indices).
     """
-    if os.path.exists(dst) and not overwrite:
+    if store_exists(dst) and not overwrite:
         raise SystemExit(f"destination exists: {dst} (use --overwrite)")
 
-    ds = xr.open_zarr(src)
+    # Source may be a loose store or an archived `*.zarr.zip`; the destination is always
+    # written as a loose directory store (zip it afterwards with scripts/zip_shard.py).
+    ds = xr.open_zarr(open_store(src))
     hr_channels = list(ds.attrs["hr_channels"])
     if "u10" not in hr_channels or "v10" not in hr_channels:
         raise SystemExit(f"store has no HR u10/v10 (channels={hr_channels})")

@@ -28,6 +28,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from dataloading.dataset import open_store, shard_path, store_exists  # noqa: E402
 from dataloading.stats import compute_norm_stats  # noqa: E402
 
 
@@ -36,7 +37,9 @@ def resolve_stores(data_dir, years, stores):
         return [str(Path(s)) for s in stores]
     if not (data_dir and years):
         raise SystemExit("provide either --stores, or both --data-dir and --years")
-    return [str(Path(data_dir) / f"shard_{int(y)}.zarr") for y in years]
+    # shard_path prefers an archived `shard_YYYY.zarr.zip` over the loose store, matching what
+    # the training dataset loads -- so stats are always computed over the same bytes.
+    return [shard_path(data_dir, y) for y in years]
 
 
 def main():
@@ -49,7 +52,7 @@ def main():
 
     stores = resolve_stores(args.data_dir, args.years, args.stores)
     for s in stores:
-        if not Path(s).exists():
+        if not store_exists(s):
             raise SystemExit(f"store not found: {s}")
     print(f"[make_stats] computing LR/HR stats over {len(stores)} shard(s):")
     for s in stores:
@@ -58,7 +61,7 @@ def main():
     stats = compute_norm_stats(stores)  # LR + HR per-channel mean/std + channel-name lists
 
     # Static land-sea mask stats (shared geometry across shards -> use the first store).
-    with xr.open_zarr(stores[0]) as z:
+    with xr.open_zarr(open_store(stores[0])) as z:
         mask = np.asarray(z["land_sea_mask"].values, dtype="float64")
     stats["lsm_mean"] = float(mask.mean())
     stats["lsm_std"] = float(mask.std())

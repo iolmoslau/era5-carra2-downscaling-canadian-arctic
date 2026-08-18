@@ -92,10 +92,18 @@ NAME=diffusion_2_test_2020_22 N=400 NUM_ENS=32 REG_CKPT=$REG \
 ```
 
 **The payoff:** the `.zip` shards persist in `$PROJECT` (backed up, not purged), so evaluating a
-**new** model on the same test years is just step 3 — no re-derotating. `_resolve_stores` prefers
-the `.zip` when present but still reads a loose `.zarr` if that's what's there, so a data dir can
-mix archived test shards with loose train shards. `zip_shard.py` works on any shard, so you can
-also archive raw/train shards to reclaim inodes.
+**new** model on the same test years is just step 3 — no re-derotating. `zip_shard.py` works on any
+shard, so you can also archive raw/train shards to reclaim inodes.
+
+Shard *location* is shared: `dataloading.dataset` owns `shard_path` / `discover_shards` /
+`resolve_stores` / `open_store`, and the dataset loader, `make_stats.py`, `sample_times.py`,
+`verify_shards.py`, `derotate_winds.py` and `trim_shard.py` all go through them. Per year the
+`.zip` wins when present, otherwise the loose `.zarr` is used — so a data dir can freely mix
+archived test shards with loose train shards, and no tool silently skips an archived year.
+
+> **Not yet covered:** the `STAGE=1` copy in `slurm/train_regression.sh` / `train_diffusion.sh`
+> still hardcodes `shard_20{11..19}.zarr`, so archived *train* shards will not stage to
+> `$SLURM_TMPDIR`. Archive train shards only once that is fixed.
 
 ## Score existing NetCDFs directly
 

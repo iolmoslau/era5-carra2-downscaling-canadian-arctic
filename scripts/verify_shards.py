@@ -5,23 +5,33 @@
 Checks per shard: full set of 3-hourly timestamps present (no gaps/dups), no NaNs in hr/lr,
 and physically plausible per-channel ranges. Across shards: identical LR/HR grids, channel
 order, land-sea mask, and patch centre -- i.e. that they can be concatenated as one dataset.
+
+Archived shards are covered too: a directory argument picks up ``shard_YYYY.zarr.zip`` as
+well as loose ``shard_YYYY.zarr`` stores, so zipping a shard to reclaim project inodes never
+drops it out of verification.
 """
 
 import glob
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import xarray as xr
 
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from dataloading.dataset import discover_shards, open_store  # noqa: E402
+
 
 def main():
     arg = sys.argv[1] if len(sys.argv) > 1 else "."
-    stores = (sorted(glob.glob(os.path.join(arg, "shard_*.zarr")))
-              if os.path.isdir(arg) else sorted(glob.glob(arg)))
+    stores = discover_shards(arg) if os.path.isdir(arg) else sorted(glob.glob(arg))
     if not stores:
-        print(f"no shard_*.zarr found at: {arg}")
+        print(f"no shard_YYYY.zarr[.zip] found at: {arg}")
         sys.exit(1)
 
     ref = None
@@ -30,7 +40,7 @@ def main():
 
     for s in stores:
         name = os.path.basename(s)
-        z = xr.open_zarr(s)
+        z = xr.open_zarr(open_store(s))
         try:
             yr = int(name.split("_")[1][:4])
         except ValueError:
@@ -80,13 +90,15 @@ def main():
     print(f"TOTAL samples: {total} / {total_exp} expected")
     print("RESULT:", "ALL GOOD ✅" if all_ok else "PROBLEMS FOUND — see !! lines above")
 
-    # quick physical-range spot check on the last shard opened
-    print("\nper-channel range (last shard):")
-    for var, cdim, names in (("hr", "hr_channel", ref["hc"]), ("lr", "lr_channel", ref["lc"])):
-        mn = z[var].min(dim=[d for d in z[var].dims if d != cdim]).values
-        mx = z[var].max(dim=[d for d in z[var].dims if d != cdim]).values
-        for nm, a, b in zip(names, mn, mx):
-            print(f"  {nm:8s} [{a:10.2f}, {b:10.2f}]")
+    # quick physical-range spot check on the last shard (reopened explicitly rather than
+    # reusing the loop variable, so the check stays correct if the loop ever changes)
+    print(f"\nper-channel range ({os.path.basename(stores[-1])}):")
+    with xr.open_zarr(open_store(stores[-1])) as z:
+        for var, cdim, names in (("hr", "hr_channel", ref["hc"]), ("lr", "lr_channel", ref["lc"])):
+            mn = z[var].min(dim=[d for d in z[var].dims if d != cdim]).values
+            mx = z[var].max(dim=[d for d in z[var].dims if d != cdim]).values
+            for nm, a, b in zip(names, mn, mx):
+                print(f"  {nm:8s} [{a:10.2f}, {b:10.2f}]")
 
 
 if __name__ == "__main__":

@@ -17,9 +17,16 @@ Example
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import xarray as xr
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from dataloading.dataset import open_store  # noqa: E402
 
 
 def main():
@@ -30,7 +37,7 @@ def main():
                     help="number of leading timesteps to keep (default 240 = ~1 month)")
     args = ap.parse_args()
 
-    ds = xr.open_zarr(args.src)
+    ds = xr.open_zarr(open_store(args.src))   # loose *.zarr or an archived *.zarr.zip
     n = min(args.steps, ds.sizes["time"])
     sub = ds.isel(time=slice(0, n))
     # one sample per chunk (matches the full shard) so per-item reads stay cheap

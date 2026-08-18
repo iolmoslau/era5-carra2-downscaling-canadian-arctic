@@ -13,6 +13,8 @@ via :class:`dataloading.upsample.BilinearUpsampler` in the forward pass.
 from __future__ import annotations
 
 import os
+import re
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -21,8 +23,22 @@ from torch.utils.data import ConcatDataset, Dataset
 
 EPS = 1e-6  # guard against zero-variance channels when normalizing
 
+# ``shard_YYYY.zarr`` (loose directory store) or ``shard_YYYY.zarr.zip`` (1-inode archive).
+_SHARD_RE = re.compile(r"shard_(\d{4})\.zarr(\.zip)?$")
 
-def _open_store(store):
+
+# --------------------------------------------------------------------------------------
+# Store location + opening
+#
+# A shard exists in two interchangeable forms: a loose ``*.zarr`` directory (~5.9k tiny chunk
+# files) and a ``*.zarr.zip`` archive of the same bytes (1 inode -- see scripts/zip_shard.py).
+# Reads are identical either way, so EVERY tool that locates or opens a shard must go through
+# the helpers below rather than hardcoding ``.zarr``. Otherwise archiving a shard to reclaim
+# project inodes silently makes it invisible to that tool.
+# --------------------------------------------------------------------------------------
+
+
+def open_store(store):
     """Return an ``xr.open_zarr`` store argument for ``store``.
 
     A ``*.zip`` path is opened as a read-only zarr ``ZipStore`` -- a shard archived to a single
@@ -37,6 +53,55 @@ def _open_store(store):
 
         return zarr.storage.ZipStore(s, mode="r")
     return s
+
+
+def store_exists(store) -> bool:
+    """True if ``store`` is present -- a file for ``*.zip``, a directory otherwise."""
+    s = os.fspath(store)
+    return os.path.isfile(s) if s.endswith(".zip") else os.path.isdir(s)
+
+
+def shard_path(data_dir, year) -> str:
+    """Path to ``data_dir``'s shard for ``year``, preferring the ``.zarr.zip`` archive.
+
+    Falls back to the loose ``shard_YYYY.zarr`` path, which is returned whether or not it
+    exists so callers can raise their own (more informative) error.
+    """
+    d = Path(data_dir)
+    zipped = d / f"shard_{int(year)}.zarr.zip"
+    return str(zipped if zipped.exists() else d / f"shard_{int(year)}.zarr")
+
+
+def discover_shards(data_dir) -> list[str]:
+    """Every ``shard_YYYY.zarr[.zip]`` in ``data_dir``, sorted by year.
+
+    Where a year is present in both forms the archive wins, so a directory that mixes archived
+    and loose shards yields exactly one store per year.
+    """
+    by_year: dict[int, str] = {}
+    for p in Path(data_dir).glob("shard_*.zarr*"):
+        m = _SHARD_RE.fullmatch(p.name)
+        if not m:
+            continue  # e.g. a half-written shard_2020.zarr.zip.partial
+        year, is_zip = int(m.group(1)), bool(m.group(2))
+        if is_zip or year not in by_year:
+            by_year[year] = str(p)
+    return [by_year[y] for y in sorted(by_year)]
+
+
+def resolve_stores(data_path, years=None) -> list[str]:
+    """Store paths for ``data_path``: a single store, or ``years`` within a shard directory.
+
+    ``data_path`` may be one ``*.zarr`` / ``*.zarr.zip`` store (``years`` is then ignored) or a
+    directory holding per-year shards, in which case ``years`` selects them via
+    :func:`shard_path`.
+    """
+    p = Path(data_path)
+    if p.suffix == ".zarr" or p.name.endswith(".zarr.zip"):
+        return [str(p)]
+    if not years:
+        raise ValueError("`years` is required when `data_path` is a shard directory")
+    return [shard_path(p, y) for y in years]
 
 
 class PatchDataset(Dataset):
@@ -58,7 +123,7 @@ class PatchDataset(Dataset):
         self.store = os.fspath(store)
         self._z: xr.Dataset | None = None  # opened lazily per worker
 
-        meta = xr.open_zarr(_open_store(self.store))
+        meta = xr.open_zarr(open_store(self.store))
         n = meta.sizes["time"]
         self.indices = list(range(*time_slice.indices(n))) if time_slice else list(range(n))
         self.lr_channels = list(meta.attrs["lr_channels"])  # names live in attrs (not coords)
@@ -86,7 +151,7 @@ class PatchDataset(Dataset):
     def z(self) -> xr.Dataset:
         # Open inside the worker process (lazy) rather than forking an open handle.
         if self._z is None:
-            self._z = xr.open_zarr(_open_store(self.store), chunks=None)
+            self._z = xr.open_zarr(open_store(self.store), chunks=None)
         return self._z
 
     def __len__(self) -> int:

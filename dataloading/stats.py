@@ -13,6 +13,8 @@ import os
 import numpy as np
 import xarray as xr
 
+from dataloading.dataset import open_store
+
 
 def compute_norm_stats(stores, out_path: str | os.PathLike | None = None) -> dict:
     """Per-channel mean/std for ``hr`` and ``lr`` over one or many stores (streamed).
@@ -39,12 +41,13 @@ def compute_norm_stats(stores, out_path: str | os.PathLike | None = None) -> dic
                                    ("lr", "lr_channel", ("time", "lat", "lon"))):
         s = sq = n = None
         for store in stores:
-            z = xr.open_zarr(store)
-            chan_names[var] = list(z.attrs[f"{var}_channels"])
-            da = z[var].astype("float64")
-            part_s = da.sum(dim=spatial).compute().values            # per channel
-            part_sq = (da ** 2).sum(dim=spatial).compute().values
-            part_n = int(np.prod([z.sizes[d] for d in spatial]))
+            # open_store: reads an archived `shard_YYYY.zarr.zip` as well as a loose store.
+            with xr.open_zarr(open_store(store)) as z:
+                chan_names[var] = list(z.attrs[f"{var}_channels"])
+                da = z[var].astype("float64")
+                part_s = da.sum(dim=spatial).compute().values        # per channel
+                part_sq = (da ** 2).sum(dim=spatial).compute().values
+                part_n = int(np.prod([z.sizes[d] for d in spatial]))
             s = part_s if s is None else s + part_s
             sq = part_sq if sq is None else sq + part_sq
             n = part_n if n is None else n + part_n
