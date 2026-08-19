@@ -83,6 +83,65 @@ def checkpoint_list(path, suffix=".mdlus"):
     return [file for _, file in checkpoints]
 
 
+# [thesis] ---------------------------------------------------------------------------------
+# Never restart from random weights without saying so.
+#
+# Upstream wraps all three `load_checkpoint` calls below in `except Exception: pass`, so a
+# checkpoint that EXISTS but cannot be read -- a .mdlus truncated by preemption mid-write, a
+# transient filesystem error, a shape mismatch after a config change -- silently restarts
+# training from randomly initialised weights. Nothing in the logs says so: the sample counter,
+# the learning-rate schedule and the new checkpoint filenames all carry on as if the resume had
+# worked, so the only symptom is a loss curve that jumps, which reads as a training instability
+# rather than a lost run. Worse, if the sample COUNTER also fails to load it resets to 0, and
+# the run then renumbers its checkpoints from the bottom, overwriting the early checkpoints of
+# the run you were trying to resume and leaving one directory holding two different models.
+#
+# That matters here specifically: jobs run on an opportunistic queue and are re-submitted
+# repeatedly until they reach TRAIN_DURATION, so every re-submit is another chance to reset.
+#
+# These helpers preserve the ONE legitimate reason to start from scratch -- an empty checkpoint
+# directory -- and turn every other load failure into a hard error. Escape hatch:
+# CORRDIFF_ALLOW_BAD_CHECKPOINT=1 restores the upstream behaviour (with a warning).
+def _checkpoints_present(path, suffix=".mdlus"):
+    """[thesis] Checkpoint files already in `path` (empty if the directory does not exist)."""
+    if not os.path.isdir(path):
+        return []
+    return checkpoint_list(path, suffix=suffix)
+
+
+def _handle_checkpoint_load_failure(
+    checkpoint_dir,
+    exc,
+    what,
+    logger=None,
+    suffix=".mdlus",
+    consequence="training would silently restart from randomly initialised weights",
+):
+    """[thesis] Re-raise a checkpoint load failure unless there was nothing to load.
+
+    Returns True when the caller should legitimately continue un-resumed (no checkpoint of
+    this kind is present, or the escape hatch is set). Raises otherwise.
+    """
+    found = _checkpoints_present(checkpoint_dir, suffix=suffix)
+    if not found:
+        return True  # nothing to resume from -- a genuine fresh start
+    if os.environ.get("CORRDIFF_ALLOW_BAD_CHECKPOINT") == "1":
+        msg = (
+            f"{what}: CORRDIFF_ALLOW_BAD_CHECKPOINT=1, so ignoring a load failure for "
+            f"{len(found)} '{suffix}' checkpoint(s) in {checkpoint_dir} -- {consequence}. "
+            f"({type(exc).__name__}: {exc})"
+        )
+        logger.warning(msg) if logger is not None else print(msg)
+        return True
+    raise RuntimeError(
+        f"{what}: {len(found)} '{suffix}' checkpoint(s) are present in {checkpoint_dir} but "
+        f"could not be loaded, so {consequence}. Newest is '{found[-1]}' "
+        f"({type(exc).__name__}: {exc}). Remove or repair the bad checkpoint, point OUTPUT_DIR "
+        f"at a fresh directory to start a new run, or set CORRDIFF_ALLOW_BAD_CHECKPOINT=1 to "
+        f"proceed anyway."
+    ) from exc
+
+
 # Define safe CUDA profiler tools that fallback to no-ops when CUDA is not available
 def cuda_profiler():
     if torch.cuda.is_available():
@@ -166,7 +225,20 @@ def main(cfg: DictConfig) -> None:
         cur_nimg = load_checkpoint(
             path=checkpoint_dir,
         )
-    except Exception:
+    except Exception as exc:
+        # [thesis] a silent reset to 0 here restarts the LR rampup AND renumbers new
+        # checkpoints from the bottom, overwriting the run being resumed. See
+        # _handle_checkpoint_load_failure.
+        _handle_checkpoint_load_failure(
+            checkpoint_dir,
+            exc,
+            "resume sample counter",
+            logger0,
+            consequence=(
+                "the run would restart at sample 0, replaying the LR rampup and renumbering "
+                "new checkpoints over the existing ones"
+            ),
+        )
         cur_nimg = 0
 
     # Set seeds and configure CUDA and cuDNN settings to ensure consistent precision
@@ -379,8 +451,12 @@ def main(cfg: DictConfig) -> None:
     # Load the model checkpoint if applicable
     try:
         load_checkpoint(path=checkpoint_dir, models=model)
-    except Exception:
-        pass
+    except Exception as exc:
+        # [thesis] the one that silently trains a random model for 12 h. See
+        # _handle_checkpoint_load_failure.
+        _handle_checkpoint_load_failure(
+            checkpoint_dir, exc, "resume model weights", logger0
+        )
 
     # Load the regression checkpoint if applicable
     if (
@@ -512,8 +588,23 @@ def main(cfg: DictConfig) -> None:
             optimizer=optimizer,
             device=dist.device,
         )
-    except Exception:
-        pass
+    except Exception as exc:
+        # [thesis] the optimizer '.pt' is legitimately optional -- WORKFLOW.md section C lets
+        # you archive only the '.mdlus' when a run is kept for inference. So a MISSING .pt is a
+        # warning (Adam moments reset, expect a transient loss bump), while a .pt that exists
+        # but will not load is the same silent-corruption case as the weights above.
+        if _handle_checkpoint_load_failure(
+            checkpoint_dir,
+            exc,
+            "resume optimizer state",
+            logger0,
+            suffix=".pt",
+            consequence="training would continue with a fresh Adam state (moments reset)",
+        ) and _checkpoints_present(checkpoint_dir):
+            logger0.warning(
+                f"resuming weights with a FRESH optimizer state: no '.pt' checkpoint in "
+                f"{checkpoint_dir}. Adam moments reset -- expect a transient loss bump."
+            )
 
     ############################################################################
     #                            MAIN TRAINING LOOP                            #

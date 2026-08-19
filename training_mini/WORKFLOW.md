@@ -141,6 +141,20 @@ The per-run `tensorboard/` deliberately lives with the run's checkpoints under `
 `collect_run.py --tensorboard $OUT/tensorboard` finds the right curves.
 
 ## Notes
+- **If a job dies with `resume model weights: N '.mdlus' checkpoint(s) ... could not be loaded`**
+  — that is the `[thesis]` guard in `train.py`, and it is doing its job. Upstream CorrDiff
+  swallows checkpoint-load failures (`except Exception: pass`), which silently restarts training
+  from random weights while the sample counter, LR schedule and checkpoint names all keep looking
+  correct. The usual cause is a `.mdlus` truncated by preemption mid-write. Fix it by deleting the
+  bad checkpoint (the run resumes from the next one down) or pointing `OUTPUT_DIR` at a fresh
+  directory. `CORRDIFF_ALLOW_BAD_CHECKPOINT=1` restores the old behaviour if you really do want to
+  press on — it passes through `submit.sh` like any other env var:
+  ```bash
+  CORRDIFF_ALLOW_BAD_CHECKPOINT=1 DATA_DIR=$DATA OUTPUT_DIR=$OUT \
+    bash training_mini/slurm/submit.sh --gpus=h100:2 training_mini/slurm/train_regression.sh
+  ```
+  A **missing** optimizer `.pt` is only a warning, not an error — restoring a `.mdlus`-only
+  archive (section C) resumes fine, with Adam moments reset and a transient loss bump.
 - **No-sea-ice variants**: add `CONFIG=config_training_era5_carra2_mini_regression_noice`
   (or `..._diffusion_noice`) to the train step, and for generation add
   `'++dataset.lr_channels=[t2m,u10,v10,t500,t850,z500,z850,u500,u850,v500,v850]'` — use a
