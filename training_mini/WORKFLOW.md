@@ -155,6 +155,16 @@ The per-run `tensorboard/` deliberately lives with the run's checkpoints under `
   ```
   A **missing** optimizer `.pt` is only a warning, not an error — restoring a `.mdlus`-only
   archive (section C) resumes fine, with Adam moments reset and a transient loss bump.
+- **Checkpointing dials** (both train scripts): `CKPT_FREQ` = samples between checkpoints
+  (config default 5000, i.e. ~every 78 steps at `total_batch_size: 64`), `KEEP_CKPTS` = how many
+  to retain (default `-1`, keep everything). Writes are synchronous behind a barrier and stall
+  both GPUs, so raising `CKPT_FREQ` buys throughput at the cost of losing more progress to
+  preemption. `KEEP_CKPTS` prunes on the *next* save, so set it when starting a run rather than
+  partway through one you may want to bisect.
+  ```bash
+  CKPT_FREQ=50000 KEEP_CKPTS=3 DATA_DIR=$DATA OUTPUT_DIR=$OUT \
+    bash training_mini/slurm/submit.sh --gpus=h100:2 training_mini/slurm/train_regression.sh
+  ```
 - **No-sea-ice variants**: add `CONFIG=config_training_era5_carra2_mini_regression_noice`
   (or `..._diffusion_noice`) to the train step, and for generation add
   `'++dataset.lr_channels=[t2m,u10,v10,t500,t850,z500,z850,u500,u850,v500,v850]'` — use a

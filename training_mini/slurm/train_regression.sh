@@ -6,6 +6,10 @@
 # Quick env test on Fir:     TRAIN_DURATION=2000 STAGE=0 bash training_mini/slurm/submit.sh training_mini/slurm/train_regression.sh
 # No-sea-ice variant:        CONFIG=config_training_era5_carra2_mini_regression_noice \
 #                                bash training_mini/slurm/submit.sh training_mini/slurm/train_regression.sh
+# Fewer/leaner checkpoints:  CKPT_FREQ=50000 KEEP_CKPTS=3 bash training_mini/slurm/submit.sh ...
+#
+# Env passthroughs: TRAIN_DURATION, TOTAL_BATCH, BATCH_PER_GPU, CKPT_FREQ, KEEP_CKPTS, CONFIG,
+# DATA_DIR, OUTPUT_DIR, STATS, STAGE, ENV_DIR, REPO.
 #
 # Always submit via slurm/submit.sh so job logs land in $REPO/logs regardless of your CWD (a bare
 # `sbatch` would drop them wherever you ran it from -- see slurm/submit.sh). All other run logs
@@ -87,6 +91,13 @@ CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
 [[ -n "${TRAIN_DURATION:-}" ]] && CMD+=("++training.hp.training_duration=$TRAIN_DURATION")
 [[ -n "${TOTAL_BATCH:-}"    ]] && CMD+=("++training.hp.total_batch_size=$TOTAL_BATCH")
 [[ -n "${BATCH_PER_GPU:-}"  ]] && CMD+=("++training.hp.batch_size_per_gpu=$BATCH_PER_GPU")
+# Checkpointing dials (config defaults: every 5000 samples, keep everything). Writes are
+# synchronous behind a barrier, so they stall BOTH GPUs -- raising CKPT_FREQ buys throughput at
+# the cost of losing more progress to preemption. KEEP_CKPTS prunes on the NEXT save, so setting
+# it partway through a run retroactively deletes that run's history; prefer setting it at the
+# start. e.g. CKPT_FREQ=50000 KEEP_CKPTS=3
+[[ -n "${CKPT_FREQ:-}"      ]] && CMD+=("++training.io.save_checkpoint_freq=$CKPT_FREQ")
+[[ -n "${KEEP_CKPTS:-}"     ]] && CMD+=("++training.io.save_n_recent_checkpoints=$KEEP_CKPTS")
 
 echo "Launching regression ($CONFIG) on $NPROC H100; checkpoints -> $OUTPUT_DIR"
 echo "  ${CMD[*]}"

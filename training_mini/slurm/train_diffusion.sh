@@ -10,6 +10,13 @@
 #     CONFIG=config_training_era5_carra2_mini_diffusion_noice \
 #         bash training_mini/slurm/submit.sh training_mini/slurm/train_diffusion.sh <regression_noice.mdlus>
 #
+# Fewer/leaner checkpoints:
+#     CKPT_FREQ=50000 KEEP_CKPTS=3 bash training_mini/slurm/submit.sh --gpus=h100:2 \
+#         training_mini/slurm/train_diffusion.sh
+#
+# Env passthroughs: TRAIN_DURATION, TOTAL_BATCH, BATCH_PER_GPU, CKPT_FREQ, KEEP_CKPTS, CONFIG,
+# DATA_DIR, OUTPUT_DIR, STATS, STAGE, REG_CKPT, ENV_DIR, REPO.
+#
 # Always submit via slurm/submit.sh so job logs land in $REPO/logs regardless of your CWD.
 # Resumable: re-submitting continues from the last diffusion checkpoint in $OUTPUT_DIR.
 
@@ -90,6 +97,13 @@ CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
 [[ -n "${TRAIN_DURATION:-}" ]] && CMD+=("++training.hp.training_duration=$TRAIN_DURATION")
 [[ -n "${TOTAL_BATCH:-}"    ]] && CMD+=("++training.hp.total_batch_size=$TOTAL_BATCH")
 [[ -n "${BATCH_PER_GPU:-}"  ]] && CMD+=("++training.hp.batch_size_per_gpu=$BATCH_PER_GPU")
+# Checkpointing dials (config defaults: every 5000 samples, keep everything). Writes are
+# synchronous behind a barrier, so they stall BOTH GPUs -- raising CKPT_FREQ buys throughput at
+# the cost of losing more progress to preemption. KEEP_CKPTS prunes on the NEXT save, so setting
+# it partway through a run retroactively deletes that run's history; prefer setting it at the
+# start. e.g. CKPT_FREQ=50000 KEEP_CKPTS=3
+[[ -n "${CKPT_FREQ:-}"      ]] && CMD+=("++training.io.save_checkpoint_freq=$CKPT_FREQ")
+[[ -n "${KEEP_CKPTS:-}"     ]] && CMD+=("++training.io.save_n_recent_checkpoints=$KEEP_CKPTS")
 
 echo "Launching diffusion ($CONFIG) on $NPROC H100; reg ckpt: $REG_CKPT"
 echo "  ${CMD[*]}"
