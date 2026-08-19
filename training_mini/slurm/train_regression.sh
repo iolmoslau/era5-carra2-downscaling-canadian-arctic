@@ -9,7 +9,11 @@
 # Fewer/leaner checkpoints:  CKPT_FREQ=50000 KEEP_CKPTS=3 bash training_mini/slurm/submit.sh ...
 #
 # Env passthroughs: TRAIN_DURATION, TOTAL_BATCH, BATCH_PER_GPU, CKPT_FREQ, KEEP_CKPTS, CONFIG,
-# DATA_DIR, OUTPUT_DIR, STATS, STAGE, ENV_DIR, REPO.
+# DATA_DIR, OUTPUT_DIR, STATS, STAGE, YEARS, ENV_DIR, REPO.
+#
+# STAGE=1 copies the shards the CONFIG needs (dataset.years + validation.years) to node-local
+# $SLURM_TMPDIR; YEARS="2011 2012" overrides that for a subset. Archived shard_YYYY.zarr.zip
+# stages as readily as a loose store, and a year that is absent warns instead of killing the job.
 #
 # Always submit via slurm/submit.sh so job logs land in $REPO/logs regardless of your CWD (a bare
 # `sbatch` would drop them wherever you ran it from -- see slurm/submit.sh). All other run logs
@@ -36,6 +40,7 @@ set -euo pipefail
 
 # ---- config ----------------------------------------------------------------
 REPO="${REPO:-$HOME/thesis/era5-carra2-downscaling-canadian-arctic}"   # respects an existing $REPO
+source "$REPO/training_mini/slurm/common.sh"   # config_years, stage_shards, shard_src
 TRAIN_DIR="$REPO/training_mini"
 ENV_DIR="${ENV_DIR:-$HOME/corrdiff-env}"
 DATA_DIR="${DATA_DIR:-$PROJECT/data}"                 # holds shard_YYYY.zarr (2011-2019)
@@ -64,21 +69,30 @@ export CORRDIFF_LOG_DIR="$REPO/logs"   # Hydra run dir, wandb offline, generate.
 mkdir -p "$CORRDIFF_LOG_DIR" "$OUTPUT_DIR"
 
 # ---- stage zarr shards to node-local storage (many tiny files -> avoid /project thrash) ----
+# Years come from the CONFIG (dataset.years + validation.years) so staging can never drift from
+# what the run reads; override with YEARS="2011 2012" for a quick subset.
+YEARS="${YEARS:-$(config_years "$TRAIN_DIR/conf/$CONFIG.yaml")}"
+if [[ "$STAGE" == "1" && -z "${SLURM_TMPDIR:-}" ]]; then
+  echo "WARNING: STAGE=1 but \$SLURM_TMPDIR is unset (not in a job?) -- reading from $DATA_DIR" >&2
+  STAGE=0
+fi
 if [[ "$STAGE" == "1" ]]; then
-  echo "Staging shards -> $SLURM_TMPDIR/data"
-  mkdir -p "$SLURM_TMPDIR/data"
-  cp -r "$DATA_DIR"/shard_20{11,12,13,14,15,16,17,18,19}.zarr "$SLURM_TMPDIR/data/"
+  echo "Staging years [$YEARS] -> $SLURM_TMPDIR/data"
+  stage_shards "$DATA_DIR" "$SLURM_TMPDIR/data" $YEARS
   RUN_DATA="$SLURM_TMPDIR/data"
 else
   RUN_DATA="$DATA_DIR"
 fi
 ln -sfn "$RUN_DATA" ./data                            # configs reference ./data
 
-# ---- train-only normalization stats (2011-2018), computed once ----
+# ---- train-only normalization stats, computed once -------------------------------------------
+# Years come from the config's dataset.years (the TRAIN years -- never validation.years, which
+# would leak the held-out year into the stats). Read from $DATA_DIR rather than the staged copy:
+# stats must cover every train year regardless of what a YEARS override happened to stage.
+TRAIN_YEARS="${TRAIN_YEARS:-$(config_years "$TRAIN_DIR/conf/$CONFIG.yaml" dataset)}"
 if [[ ! -f "$STATS" ]]; then
-  echo "Computing train stats -> $STATS"
-  python tools/make_stats.py --data-dir "$RUN_DATA" \
-     --years 2011 2012 2013 2014 2015 2016 2017 2018 --out "$STATS"
+  echo "Computing train stats over [$TRAIN_YEARS] -> $STATS"
+  python tools/make_stats.py --data-dir "$DATA_DIR" --years $TRAIN_YEARS --out "$STATS"
 fi
 
 # optional overrides for a quick env-test or tuning, e.g. TRAIN_DURATION=2000

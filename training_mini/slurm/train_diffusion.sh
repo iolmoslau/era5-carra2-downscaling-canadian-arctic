@@ -15,7 +15,11 @@
 #         training_mini/slurm/train_diffusion.sh
 #
 # Env passthroughs: TRAIN_DURATION, TOTAL_BATCH, BATCH_PER_GPU, CKPT_FREQ, KEEP_CKPTS, CONFIG,
-# DATA_DIR, OUTPUT_DIR, STATS, STAGE, REG_CKPT, ENV_DIR, REPO.
+# DATA_DIR, OUTPUT_DIR, STATS, STAGE, YEARS, REG_CKPT, ENV_DIR, REPO.
+#
+# STAGE=1 copies the shards the CONFIG needs (dataset.years + validation.years) to node-local
+# $SLURM_TMPDIR; YEARS="2011 2012" overrides that for a subset. Archived shard_YYYY.zarr.zip
+# stages as readily as a loose store, and a year that is absent warns instead of killing the job.
 #
 # Always submit via slurm/submit.sh so job logs land in $REPO/logs regardless of your CWD.
 # Resumable: re-submitting continues from the last diffusion checkpoint in $OUTPUT_DIR.
@@ -36,7 +40,7 @@
 set -euo pipefail
 
 REPO="${REPO:-$HOME/thesis/era5-carra2-downscaling-canadian-arctic}"   # respects an existing $REPO
-source "$REPO/training_mini/slurm/common.sh"   # latest_ckpt (selects by nimg, not mtime)
+source "$REPO/training_mini/slurm/common.sh"   # latest_ckpt, config_years, stage_shards
 TRAIN_DIR="$REPO/training_mini"
 ENV_DIR="${ENV_DIR:-$HOME/corrdiff-env}"
 DATA_DIR="${DATA_DIR:-$PROJECT/data}"
@@ -76,10 +80,16 @@ cd "$TRAIN_DIR"
 export CORRDIFF_LOG_DIR="$REPO/logs"   # Hydra run dir, wandb offline, generate.log all go here
 mkdir -p "$CORRDIFF_LOG_DIR" "$OUTPUT_DIR"
 
+# Years come from the CONFIG (dataset.years + validation.years) so staging can never drift from
+# what the run reads; override with YEARS="2011 2012" for a quick subset.
+YEARS="${YEARS:-$(config_years "$TRAIN_DIR/conf/$CONFIG.yaml")}"
+if [[ "$STAGE" == "1" && -z "${SLURM_TMPDIR:-}" ]]; then
+  echo "WARNING: STAGE=1 but \$SLURM_TMPDIR is unset (not in a job?) -- reading from $DATA_DIR" >&2
+  STAGE=0
+fi
 if [[ "$STAGE" == "1" ]]; then
-  echo "Staging shards -> $SLURM_TMPDIR/data"
-  mkdir -p "$SLURM_TMPDIR/data"
-  cp -r "$DATA_DIR"/shard_20{11,12,13,14,15,16,17,18,19}.zarr "$SLURM_TMPDIR/data/"
+  echo "Staging years [$YEARS] -> $SLURM_TMPDIR/data"
+  stage_shards "$DATA_DIR" "$SLURM_TMPDIR/data" $YEARS
   RUN_DATA="$SLURM_TMPDIR/data"
 else
   RUN_DATA="$DATA_DIR"

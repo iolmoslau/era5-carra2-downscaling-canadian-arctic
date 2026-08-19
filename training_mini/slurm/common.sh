@@ -53,6 +53,72 @@ ckpt_nimg() {
 }
 
 # ---------------------------------------------------------------------------------------
+# Staging shards to node-local storage
+#
+# WHY THIS EXISTS: the staging copy used to be
+#     cp -r "$DATA_DIR"/shard_20{11,...,19}.zarr "$SLURM_TMPDIR/data/"
+# which has three problems. The year list was hardcoded and could drift from the config's
+# dataset.years; it could not see a shard archived to shard_YYYY.zarr.zip; and under
+# `set -euo pipefail` a single missing year made cp return non-zero and killed the job at
+# staging -- AFTER the GPUs had been allocated.
+#
+# A missing year is not fatal here: ERA5CARRA2Dataset raises FileNotFoundError for any store it
+# actually needs, so that check stays authoritative and we only warn.
+# ---------------------------------------------------------------------------------------
+
+# shard_src <dir> <year> -- that year's shard, preferring the 1-inode .zarr.zip archive over the
+# loose directory store. Prints nothing and returns 1 if neither form is present.
+shard_src() {
+  local d="${1:-}" y="${2:-}"
+  if [[ -f "$d/shard_${y}.zarr.zip" ]]; then printf '%s\n' "$d/shard_${y}.zarr.zip"; return 0; fi
+  if [[ -d "$d/shard_${y}.zarr" ]]; then printf '%s\n' "$d/shard_${y}.zarr"; return 0; fi
+  return 1
+}
+
+# config_years <config.yaml> [all|dataset|validation] -- the years that config reads, space
+# separated. Keeps staging (and the stats build) tied to what the run actually uses, instead of
+# a hardcoded list that can drift. `dataset` is the TRAIN years, which is what normalization
+# stats must be computed over -- never the validation year. Needs the venv active (PyYAML).
+config_years() {
+  python - "${1:?config path required}" "${2:-all}" <<'PY'
+import sys, yaml
+cfg = yaml.safe_load(open(sys.argv[1])) or {}
+which = sys.argv[2]
+years = []
+if which in ("all", "dataset"):
+    years += list((cfg.get("dataset") or {}).get("years") or [])
+if which in ("all", "validation"):
+    years += list((cfg.get("validation") or {}).get("years") or [])
+print(" ".join(str(int(y)) for y in sorted(set(years))))
+PY
+}
+
+# stage_shards <src-dir> <dest-dir> <year>... -- copy each year's shard (either form) to dest.
+# Warns on a year that is absent, fails only if nothing at all could be staged.
+stage_shards() {
+  local src_dir="${1:?}" dest="${2:?}"; shift 2
+  local y src staged=0 missing=""
+  mkdir -p "$dest"
+  for y in "$@"; do
+    if src=$(shard_src "$src_dir" "$y"); then
+      cp -r "$src" "$dest/"
+      staged=$(( staged + 1 ))
+    else
+      missing+="$y "
+    fi
+  done
+  if [[ -n "$missing" ]]; then
+    echo "WARNING: no shard_YYYY.zarr[.zip] for year(s) ${missing% } in $src_dir." >&2
+    echo "         Staging continues; the dataset fails loudly if the run needs them." >&2
+  fi
+  if (( staged == 0 )); then
+    echo "ERROR: staged 0 shards from $src_dir -- nothing to train on." >&2
+    return 1
+  fi
+  echo "staged $staged shard(s) -> $dest"
+}
+
+# ---------------------------------------------------------------------------------------
 # Ensemble batching for generation
 #
 # generation.seed_batch_size is how many ensemble members are denoised in ONE sampler call.
