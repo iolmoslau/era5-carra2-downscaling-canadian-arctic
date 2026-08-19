@@ -33,7 +33,11 @@ dataset:
 generation:
     num_ensembles: 15
     # members per input time for the FULL model; run_eval.sh sets 1 for the regression pass
-    seed_batch_size: 1
+    seed_batch_size: 5
+    # members denoised per sampler call. MUST divide num_ensembles: physicsnemo sizes the
+    # diffusion latents from the conditioning batch, not the seed count, so an uneven split
+    # emits more members than requested and fails against the regression mean. 1 serialises
+    # the ensemble and leaves the GPU idle. run_eval.sh computes/validates this per run.
     times: null                     # use times_range instead of an explicit list
     times_range:
         - 2019-01-01T00:00:00       # first 2019 timestamp (3-hourly shard, on the 00:00 grid)

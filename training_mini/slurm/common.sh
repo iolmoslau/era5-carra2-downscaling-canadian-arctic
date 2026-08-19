@@ -51,3 +51,44 @@ ckpt_nimg() {
   base="${base%.pt}"
   printf '%s\n' "${base##*.}"
 }
+
+# ---------------------------------------------------------------------------------------
+# Ensemble batching for generation
+#
+# generation.seed_batch_size is how many ensemble members are denoised in ONE sampler call.
+# At 1 -- the config default -- a NUM_ENS-member ensemble is NUM_ENS sequential batch-of-one
+# runs of an 18-step sampler, which leaves an H100 mostly idle. (The regression net is already
+# batched: generate.py sizes its latents from sum(map(len, rank_batches)).)
+#
+# CONSTRAINT: seed_batch_size must DIVIDE num_ensembles. physicsnemo's diffusion_step sizes its
+# latents from `img_lr.shape[0]` -- which generate.py expands to seed_batch_size -- rather than
+# from len(batch_seeds). So an uneven split makes the short final batch still emit
+# seed_batch_size samples, and the total no longer matches the regression mean it is added to:
+#     latents_shape = [img_lr.shape[0], img_out_channels, img_shape[0], img_shape[1]]
+# The failure is a tensor-shape error deep inside physicsnemo, so we check it up front instead.
+# ---------------------------------------------------------------------------------------
+
+# seed_batch_for <num_ensembles> [cap] -- largest divisor of N that is <= cap (default 8).
+seed_batch_for() {
+  local n="${1:?num_ensembles required}" cap="${2:-8}" b
+  (( cap > n )) && cap=$n
+  for (( b = cap; b > 1; b-- )); do
+    (( n % b == 0 )) && { printf '%s\n' "$b"; return 0; }
+  done
+  printf '1\n'
+}
+
+# require_divisor <num_ensembles> <seed_batch> [label] -- return 1 with an explanation unless
+# seed_batch is a positive divisor of num_ensembles.
+require_divisor() {
+  local n="${1:-}" b="${2:-}" label="${3:-SEED_BATCH}" d divisors=""
+  if [[ ! "$b" =~ ^[0-9]+$ ]] || (( b < 1 )) || (( n % b != 0 )); then
+    for (( d = 1; d <= n; d++ )); do (( n % d == 0 )) && divisors+="$d "; done
+    echo "ERROR: $label=$b must be a positive divisor of NUM_ENS=$n." >&2
+    echo "       CorrDiff sizes the diffusion latents from the conditioning batch, not from the" >&2
+    echo "       seed count, so an uneven split generates more members than requested and then" >&2
+    echo "       fails when they are added to the regression mean." >&2
+    echo "       Divisors of $n: ${divisors% }" >&2
+    return 1
+  fi
+}

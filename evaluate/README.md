@@ -48,6 +48,14 @@ NAME=diffusion_2 N=400 NUM_ENS=32 REG_CKPT=$REG YEARS="2020 2021" \
 - **`NAME` is required** — it names the results folder (`results/<NAME>/eval/`). It is *not*
   guessed from `OUTPUT_DIR`, so an oddly-named scratch dir can't silently write to the wrong
   place; the job exits immediately if `NAME` is unset.
+- **`SEED_BATCH`** is how many ensemble members are denoised in one sampler call. It defaults to
+  the largest divisor of `NUM_ENS` that is ≤ 8, so `NUM_ENS=15` runs 3 sampler calls rather than
+  15 — the diffusion pass used to be `NUM_ENS` sequential batch-of-one runs of an 18-step
+  sampler, which leaves an H100 mostly idle. It **must divide `NUM_ENS`**, and the job refuses to
+  start otherwise: physicsnemo sizes the diffusion latents from the conditioning batch rather
+  than the seed count, so an uneven split emits more members than requested and then fails
+  against the regression mean. Raise it for throughput, lower it if you hit OOM. Picking a
+  `NUM_ENS` with plenty of divisors (16, 32) batches better than a prime-ish one (13, 15).
 - **`N`** random times are drawn (without replacement) from **`YEARS`** (space-separated,
   default `2019`), with **`SEED`** for reproducibility — the full and regression passes use the
   identical set. Sampling reads the shard's real time index, so every pick is valid and times of
@@ -92,7 +100,7 @@ REG=$(latest_ckpt $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression)
 NAME=diffusion_2_test_2020_22 N=400 NUM_ENS=32 REG_CKPT=$REG \
   OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_2 \
   DATA_DIR=$PROJECT/data/derot YEARS="2020 2021 2022" \
-  bash training_mini/slurm/submit.sh --time=4:00:00 evaluate/run_eval.sh
+  bash training_mini/slurm/submit.sh --time=5:30:00 evaluate/run_eval.sh
 ```
 
 **The payoff:** the `.zip` shards persist in `$PROJECT` (backed up, not purged), so evaluating a

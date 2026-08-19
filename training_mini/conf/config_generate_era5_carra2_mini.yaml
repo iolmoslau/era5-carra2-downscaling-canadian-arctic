@@ -27,7 +27,10 @@ dataset:
 generation:
     num_ensembles: 4
     # ensemble members per input time
-    seed_batch_size: 1
+    seed_batch_size: 4
+    # members denoised per sampler call. MUST divide num_ensembles (physicsnemo sizes the
+    # diffusion latents from the conditioning batch, not the seed count). 1 serialises the
+    # ensemble into num_ensembles batch-of-one sampler runs. slurm/generate.sh sets this.
     times:
         - 2019-01-15T00:00:00
         - 2019-07-15T00:00:00

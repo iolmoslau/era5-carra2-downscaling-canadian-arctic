@@ -35,6 +35,10 @@ OUTPUT_DIR="${OUTPUT_DIR:-$SCRATCH/corrdiff_mini}"     # holds checkpoints_regre
 STATS="${STATS:-$DATA_DIR/stats_train_2011_2018.json}"
 CONFIG="${CONFIG:-config_generate_era5_carra2_eval}"
 NUM_ENS="${NUM_ENS:-15}"                               # ensemble members for the FULL model
+# Members denoised per sampler call (the FULL pass only; the regression pass is 1 member, so it
+# is pinned to 1). Defaults to the largest divisor of NUM_ENS that is <= 8, and must divide
+# NUM_ENS exactly -- see seed_batch_for/require_divisor in training_mini/slurm/common.sh.
+SEED_BATCH="${SEED_BATCH:-$(seed_batch_for "$NUM_ENS")}"
 N="${N:-${1:-50}}"                                     # number of RANDOM eval times to draw
 SEED="${SEED:-0}"                                      # RNG seed: reproducible; both passes share it
 YEARS="${YEARS:-2019}"                                 # space-separated year(s) to sample from
@@ -47,6 +51,7 @@ NC_DIR="${NC_DIR:-$OUTPUT_DIR/eval}"
 NPROC="${SLURM_GPUS_ON_NODE:-1}"
 (( N < 1 )) && N=1
 YEARS_CSV=$(echo "$YEARS" | tr ' ' ',')                # "2018 2019" -> "2018,2019" for Hydra
+require_divisor "$NUM_ENS" "$SEED_BATCH" SEED_BATCH || exit 1
 
 # ---- sanity: NAME is required so metrics land in the intended results/<NAME>/eval ----------
 if [[ -z "$NAME" ]]; then
@@ -115,10 +120,12 @@ COMMON=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
         ++generation.times="$TIMES"
         ++generation.times_range=null)
 
-echo "== FULL model (regression + diffusion, $NUM_ENS members) -> $NC_DIR/full.nc =="
+echo "== FULL model (regression + diffusion, $NUM_ENS members, $SEED_BATCH per sampler call) \
+-> $NC_DIR/full.nc =="
 "${COMMON[@]}" \
   ++generation.inference_mode=all \
   ++generation.num_ensembles="$NUM_ENS" \
+  ++generation.seed_batch_size="$SEED_BATCH" \
   ++generation.io.reg_ckpt_filename="$REG_CKPT" \
   ++generation.io.res_ckpt_filename="$RES_CKPT" \
   ++generation.io.output_filename="$NC_DIR/full.nc"
@@ -127,6 +134,7 @@ echo "== REGRESSION only (deterministic mean) -> $NC_DIR/reg.nc =="
 "${COMMON[@]}" \
   ++generation.inference_mode=regression \
   ++generation.num_ensembles=1 \
+  ++generation.seed_batch_size=1 \
   ++generation.io.reg_ckpt_filename="$REG_CKPT" \
   ++generation.io.output_filename="$NC_DIR/reg.nc"
 

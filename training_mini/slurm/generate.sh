@@ -12,6 +12,12 @@
 # and per-channel-mean variance. e.g. for a 15-member spread estimate:
 #     MODE=all NUM_ENS=15 REG_CKPT=... RES_CKPT=... bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
 #
+# SEED_BATCH = members denoised per sampler call. Defaults to the largest divisor of NUM_ENS that
+# is <= 8, so a 15-member ensemble is 3 sampler calls instead of 15. It MUST divide NUM_ENS (the
+# job refuses to start otherwise -- see require_divisor in slurm/common.sh). Raise it for more
+# GPU throughput, lower it if you hit OOM:
+#     MODE=all NUM_ENS=16 SEED_BATCH=16 bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
+#
 # Output NetCDF (truth/prediction/input groups) lands in training_mini/ as corrdiff_output.nc.
 
 #SBATCH --account=def-stockie_gpu
@@ -34,8 +40,13 @@ OUTPUT_DIR="${OUTPUT_DIR:-$SCRATCH/corrdiff_mini}"
 STATS="${STATS:-$DATA_DIR/stats_train_2011_2018.json}"
 MODE="${MODE:-regression}"                 # regression | diffusion | all
 NUM_ENS="${NUM_ENS:-1}"                     # ensemble members (use >1 for diffusion/all)
+# Members denoised per sampler call. Defaults to the largest divisor of NUM_ENS that is <= 8;
+# must divide NUM_ENS exactly (see seed_batch_for/require_divisor in slurm/common.sh).
+SEED_BATCH="${SEED_BATCH:-$(seed_batch_for "$NUM_ENS")}"
 CONFIG="${CONFIG:-config_generate_era5_carra2_mini}"
 NPROC="${SLURM_GPUS_ON_NODE:-1}"           # torchrun processes = GPUs on the node
+
+require_divisor "$NUM_ENS" "$SEED_BATCH" SEED_BATCH || exit 1
 
 # ---- sanity: log resolved paths, fail fast if $SCRATCH/$PROJECT were unset at submit -------
 echo "[paths] OUTPUT_DIR=$OUTPUT_DIR  DATA_DIR=$DATA_DIR  (SCRATCH=${SCRATCH:-<unset>} PROJECT=${PROJECT:-<unset>})"
@@ -74,6 +85,7 @@ CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
      hydra.run.dir="$CORRDIFF_LOG_DIR/hydra/${SLURM_JOB_ID:-manual}"
      ++generation.inference_mode="$MODE"
      ++generation.num_ensembles="$NUM_ENS"
+     ++generation.seed_batch_size="$SEED_BATCH"
      ++dataset.data_path="$DATA_DIR"
      ++dataset.stats_path="$STATS"
      ++generation.io.reg_ckpt_filename="$REG_CKPT")
