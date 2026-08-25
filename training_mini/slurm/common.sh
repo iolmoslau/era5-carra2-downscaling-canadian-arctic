@@ -119,6 +119,60 @@ stage_shards() {
 }
 
 # ---------------------------------------------------------------------------------------
+# Which two nets to evaluate
+#
+# Generation is `regression mean + diffusion residual`, so evaluation needs BOTH nets -- and
+# WORKFLOW.md section B trains a diffusion run against an EARLIER regression run, so they
+# normally live in different directories (regression_2/, diffusion_2/). There is therefore no
+# single "the run" to point at: a diffusion run dir holds only checkpoints_diffusion, so
+# auto-discovery from one directory can never find the regression net for a real run.
+#
+# Hence two run dirs. OUTPUT_DIR is kept as a fallback that sets both, for the case where one
+# directory happens to hold both nets (and so older commands keep working).
+# ---------------------------------------------------------------------------------------
+
+# resolve_eval_paths -- decide which checkpoints to evaluate and where the NetCDFs go.
+#   reads/sets: REG_RUN RES_RUN REG_CKPT RES_CKPT NC_DIR   (OUTPUT_DIR read as a fallback)
+# Returns 1 with an explanation if either net cannot be resolved.
+resolve_eval_paths() {
+  OUTPUT_DIR="${OUTPUT_DIR:-}"
+  REG_RUN="${REG_RUN:-$OUTPUT_DIR}"
+  RES_RUN="${RES_RUN:-$OUTPUT_DIR}"
+  REG_CKPT="${REG_CKPT:-}"
+  RES_CKPT="${RES_CKPT:-}"
+
+  if [[ -z "$REG_CKPT" && -n "$REG_RUN" ]]; then
+    REG_CKPT=$(latest_ckpt "$REG_RUN/checkpoints_regression" || true)
+  fi
+  if [[ -z "$RES_CKPT" && -n "$RES_RUN" ]]; then
+    RES_CKPT=$(latest_ckpt "$RES_RUN/checkpoints_diffusion" || true)
+  fi
+
+  if [[ -z "$REG_CKPT" || ! -f "$REG_CKPT" ]]; then
+    echo "ERROR: no regression checkpoint." >&2
+    echo "       Set REG_RUN=<dir containing checkpoints_regression/> or REG_CKPT=<file>." >&2
+    echo "       A diffusion run dir holds only checkpoints_diffusion -- the regression net" >&2
+    echo "       lives in the run it was trained against (WORKFLOW.md section B). e.g." >&2
+    echo "         REG_RUN=\$SCRATCH/corrdiff_runs/regression_2 \\" >&2
+    echo "         RES_RUN=\$SCRATCH/corrdiff_runs/diffusion_2" >&2
+    return 1
+  fi
+  if [[ -z "$RES_CKPT" || ! -f "$RES_CKPT" ]]; then
+    echo "ERROR: no diffusion checkpoint -- needed for the full model." >&2
+    echo "       Set RES_RUN=<dir containing checkpoints_diffusion/> or RES_CKPT=<file>." >&2
+    return 1
+  fi
+
+  # NetCDFs land with the run being evaluated (the diffusion one). When only RES_CKPT was
+  # given, its run dir is two levels up from the checkpoint file.
+  if [[ -z "${NC_DIR:-}" ]]; then
+    local base="$RES_RUN"
+    [[ -n "$base" ]] || base=$(dirname "$(dirname "$RES_CKPT")")
+    NC_DIR="$base/eval"
+  fi
+}
+
+# ---------------------------------------------------------------------------------------
 # Ensemble batching for generation
 #
 # generation.seed_batch_size is how many ensemble members are denoised in ONE sampler call.

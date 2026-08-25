@@ -22,31 +22,34 @@ deterministic forecast is just a 1-member ensemble.
 - **`mae`** — MAE of the ensemble mean (the point forecast).
 - **`rmse`** — RMSE of the ensemble mean (alongside; not the primary score).
 
-The CRPS estimator is unit-tested against a brute-force pairwise computation, the `M=1 → MAE`
-identity, and the analytic Gaussian CRPS.
+> **TODO (audit P2-2):** the CRPS estimator has **no unit tests**. The sorted-order identity in
+> `crps_ensemble_map` deserves a brute-force cross-check, plus the `M=1 → MAE` identity and the
+> analytic Gaussian CRPS. It is a headline number in the thesis; the `reg` pass reporting
+> `crps == mae` exactly is consistent with the identity but is not a test.
 
 ## Run it (on fir)
 
 ```bash
 # from $REPO, submit via slurm/submit.sh so logs go to $REPO/logs
 NAME=diffusion_2 N=100 NUM_ENS=15 SEED=0 YEARS=2019 \
-  OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_2 \
+  REG_RUN=$SCRATCH/corrdiff_runs/regression_2 \
+  RES_RUN=$SCRATCH/corrdiff_runs/diffusion_2 \
   DATA_DIR=$PROJECT/data/derot \
   bash training_mini/slurm/submit.sh evaluate/run_eval.sh
 ```
 
-## Or specifying regression checkpoint:
+## Or pinning exact checkpoints:
 
 ```bash
-REG=[path to regression checkpoint here]
-NAME=diffusion_2 N=400 NUM_ENS=32 REG_CKPT=$REG YEARS="2020 2021" \
-  OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_2 \
+NAME=diffusion_2 N=400 NUM_ENS=32 YEARS="2020 2021" \
+  REG_CKPT=/path/to/CorrDiffRegressionUNet.0.NNN.mdlus \
+  RES_CKPT=/path/to/EDMPrecondSuperResolution.0.NNN.mdlus \
   DATA_DIR=$PROJECT/data/derot \
   bash training_mini/slurm/submit.sh evaluate/run_eval.sh
 ```
 
 - **`NAME` is required** — it names the results folder (`results/<NAME>/eval/`). It is *not*
-  guessed from `OUTPUT_DIR`, so an oddly-named scratch dir can't silently write to the wrong
+  guessed from the run dirs, so an oddly-named scratch dir can't silently write to the wrong
   place; the job exits immediately if `NAME` is unset.
 - **`SEED_BATCH`** is how many ensemble members are denoised in one sampler call. It defaults to
   the largest divisor of `NUM_ENS` that is ≤ 8, so `NUM_ENS=15` runs 3 sampler calls rather than
@@ -60,18 +63,23 @@ NAME=diffusion_2 N=400 NUM_ENS=32 REG_CKPT=$REG YEARS="2020 2021" \
   default `2019`), with **`SEED`** for reproducibility — the full and regression passes use the
   identical set. Sampling reads the shard's real time index, so every pick is valid and times of
   day are unbiased (a fixed stride would hit only one hour). Cost/disk scale with `N × NUM_ENS`.
-- Checkpoints are auto-picked as the highest-step `.mdlus` in
-  `$OUTPUT_DIR/checkpoints_{regression,diffusion}` via `latest_ckpt`
-  (`training_mini/slurm/common.sh`), which selects on the `<nimg>` encoded in the filename —
-  *not* on modification time, which a checkpoint archive/restore reorders. Override with
-  `REG_CKPT=` / `RES_CKPT=` to pair a diffusion run with a regression checkpoint from a
-  **different** run dir.
+- **Two run dirs, not one.** Generation is `regression mean + diffusion residual`, and a
+  diffusion run is trained against an *earlier* regression run (WORKFLOW.md §B), so the two nets
+  normally live in different directories — a `diffusion_n/` dir holds only
+  `checkpoints_diffusion`. Give both: `REG_RUN` (→ `checkpoints_regression/`) and `RES_RUN`
+  (→ `checkpoints_diffusion/`). Each picks its highest-step `.mdlus` via `latest_ckpt`
+  (`training_mini/slurm/common.sh`), which selects on the `<nimg>` in the filename — *not* on
+  modification time, which a checkpoint archive/restore reorders. Pin an exact file with
+  `REG_CKPT=` / `RES_CKPT=`. `OUTPUT_DIR=` still works and sets both, for a directory holding
+  both nets.
+  > Pairing a diffusion net with the **wrong** regression base produces quietly wrong metrics,
+  > not an error — naming both runs in the command keeps the pairing visible at the call site.
 - Sampling from multiple years (e.g. `YEARS="2018 2019"`) requires those shards in `$DATA_DIR`.
 - **Outputs are split by size:**
   - `metrics_crps_mae.json` (small, the thing you keep) -> **`RESULT_DIR`**, default
     `training_mini/results/<NAME>/eval/` (e.g. `results/diffusion_2/eval/`). It's git-trackable —
     commit it with the run's results.
-  - `full.nc` / `reg.nc` (several GB) -> **`NC_DIR`**, default `$OUTPUT_DIR/eval/` on `$SCRATCH`,
+  - `full.nc` / `reg.nc` (several GB) -> **`NC_DIR`**, default `$RES_RUN/eval/` on `$SCRATCH`,
     since they're too big for the `$HOME` repo quota and `.nc` is gitignored anyway. They're
     intermediates — safe to delete after the metrics are computed. Set `NC_DIR=$RESULT_DIR` to
     force them alongside the metrics.
@@ -98,7 +106,7 @@ done
 source $REPO/training_mini/slurm/common.sh
 REG=$(latest_ckpt $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression)
 NAME=diffusion_2_test_2020_22 N=400 NUM_ENS=32 REG_CKPT=$REG \
-  OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_2 \
+  RES_RUN=$SCRATCH/corrdiff_runs/diffusion_2 \
   DATA_DIR=$PROJECT/data/derot YEARS="2020 2021 2022" \
   bash training_mini/slurm/submit.sh --time=5:30:00 evaluate/run_eval.sh
 ```
@@ -113,9 +121,11 @@ Shard *location* is shared: `dataloading.dataset` owns `shard_path` / `discover_
 `.zip` wins when present, otherwise the loose `.zarr` is used — so a data dir can freely mix
 archived test shards with loose train shards, and no tool silently skips an archived year.
 
-> **Not yet covered:** the `STAGE=1` copy in `slurm/train_regression.sh` / `train_diffusion.sh`
-> still hardcodes `shard_20{11..19}.zarr`, so archived *train* shards will not stage to
-> `$SLURM_TMPDIR`. Archive train shards only once that is fixed.
+`STAGE=1` staging follows the same rules: `stage_shards` copies whichever form of each year is
+present, and the years come from the config rather than a hardcoded list — so **train** shards can
+be archived too. That is worth doing: staging nine loose shards measured ~6 min each (~54 min per
+submission, at ~13 MB/s — metadata-bound, not bandwidth), which nine single-file archives should
+cut to a few minutes.
 
 ## Score existing NetCDFs directly
 
