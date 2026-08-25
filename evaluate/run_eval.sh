@@ -69,6 +69,15 @@ for p in "$OUTPUT_DIR" "$DATA_DIR"; do
     /scratch/*|/project/*|/home/*) : ;;
     *) echo "ERROR: path '$p' is not absolute -- is \$SCRATCH/\$PROJECT set when you run sbatch?" >&2; exit 1 ;;
   esac
+  # A checkpoint path pasted in place of the run dir otherwise gets 'checkpoints_regression'
+  # appended to a FILE, and the failure only shows up as a confusing missing-checkpoint error.
+  if [[ -e "$p" && ! -d "$p" ]]; then
+    echo "ERROR: '$p' is a file, not a directory." >&2
+    echo "       OUTPUT_DIR is the RUN directory (e.g. \$SCRATCH/corrdiff_runs/diffusion_2)," >&2
+    echo "       which holds checkpoints_regression/ and/or checkpoints_diffusion/." >&2
+    echo "       To name a specific checkpoint file, use REG_CKPT= / RES_CKPT= instead." >&2
+    exit 1
+  fi
 done
 
 # ---- resolve checkpoints by highest step (nimg in filename), robust to copy mtimes ----------
