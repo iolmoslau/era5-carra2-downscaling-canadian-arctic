@@ -27,9 +27,11 @@ WHAT TO EXPECT
 --------------
 The regression net predicts a conditional mean, so it is mathematically obliged to be
 under-dispersed: expect its PDF to be too narrow, with thin tails, relative to truth. The
-diffusion residual exists to restore that spread. The log-scale panel is where this shows --
-on a linear axis all three curves look alike near the mode and the difference lives entirely in
-the tails.
+diffusion residual exists to restore that spread.
+
+Density is plotted on a LOG axis only. On a linear axis all three curves look alike near the
+mode and the entire difference lives in the tails, so a linear panel shows nothing the summary
+table does not already give you.
 """
 from __future__ import annotations
 
@@ -141,40 +143,34 @@ def make_plot(report, curves, path, labels, min_count=10):
     import matplotlib.pyplot as plt  # noqa: PLC0415
 
     chans = list(curves)
-    fig, axes = plt.subplots(len(chans), 2, figsize=(11, 3.2 * len(chans)), squeeze=False)
+    fig, axes = plt.subplots(len(chans), 1, figsize=(8, 3.4 * len(chans)), squeeze=False)
     style = {"truth": dict(color="k", lw=2.0, zorder=3)}
     palette = ["tab:red", "tab:blue", "tab:green", "tab:orange"]
     for i, lb in enumerate(labels):
         style[lb] = dict(color=palette[i % len(palette)], lw=1.4)
 
     for r, ch in enumerate(chans):
-        for col, logy in ((0, False), (1, True)):
-            ax = axes[r][col]
-            for src in ["truth"] + labels:
-                c = curves[ch][src]
-                n = report[ch]["sources"][src]["n_values"]
-                y = c["density"].copy()
-                if logy:
-                    # Far-tail bins hold a handful of samples, so their density is Poisson
-                    # hash. Drawing it as a curve invites reading noise as tail structure.
-                    y[c["counts"] < min_count] = np.nan
-                ax.plot(c["centres"], y,
-                        label=f"{src}  (n={n:.3g}, σ={report[ch]['sources'][src]['std']:.3g})",
-                        **style[src])
-            ax.set_xlabel(ch)
-            ax.set_ylabel("density")
-            if logy:
-                ax.set_yscale("log")
-                # the bulk is uninformative here; the tails are the whole point
-                shown = [curves[ch][s]["density"][curves[ch][s]["counts"] >= min_count]
-                         for s in ["truth"] + labels]
-                shown = np.concatenate([a[a > 0] for a in shown if a.size])
-                if shown.size:
-                    ax.set_ylim(shown.min() * 0.5, shown.max() * 2)
-                ax.set_title(f"{ch} — log density (bins with ≥{min_count} samples)", fontsize=9)
-            else:
-                ax.set_title(f"{ch} — density", fontsize=9)
-                ax.legend(fontsize=7)
+        ax = axes[r][0]
+        for src in ["truth"] + labels:
+            c = curves[ch][src]
+            st = report[ch]["sources"][src]
+            # Far-tail bins hold a handful of samples, so their density is Poisson hash.
+            # Drawing it as a curve invites reading noise as tail structure.
+            y = np.where(c["counts"] >= min_count, c["density"], np.nan)
+            ax.plot(c["centres"], y,
+                    label=f"{src}  (σ={st['std']:.3g}, p1={st['percentiles']['1']:.3g}, "
+                          f"p99={st['percentiles']['99']:.3g})",
+                    **style[src])
+        ax.set_yscale("log")
+        shown = [curves[ch][s]["density"][curves[ch][s]["counts"] >= min_count]
+                 for s in ["truth"] + labels]
+        shown = np.concatenate([a[a > 0] for a in shown if a.size])
+        if shown.size:
+            ax.set_ylim(shown.min() * 0.5, shown.max() * 2)
+        ax.set_xlabel(ch)
+        ax.set_ylabel("density (log)")
+        ax.set_title(f"{ch} — climatological PDF (bins with ≥{min_count} samples)", fontsize=9)
+        ax.legend(fontsize=7)
     fig.tight_layout()
     fig.savefig(path, dpi=130)
     print(f"wrote {path}")
