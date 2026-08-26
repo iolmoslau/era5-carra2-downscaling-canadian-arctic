@@ -180,7 +180,8 @@ def plot_native_panel(ax, field_o, lat_o, lon_o, fx, fy, extent_ll, *, vmin, vma
     add_geo_features(ax, fx, fy, extent_ll)
     if stations:
         add_stations(ax, fx, fy, stations, extent_ll)
-    add_scalebar(ax, spacing_km, nx, ny, scalebar_km)
+    if scalebar_km:  # None/0 skips it -- one bar is enough on a multi-panel figure
+        add_scalebar(ax, spacing_km, nx, ny, scalebar_km)
     ax.set_aspect("equal")
     ax.set_xlim(0, nx - 1)
     ax.set_ylim(0, ny - 1)
