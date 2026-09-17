@@ -1,13 +1,29 @@
 {
   "run": "regression_1",
   "stage": "regression",
-  "date": "2026-07-08",
-  "train_samples": 2000000,
+  "date": "2026-09-17",
   "checkpoint": "/scratch/iolmos/corrdiff_mini/checkpoints_regression/CorrDiffRegressionUNet.0.2000000.mdlus",
-  "config": "config_training_era5_carra2_mini_regression",
-  "data": "$PROJECT/data (original, grid-relative CARRA2 winds)",
-  "eval_time": "2019-01-15T00:00:00",
-  "git": "",
+  "train_samples": "2000000",
+  "nc": "",
+  "tensorboard": "",
+  "provenance": {
+    "config": "config_training_era5_carra2_mini_regression",
+    "data": "$PROJECT/data (original, grid-relative CARRA2 winds)",
+    "stats": "",
+    "git": "dd66cc9",
+    "versions": {
+      "physicsnemo": "2.1.1",
+      "torch": "2.12.1",
+      "numpy": "2.4.2",
+      "xarray": "2026.4.0+computecanada",
+      "zarr": "3.1.6"
+    },
+    "in_channels": 20,
+    "lr_n": 12,
+    "sea_ice": "yes",
+    "conv": "model.enc.448x448_conv.weight"
+  },
+  "git": "dd66cc9",
   "notes": "First regression run. GRID-RELATIVE CARRA2 winds (before the de-rotation fix): t2m valid; u10/v10 learned the ~100deg grid rotation. 2M samples, 2x H100, ~24h. Validation loss plateaued ~500k. Superseded by the de-rotated retrain.",
   "metrics": {
     "t2m": {

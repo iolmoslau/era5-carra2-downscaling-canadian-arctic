@@ -10,7 +10,7 @@
     "config": "",
     "data": "",
     "stats": "",
-    "git": "ec551b2",
+    "git": "dd66cc9",
     "versions": {
       "physicsnemo": "2.1.1",
       "torch": "2.12.1",
@@ -19,11 +19,28 @@
       "zarr": "3.1.6"
     },
     "in_channels": 23,
-    "lr_n": 15,
-    "sea_ice": "unknown",
-    "conv": "model.enc.448x448_conv.weight"
+    "lr_n": 12,
+    "sea_ice": "yes",
+    "conv": "model.enc.448x448_conv.weight",
+    "nc_input_channels": [
+      "t2m",
+      "u10",
+      "v10",
+      "t500",
+      "t850",
+      "z500",
+      "z850",
+      "u500",
+      "u850",
+      "v500",
+      "v850",
+      "siconc",
+      "lsm"
+    ],
+    "nc_lr_n": 12,
+    "nc_sea_ice": "yes"
   },
-  "git": "ec551b2",
+  "git": "dd66cc9",
   "notes": "diffusion on regression_2; 4-member ensemble",
   "metrics": {
     "t2m": {

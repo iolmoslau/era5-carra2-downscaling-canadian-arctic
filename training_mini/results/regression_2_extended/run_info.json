@@ -1,11 +1,46 @@
 {
   "run": "regression_2_extended",
   "stage": "regression",
-  "date": "2026-08-12",
+  "date": "2026-09-17",
   "checkpoint": "/scratch/iolmos/corrdiff_runs/regression_2_extended/checkpoints_regression/CorrDiffRegressionUNet.0.1500032.mdlus",
+  "train_samples": "",
   "nc": "corrdiff_output.nc",
   "tensorboard": "/scratch/iolmos/corrdiff_runs/regression_2_extended/tensorboard",
-  "git": "a06a1d5",
+  "provenance": {
+    "config": "",
+    "data": "",
+    "stats": "",
+    "git": "dd66cc9",
+    "versions": {
+      "physicsnemo": "2.1.1",
+      "torch": "2.12.1",
+      "numpy": "2.4.2",
+      "xarray": "2026.4.0+computecanada",
+      "zarr": "3.1.6"
+    },
+    "in_channels": 20,
+    "lr_n": 12,
+    "sea_ice": "yes",
+    "conv": "model.enc.448x448_conv.weight",
+    "nc_input_channels": [
+      "t2m",
+      "u10",
+      "v10",
+      "t500",
+      "t850",
+      "z500",
+      "z850",
+      "u500",
+      "u850",
+      "v500",
+      "v850",
+      "siconc",
+      "lsm"
+    ],
+    "nc_lr_n": 12,
+    "nc_sea_ice": "yes"
+  },
+  "git": "dd66cc9",
   "notes": "Regression two pushed to 1.5 M samples",
   "metrics": {
     "t2m": {

@@ -1,11 +1,46 @@
 {
   "run": "diffusion_2_w_extended_regression_2",
   "stage": "diffusion",
-  "date": "2026-08-11",
+  "date": "2026-09-17",
   "checkpoint": "/scratch/iolmos/corrdiff_runs/diffusion_2/checkpoints_diffusion/EDMPrecondSuperResolution.0.2000000.mdlus",
+  "train_samples": "",
   "nc": "corrdiff_output.nc",
   "tensorboard": "/scratch/iolmos/corrdiff_runs/regression_2_extended/tensorboard",
-  "git": "73b08fe",
+  "provenance": {
+    "config": "",
+    "data": "",
+    "stats": "",
+    "git": "dd66cc9",
+    "versions": {
+      "physicsnemo": "2.1.1",
+      "torch": "2.12.1",
+      "numpy": "2.4.2",
+      "xarray": "2026.4.0+computecanada",
+      "zarr": "3.1.6"
+    },
+    "in_channels": 23,
+    "lr_n": 12,
+    "sea_ice": "yes",
+    "conv": "model.enc.448x448_conv.weight",
+    "nc_input_channels": [
+      "t2m",
+      "u10",
+      "v10",
+      "t500",
+      "t850",
+      "z500",
+      "z850",
+      "u500",
+      "u850",
+      "v500",
+      "v850",
+      "siconc",
+      "lsm"
+    ],
+    "nc_lr_n": 12,
+    "nc_sea_ice": "yes"
+  },
+  "git": "dd66cc9",
   "notes": "diffusion_2 on regression_2_extended; 15-member ensemble",
   "metrics": {
     "t2m": {
