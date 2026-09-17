@@ -1,11 +1,29 @@
 {
   "run": "regression_2",
   "stage": "regression",
-  "date": "2026-07-30",
+  "date": "2026-09-17",
   "checkpoint": "/scratch/iolmos/corrdiff_runs/regression_2/checkpoints_regression/CorrDiffRegressionUNet.0.1000000.mdlus",
+  "train_samples": "",
   "nc": "corrdiff_output.nc",
   "tensorboard": "/scratch/iolmos/corrdiff_runs/regression_2/tensorboard",
-  "git": "1c5e3d2",
+  "provenance": {
+    "config": "",
+    "data": "",
+    "stats": "",
+    "git": "ec551b2",
+    "versions": {
+      "physicsnemo": "2.1.1",
+      "torch": "2.12.1",
+      "numpy": "2.4.2",
+      "xarray": "2026.4.0+computecanada",
+      "zarr": "3.1.6"
+    },
+    "in_channels": 20,
+    "lr_n": 15,
+    "sea_ice": "unknown",
+    "conv": "model.enc.448x448_conv.weight"
+  },
+  "git": "ec551b2",
   "notes": "de-rotated winds; 2x H100",
   "metrics": {
     "t2m": {
