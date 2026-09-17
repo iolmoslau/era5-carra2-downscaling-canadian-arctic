@@ -1,0 +1,33 @@
+{
+  "run": "regression_2_extended",
+  "stage": "regression",
+  "date": "2026-08-12",
+  "checkpoint": "/scratch/iolmos/corrdiff_runs/regression_2_extended/checkpoints_regression/CorrDiffRegressionUNet.0.1500032.mdlus",
+  "nc": "corrdiff_output.nc",
+  "tensorboard": "/scratch/iolmos/corrdiff_runs/regression_2_extended/tensorboard",
+  "git": "a06a1d5",
+  "notes": "Regression two pushed to 1.5 M samples",
+  "metrics": {
+    "t2m": {
+      "rmse": 3.1089,
+      "rmse_over_sigma_pct": 40.2,
+      "bias": -1.2327,
+      "truth_min": 229.406,
+      "truth_max": 269.345
+    },
+    "u10": {
+      "rmse": 0.8682,
+      "rmse_over_sigma_pct": 25.4,
+      "bias": 0.0788,
+      "truth_min": -18.188,
+      "truth_max": 11.521
+    },
+    "v10": {
+      "rmse": 0.702,
+      "rmse_over_sigma_pct": 41.53,
+      "bias": -0.1007,
+      "truth_min": -8.86,
+      "truth_max": 11.65
+    }
+  }
+}

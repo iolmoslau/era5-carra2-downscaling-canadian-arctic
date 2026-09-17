@@ -1,0 +1,42 @@
+{
+  "run": "diffusion_2",
+  "stage": "diffusion",
+  "date": "2026-08-01",
+  "checkpoint": "/scratch/iolmos/corrdiff_runs/diffusion_2/checkpoints_diffusion/EDMPrecondSuperResolution.0.2000000.mdlus",
+  "nc": "corrdiff_output.nc",
+  "tensorboard": "/scratch/iolmos/corrdiff_runs/diffusion_2/tensorboard",
+  "git": "73b08fe",
+  "notes": "diffusion on regression_2; 4-member ensemble",
+  "metrics": {
+    "t2m": {
+      "rmse": 3.8595,
+      "rmse_over_sigma_pct": 49.9,
+      "bias": -2.0477,
+      "truth_min": 229.406,
+      "truth_max": 269.345,
+      "ensemble_n": 15,
+      "ensemble_mean_var": 3.01013,
+      "ensemble_mean_std": 1.735
+    },
+    "u10": {
+      "rmse": 1.0043,
+      "rmse_over_sigma_pct": 29.38,
+      "bias": 0.0575,
+      "truth_min": -18.188,
+      "truth_max": 11.521,
+      "ensemble_n": 15,
+      "ensemble_mean_var": 0.38076,
+      "ensemble_mean_std": 0.6171
+    },
+    "v10": {
+      "rmse": 0.8615,
+      "rmse_over_sigma_pct": 50.96,
+      "bias": -0.0775,
+      "truth_min": -8.86,
+      "truth_max": 11.65,
+      "ensemble_n": 15,
+      "ensemble_mean_var": 0.31289,
+      "ensemble_mean_std": 0.5594
+    }
+  }
+}
