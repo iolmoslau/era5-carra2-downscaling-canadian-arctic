@@ -236,3 +236,54 @@ def test_patch_dataset_reads_both_forms_identically(tmp_path):
     for i in range(len(a)):
         assert np.array_equal(a[i]["hr"].numpy(), b[i]["hr"].numpy())
         assert np.array_equal(a[i]["lr"].numpy(), b[i]["lr"].numpy())
+
+
+# ------------------------------------------------------------------ archive verification (P1-3)
+def test_verify_archive_accepts_a_faithful_copy(tmp_path):
+    """--remove-src is irreversible, so deletion is gated on this passing."""
+    import scripts.zip_shard as zs
+
+    loose = make_shard(tmp_path / "shard_2011.zarr", 2011, seed=21)
+    dst = str(loose) + ".zip"
+    zs.zip_store(str(loose), dst)
+    info = zs.verify_archive(str(loose), dst, n_samples=3)
+    assert info["n_time"] == NT and len(info["checked"]) == 3
+
+
+def test_verify_archive_catches_differing_data(tmp_path):
+    """Guards the guard: an archive that does not match its source must fail, or the gate on
+    --remove-src is decorative and would happily delete the only good copy."""
+    import numpy as np
+    import xarray as xr
+
+    import scripts.zip_shard as zs
+
+    loose = make_shard(tmp_path / "shard_2011.zarr", 2011, seed=22)
+    dst = str(loose) + ".zip"
+    zs.zip_store(str(loose), dst)
+
+    # rewrite the source so the archive no longer represents it
+    drifted = tmp_path / "drifted.zarr"
+    with xr.open_zarr(loose) as z:
+        ds = z.load()
+    ds["hr"] = ds["hr"] + np.float32(1.0)
+    ds.to_zarr(drifted, mode="w")
+
+    with pytest.raises(SystemExit, match="VERIFY FAILED"):
+        zs.verify_archive(str(drifted), dst, n_samples=3)
+
+
+def test_verify_archive_catches_a_truncated_time_axis(tmp_path):
+    import xarray as xr
+
+    import scripts.zip_shard as zs
+
+    loose = make_shard(tmp_path / "shard_2011.zarr", 2011, seed=23)
+    dst = str(loose) + ".zip"
+    zs.zip_store(str(loose), dst)
+
+    short = tmp_path / "short.zarr"
+    with xr.open_zarr(loose) as z:
+        z.isel(time=slice(0, NT - 2)).load().to_zarr(short, mode="w")
+    with pytest.raises(SystemExit, match="time length"):
+        zs.verify_archive(str(short), dst, n_samples=2)
