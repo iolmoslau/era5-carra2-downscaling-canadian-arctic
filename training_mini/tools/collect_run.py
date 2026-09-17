@@ -66,6 +66,32 @@ def git_hash() -> str:
         return ""
 
 
+def previous_collect(rdir: Path) -> dict:
+    """The last run_info.json for this run, so a re-collect can top it up rather than blank it."""
+    p = rdir / "run_info.json"
+    if not p.is_file():
+        return {}
+    try:
+        return json.loads(p.read_text())
+    except Exception as e:
+        print(f"  WARNING: ignoring unreadable {p} ({type(e).__name__})", file=sys.stderr)
+        return {}
+
+
+def prev_field(prev: dict, name: str) -> str:
+    """Look a field up in either layout: the provenance block, or the older flat one.
+
+    `regression_1` was collected before provenance was nested, and hand-edited besides, so both
+    shapes are live in the repo.
+    """
+    if not prev:
+        return ""
+    got = (prev.get("provenance") or {}).get(name)
+    if got in (None, ""):
+        got = prev.get(name)
+    return "" if got in (None, {}) else str(got)
+
+
 def env_versions() -> dict:
     """Package versions, so a later comparison can tell whether the env moved underneath it."""
     out = {}
@@ -173,19 +199,19 @@ def main():
     ap.add_argument("--name", required=True, help="run name, e.g. regression_1 / diffusion_2")
     ap.add_argument("--tensorboard", help="TensorBoard log dir (usually OUTPUT_DIR/tensorboard)")
     ap.add_argument("--nc", help="generate.py output NetCDF (for the sample plot + metrics)")
-    ap.add_argument("--checkpoint", default="", help="checkpoint path, for the record")
-    ap.add_argument("--train-samples", default="", help="training length in processed samples")
-    ap.add_argument("--notes", default="", help="free-text notes")
+    ap.add_argument("--checkpoint", help="checkpoint path, for the record")
+    ap.add_argument("--train-samples", help="training length in processed samples")
+    ap.add_argument("--notes", help="free-text notes")
     ap.add_argument("--error", default="sigma", help="error mode for the sample plot")
     ap.add_argument("--time", type=int, default=0, help="time index for the sample")
     # --- provenance: what was this run, exactly? ------------------------------------------
-    ap.add_argument("--config", default="",
+    ap.add_argument("--config",
                     help="Hydra config name used, e.g. config_training_era5_carra2_mini_regression")
     ap.add_argument("--hydra-config", default="",
                     help="$REPO/logs/hydra/<jobid> snapshot dir (or its config.yaml) -- the "
                          "RESOLVED config the run actually used; preferred over --config")
-    ap.add_argument("--data", default="", help="data dir the run read (e.g. $PROJECT/data/derot)")
-    ap.add_argument("--stats", default="", help="normalization stats JSON used")
+    ap.add_argument("--data", help="data dir the run read (e.g. $PROJECT/data/derot)")
+    ap.add_argument("--stats", help="normalization stats JSON used")
     args = ap.parse_args()
 
     rdir = RESULTS / args.name
@@ -193,12 +219,42 @@ def main():
     stage = ("diffusion" if args.name.startswith("diffusion")
              else "regression" if args.name.startswith("regression") else "other")
 
+    prev = previous_collect(rdir)
+    carried = []
+
+    def keep(name, supplied):
+        """Supplied value wins; otherwise carry forward what the last collect recorded.
+
+        collect_run has always been documented as idempotent, but that only held if you passed
+        every original argument again -- omitting --nc replaced the row's metrics with blanks.
+        Re-passing --nc is its own hazard, since generate.py writes one fixed corrdiff_output.nc
+        that the next generation overwrites, so it may no longer hold this run's output. Topping
+        up provenance must therefore not require re-supplying (or re-deriving) everything else.
+        """
+        if supplied is not None:
+            return supplied
+        was = prev_field(prev, name)
+        if was:
+            carried.append(name)
+        return was
+
+    checkpoint = keep("checkpoint", args.checkpoint)
+    tensorboard = keep("tensorboard", args.tensorboard)
+    nc = keep("nc", args.nc)
+    train_samples = keep("train_samples", args.train_samples)
+    notes = keep("notes", args.notes)
+    cfg_name = keep("config", args.config)
+    data_dir = keep("data", args.data)
+    stats_path = keep("stats", args.stats)
+
+    # Only EXPLICIT arguments redo work. A carried-over path is recorded but not re-plotted:
+    # the figure already exists, and $SCRATCH tensorboard dirs get purged.
     if args.tensorboard:
         subprocess.run([sys.executable, str(HERE / "plot_losses.py"),
                         "--logdir", args.tensorboard,
                         "--out", str(rdir / "loss_curve.png"), "--logy"], check=True)
 
-    metrics = {}
+    metrics = prev.get("metrics") or {}
     if args.nc:
         subprocess.run([sys.executable, str(HERE / "plot_sample_native.py"),
                         "--nc", args.nc, "--out", str(rdir / "sample_native.png"),
@@ -206,11 +262,13 @@ def main():
                         "--error", args.error, "--time", str(args.time)], check=True)
         metrics = json.load(open(rdir / "metrics.json")).get("channels", {})
 
-    ck = checkpoint_provenance(args.checkpoint, stage)
+    ck = checkpoint_provenance(checkpoint, stage)
     hy = hydra_provenance(args.hydra_config)
-    prov = {"config": args.config or hy.get("hydra_config", ""),
-            "data": args.data, "stats": args.stats or hy.get("stats_path", ""),
+    prov = {"config": cfg_name or hy.get("hydra_config", ""),
+            "data": data_dir, "stats": stats_path or hy.get("stats_path", ""),
             "git": git_hash(), "versions": env_versions(), **ck, **hy}
+    if carried:
+        print(f"\ncarried forward from the previous collect: {', '.join(sorted(set(carried)))}")
 
     print("\nprovenance")
     print(f"  in_channels : {ck['in_channels']}  ({ck.get('conv') or 'n/a'})")
@@ -224,10 +282,10 @@ def main():
 
     info = {"run": args.name, "stage": stage,
             "date": datetime.date.today().isoformat(),
-            "checkpoint": args.checkpoint, "train_samples": args.train_samples,
-            "nc": args.nc or "", "tensorboard": args.tensorboard or "",
+            "checkpoint": checkpoint, "train_samples": train_samples,
+            "nc": nc, "tensorboard": tensorboard,
             "provenance": prov, "git": prov["git"],
-            "notes": args.notes, "metrics": metrics}
+            "notes": notes, "metrics": metrics}
     with open(rdir / "run_info.json", "w") as f:
         json.dump(info, f, indent=2)
 
@@ -237,8 +295,8 @@ def main():
            "config": Path(prov["config"]).name if prov["config"] else "",
            "sea_ice": ck["sea_ice"], "lr_n": ck["lr_n"] if ck["lr_n"] is not None else "",
            "in_channels": ck["in_channels"] if ck["in_channels"] is not None else "",
-           "train_samples": args.train_samples, "checkpoint": args.checkpoint,
-           "git": info["git"], "notes": args.notes}
+           "train_samples": train_samples, "checkpoint": checkpoint,
+           "git": info["git"], "notes": notes}
     for ch in ["t2m", "u10", "v10"]:
         row[f"rmse_{ch}"] = g(ch, "rmse")
         row[f"nrmse_{ch}_pct"] = g(ch, "rmse_over_sigma_pct")

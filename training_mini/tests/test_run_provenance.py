@@ -126,3 +126,62 @@ def test_upsert_replaces_rather_than_duplicates(tmp_path, monkeypatch):
         collect_run.upsert_csv({"run": "regression_3", "sea_ice": ice})
     rows = list(csv.DictReader(csv_path.open()))
     assert len(rows) == 1 and rows[0]["sea_ice"] == "yes"
+
+
+# ------------------------------------------------------------------ re-collecting tops up
+def _prior(rdir, **over):
+    rdir.mkdir(parents=True, exist_ok=True)
+    info = {"run": "regression_2", "stage": "regression",
+            "checkpoint": "/scratch/r2/checkpoints_regression/M.0.2000000.mdlus",
+            "nc": "/scratch/r2/eval/full.nc", "tensorboard": "/scratch/r2/tensorboard",
+            "train_samples": "2000000", "notes": "the original collect",
+            "metrics": {"t2m": {"rmse": 3.0, "rmse_over_sigma_pct": 39.3}},
+            "provenance": {"config": "config_training_era5_carra2_mini_regression",
+                           "data": "/project/derot", "stats": "/project/derot/stats.json"}}
+    info.update(over)
+    import json as _json
+    (rdir / "run_info.json").write_text(_json.dumps(info))
+    return info
+
+
+def test_recollect_carries_forward_everything_not_resupplied(tmp_path):
+    """THE HAZARD: omitting --nc used to replace the row's metrics with blanks, so topping up
+    provenance would have silently destroyed the numbers it was meant to sit beside."""
+    rdir = tmp_path / "regression_2"
+    prior = _prior(rdir)
+    prev = collect_run.previous_collect(rdir)
+
+    assert prev["metrics"] == prior["metrics"]           # metrics survive a --nc-less re-collect
+    for field, expect in (("checkpoint", prior["checkpoint"]),
+                          ("nc", prior["nc"]),
+                          ("tensorboard", prior["tensorboard"]),
+                          ("train_samples", "2000000"),
+                          ("notes", "the original collect")):
+        assert collect_run.prev_field(prev, field) == expect
+
+
+def test_prev_field_reads_both_layouts(tmp_path):
+    """regression_1 predates the nested provenance block and was hand-edited besides."""
+    nested = tmp_path / "nested"
+    _prior(nested)
+    assert collect_run.prev_field(collect_run.previous_collect(nested), "config") \
+        == "config_training_era5_carra2_mini_regression"
+
+    flat = tmp_path / "flat"
+    flat.mkdir()
+    (flat / "run_info.json").write_text('{"run": "regression_1", "config": "old_flat_config"}')
+    assert collect_run.prev_field(collect_run.previous_collect(flat), "config") == "old_flat_config"
+
+
+def test_first_collect_has_nothing_to_carry(tmp_path):
+    empty = tmp_path / "brand_new"
+    empty.mkdir()
+    assert collect_run.previous_collect(empty) == {}
+    assert collect_run.prev_field({}, "checkpoint") == ""
+
+
+def test_unreadable_previous_collect_does_not_abort(tmp_path):
+    rdir = tmp_path / "corrupt"
+    rdir.mkdir()
+    (rdir / "run_info.json").write_text("{not json")
+    assert collect_run.previous_collect(rdir) == {}
