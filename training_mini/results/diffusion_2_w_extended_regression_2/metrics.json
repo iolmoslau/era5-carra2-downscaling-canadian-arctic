@@ -1,0 +1,37 @@
+{
+  "time_index": 0,
+  "ensemble": 0,
+  "error_mode": "sigma",
+  "channels": {
+    "t2m": {
+      "rmse": 4.0848,
+      "rmse_over_sigma_pct": 52.81,
+      "bias": -1.9408,
+      "truth_min": 229.406,
+      "truth_max": 269.345,
+      "ensemble_n": 15,
+      "ensemble_mean_var": 3.00854,
+      "ensemble_mean_std": 1.7345
+    },
+    "u10": {
+      "rmse": 1.0734,
+      "rmse_over_sigma_pct": 31.4,
+      "bias": -0.0235,
+      "truth_min": -18.188,
+      "truth_max": 11.521,
+      "ensemble_n": 15,
+      "ensemble_mean_var": 0.39573,
+      "ensemble_mean_std": 0.6291
+    },
+    "v10": {
+      "rmse": 0.9174,
+      "rmse_over_sigma_pct": 54.27,
+      "bias": -0.0792,
+      "truth_min": -8.86,
+      "truth_max": 11.65,
+      "ensemble_n": 15,
+      "ensemble_mean_var": 0.32647,
+      "ensemble_mean_std": 0.5714
+    }
+  }
+}

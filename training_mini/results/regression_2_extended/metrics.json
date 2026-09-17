@@ -1,0 +1,28 @@
+{
+  "time_index": 0,
+  "ensemble": 0,
+  "error_mode": "sigma",
+  "channels": {
+    "t2m": {
+      "rmse": 3.1089,
+      "rmse_over_sigma_pct": 40.2,
+      "bias": -1.2327,
+      "truth_min": 229.406,
+      "truth_max": 269.345
+    },
+    "u10": {
+      "rmse": 0.8682,
+      "rmse_over_sigma_pct": 25.4,
+      "bias": 0.0788,
+      "truth_min": -18.188,
+      "truth_max": 11.521
+    },
+    "v10": {
+      "rmse": 0.702,
+      "rmse_over_sigma_pct": 41.53,
+      "bias": -0.1007,
+      "truth_min": -8.86,
+      "truth_max": 11.65
+    }
+  }
+}
