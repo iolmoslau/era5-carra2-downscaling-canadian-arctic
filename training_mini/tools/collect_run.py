@@ -46,13 +46,23 @@ FIELDS = ["run", "stage", "date", "config", "sea_ice", "lr_n", "in_channels",
           "rmse_v10", "nrmse_v10_pct", "bias_v10",
           "ens_members", "ens_meanvar_t2m", "ens_meanvar_u10", "ens_meanvar_v10"]
 
-# Channel arithmetic, mirroring how train.py sizes the input conv:
-#     in_channels = len(lr_channels) + include_lsm + N_grid_channels
-#                   + img_out_channels   (only when hr_mean_conditioning)
-# regression (hr_mean_conditioning false): in = L + 1 + 4     = L + 5
-# diffusion  (hr_mean_conditioning true):  in = L + 1 + 4 + 3 = L + 8
-# Assumes the shipped defaults include_lsm=true, N_grid_channels=4, 3 HR outputs.
-_STAGE_OFFSET = {"regression": 5, "diffusion": 8}
+# Channel arithmetic, mirroring how train.py sizes the input conv. Three terms beyond the LR
+# channels themselves, and the third is easy to miss:
+#     + include_lsm                       1   the static land-sea mask
+#     + N_grid_channels                   4   sinusoidal positional embedding
+#     + img_out_channels                  3   the LATENT the UNet denoises, concatenated with the
+#                                             conditioning -- present for the regression net too,
+#                                             which is why regression_step passes latents_shape
+#     + img_out_channels                  3   again, only when hr_mean_conditioning (diffusion)
+#
+# regression: in = L + 1 + 4 + 3      = L + 8      (12 channels -> 20, 11 -> 19)
+# diffusion:  in = L + 1 + 4 + 3 + 3  = L + 11     (12 channels -> 23, 11 -> 22)
+#
+# Confirmed against real checkpoints: regression_2 reads 20 and diffusion_2 reads 23, both
+# giving L = 12, which the `input` group of a generate NetCDF corroborates BY NAME --
+# 12 LR channels including siconc, plus lsm. Assumes the shipped defaults (include_lsm true,
+# N_grid_channels 4, three HR outputs, no patching).
+_STAGE_OFFSET = {"regression": 8, "diffusion": 11}
 _FULL_LR, _NOICE_LR = 12, 11
 
 
@@ -146,6 +156,29 @@ def channels_from_in(in_channels: int, stage: str) -> dict:
     lr_n = in_channels - off
     return {"lr_n": lr_n,
             "sea_ice": "yes" if lr_n == _FULL_LR else "no" if lr_n == _NOICE_LR else "unknown"}
+
+
+def nc_provenance(path: str) -> dict:
+    """Channel names from a generate NetCDF's `input` group -- names, not arithmetic.
+
+    `NetCDFWriter` creates one variable per `dataset.input_channels()`, so this states the
+    channel set outright instead of inferring it. It corroborates rather than replaces the
+    conv-width reading: the conv is a property of THIS checkpoint, whereas generate.py writes to
+    one fixed corrdiff_output.nc that a later run overwrites (audit P2-4), so a recorded NetCDF
+    path may no longer belong to this run. Disagreement between the two is itself a signal.
+    """
+    if not path or not Path(path).is_file():
+        return {}
+    try:
+        import xarray as xr  # noqa: PLC0415
+
+        with xr.open_dataset(path, group="input") as inp:
+            names = [str(v) for v in inp.data_vars]
+    except Exception as e:
+        return {"nc_error": f"{type(e).__name__}: {e}"}
+    lr = [n for n in names if n != "lsm"]
+    return {"nc_input_channels": names, "nc_lr_n": len(lr),
+            "nc_sea_ice": "yes" if "siconc" in lr else "no"}
 
 
 def hydra_provenance(path: str) -> dict:
@@ -263,10 +296,17 @@ def main():
         metrics = json.load(open(rdir / "metrics.json")).get("channels", {})
 
     ck = checkpoint_provenance(checkpoint, stage)
+    nc_p = nc_provenance(nc)
     hy = hydra_provenance(args.hydra_config)
+    if nc_p.get("nc_sea_ice") and ck["sea_ice"] != "unknown" \
+            and nc_p["nc_sea_ice"] != ck["sea_ice"]:
+        print(f"  WARNING: checkpoint says sea_ice={ck['sea_ice']} but the NetCDF input group "
+              f"says {nc_p['nc_sea_ice']}.\n           generate.py reuses one fixed output "
+              f"path, so the NetCDF may belong to another run; trust the checkpoint.",
+              file=sys.stderr)
     prov = {"config": cfg_name or hy.get("hydra_config", ""),
             "data": data_dir, "stats": stats_path or hy.get("stats_path", ""),
-            "git": git_hash(), "versions": env_versions(), **ck, **hy}
+            "git": git_hash(), "versions": env_versions(), **ck, **nc_p, **hy}
     if carried:
         print(f"\ncarried forward from the previous collect: {', '.join(sorted(set(carried)))}")
 
@@ -277,6 +317,8 @@ def main():
         print(f"  NOTE: could not read the checkpoint ({ck['error']}).")
         print("        Channel provenance is the one field that cannot be faked -- "
               "re-run in corrdiff-env with --checkpoint to capture it.")
+    if nc_p.get("nc_input_channels"):
+        print(f"  nc inputs   : {nc_p['nc_lr_n']} LR + lsm, sea ice: {nc_p['nc_sea_ice']}")
     if hy.get("lr_channels") is not None:
         print(f"  lr_channels : {hy['lr_channels']}")
 

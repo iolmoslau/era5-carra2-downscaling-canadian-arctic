@@ -29,11 +29,15 @@ collect_run = pytest.importorskip("collect_run")
 
 # ------------------------------------------------------------------ the arithmetic that decides
 @pytest.mark.parametrize("stage,in_ch,lr_n,ice", [
-    # from train.py: regression in = L + lsm(1) + N_grid(4); diffusion adds img_out(3)
-    ("regression", 17, 12, "yes"),
-    ("regression", 16, 11, "no"),
-    ("diffusion", 20, 12, "yes"),
-    ("diffusion", 19, 11, "no"),
+    # regression in = L + lsm(1) + N_grid(4) + latents(3); diffusion adds img_out(3) again for
+    # hr_mean_conditioning. The latents term is the one that was missed first time round: the
+    # UNet denoises a 3-channel target concatenated with the conditioning, for the regression
+    # net too (hence regression_step's latents_shape). Real checkpoints: regression_2 = 20,
+    # diffusion_2 = 23, both L = 12.
+    ("regression", 20, 12, "yes"),
+    ("regression", 19, 11, "no"),
+    ("diffusion", 23, 12, "yes"),
+    ("diffusion", 22, 11, "no"),
 ])
 def test_channel_count_recovered_from_conv_width(stage, in_ch, lr_n, ice):
     got = collect_run.channels_from_in(in_ch, stage)
@@ -42,8 +46,55 @@ def test_channel_count_recovered_from_conv_width(stage, in_ch, lr_n, ice):
 
 def test_ablation_widths_report_unknown_rather_than_guessing():
     """A run with 9 LR channels is neither the full nor the noice set; saying "no" would be a lie."""
-    got = collect_run.channels_from_in(14, "regression")
+    got = collect_run.channels_from_in(17, "regression")
     assert got["lr_n"] == 9 and got["sea_ice"] == "unknown"
+
+
+def test_the_two_stages_differ_by_exactly_the_hr_mean_term():
+    """Both stages read the same LR count off their own width -- the offsets are not independent
+    guesses, they differ by img_out_channels and nothing else."""
+    reg = collect_run.channels_from_in(20, "regression")
+    dif = collect_run.channels_from_in(23, "diffusion")
+    assert reg["lr_n"] == dif["lr_n"] == 12
+    assert collect_run._STAGE_OFFSET["diffusion"] - collect_run._STAGE_OFFSET["regression"] == 3
+
+
+def test_netcdf_input_group_names_the_channels(tmp_path):
+    """The corroborating source: names, not arithmetic. This is what settled it in the end."""
+    import netCDF4 as nc
+
+    path = tmp_path / "out.nc"
+    f = nc.Dataset(path, "w")
+    f.createDimension("time"); f.createDimension("x", 2); f.createDimension("y", 2)
+    g = f.createGroup("input")
+    for name in ["t2m", "u10", "v10", "t500", "t850", "z500", "z850",
+                 "u500", "u850", "v500", "v850", "siconc", "lsm"]:
+        g.createVariable(name, "f", ("time", "y", "x"))
+    f.close()
+
+    got = collect_run.nc_provenance(str(path))
+    assert got["nc_lr_n"] == 12 and got["nc_sea_ice"] == "yes"
+    assert "lsm" not in [c for c in got["nc_input_channels"] if c == "__never__"]
+
+
+def test_netcdf_without_sea_ice_reports_no(tmp_path):
+    import netCDF4 as nc
+
+    path = tmp_path / "noice.nc"
+    f = nc.Dataset(path, "w")
+    f.createDimension("time"); f.createDimension("x", 2); f.createDimension("y", 2)
+    g = f.createGroup("input")
+    for name in ["t2m", "u10", "v10", "t500", "t850", "z500", "z850",
+                 "u500", "u850", "v500", "v850", "lsm"]:
+        g.createVariable(name, "f", ("time", "y", "x"))
+    f.close()
+    got = collect_run.nc_provenance(str(path))
+    assert got["nc_lr_n"] == 11 and got["nc_sea_ice"] == "no"
+
+
+def test_absent_netcdf_is_not_fatal(tmp_path):
+    assert collect_run.nc_provenance("") == {}
+    assert collect_run.nc_provenance(str(tmp_path / "nope.nc")) == {}
 
 
 def test_unknown_stage_does_not_invent_a_count():
