@@ -176,3 +176,44 @@ def test_undeterminable_device_count_does_not_block():
 def test_visible_gpus_counts_the_cuda_list():
     assert sh("CUDA_VISIBLE_DEVICES=0,1,2 visible_gpus").stdout.strip() == "3"
     assert sh("CUDA_VISIBLE_DEVICES=1 visible_gpus").stdout.strip() == "1"
+
+
+# ------------------------------------------------------------------ NPROC derivation
+# $SLURM_GPUS_ON_NODE is a claim; the visible devices are the fact. sbatch --export=ALL means an
+# unset one keeps whatever the submitting shell had, so it can be stale or simply wrong.
+NPROC_SNIPPET = '''
+NPROC="${NPROC:-}"
+if [[ ! "$NPROC" =~ ^[1-9][0-9]*$ ]]; then
+  NPROC=$(visible_gpus)
+  [[ "$NPROC" =~ ^[1-9][0-9]*$ ]] || NPROC="${SLURM_GPUS_ON_NODE:-1}"
+fi
+echo "$NPROC"
+'''
+
+
+def nproc(env: str) -> str:
+    return sh(f"{env}\n{NPROC_SNIPPET}").stdout.strip()
+
+
+def test_visible_devices_beat_a_stale_slurm_variable():
+    """The incident: SLURM_GPUS_ON_NODE=1 inherited from the submitting shell while three GPUs
+    were actually allocated. The device list must win."""
+    assert nproc("export CUDA_VISIBLE_DEVICES=0,1,2 SLURM_GPUS_ON_NODE=1") == "3"
+
+
+def test_explicit_nproc_beats_everything():
+    """The escape hatch the warning points at, for when neither source can be trusted."""
+    assert nproc("export NPROC=2 CUDA_VISIBLE_DEVICES=0,1,2,3 SLURM_GPUS_ON_NODE=4") == "2"
+
+
+def test_a_junk_nproc_is_ignored_rather_than_passed_to_torchrun():
+    assert nproc("export NPROC=abc CUDA_VISIBLE_DEVICES=0,1") == "2"
+    assert nproc("export NPROC=0 CUDA_VISIBLE_DEVICES=0,1") == "2"
+
+
+def test_falls_back_when_no_devices_are_visible():
+    """A CPU-only shell must not end up launching zero ranks."""
+    assert nproc("unset CUDA_VISIBLE_DEVICES; visible_gpus() { printf ''; }; "
+                 "export SLURM_GPUS_ON_NODE=2") == "2"
+    assert nproc("unset CUDA_VISIBLE_DEVICES SLURM_GPUS_ON_NODE; "
+                 "visible_gpus() { printf '0\\n'; }") == "1"

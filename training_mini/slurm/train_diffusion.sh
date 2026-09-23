@@ -48,7 +48,15 @@ OUTPUT_DIR="${OUTPUT_DIR:-$SCRATCH/corrdiff_mini}"
 CONFIG="${CONFIG:-config_training_era5_carra2_mini_diffusion}"
 STATS="${STATS:-$DATA_DIR/stats_train_2011_2018.json}"
 STAGE="${STAGE:-1}"
-NPROC="${NPROC:-${SLURM_GPUS_ON_NODE:-1}}"            # overridable; the :-1 fallback is checked below
+# Devices actually visible first: $SLURM_GPUS_ON_NODE is a claim about the allocation, and an
+# absent one silently inherits whatever the submitting shell had (sbatch --export=ALL), which is
+# how a 3-GPU job once trained on 1 for 12 hours. CUDA_VISIBLE_DEVICES/nvidia-smi cannot be stale.
+# A count of 0 (or none at all) is not a rank count -- fall back rather than launch zero ranks.
+NPROC="${NPROC:-}"
+if [[ ! "$NPROC" =~ ^[1-9][0-9]*$ ]]; then
+  NPROC=$(visible_gpus)
+  [[ "$NPROC" =~ ^[1-9][0-9]*$ ]] || NPROC="${SLURM_GPUS_ON_NODE:-1}"
+fi
 
 # ---- sanity: log resolved paths, fail fast on a bad OUTPUT_DIR/DATA_DIR --------------------
 echo "[paths] OUTPUT_DIR=$OUTPUT_DIR"
