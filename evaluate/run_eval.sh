@@ -22,7 +22,8 @@
 # Cost/disk scale with N*NUM_ENS.
 #
 #SBATCH --account=def-stockie_gpu
-#SBATCH --gpus=h100:1
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=h100:1
 #SBATCH --job-name=corrdiff_eval
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G

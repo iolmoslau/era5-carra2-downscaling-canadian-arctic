@@ -72,4 +72,4 @@ fi
 
 echo "DONE. Corrected (earth-relative wind) shards in $DST_DIR"
 echo "Retrain with: DATA_DIR=$DST_DIR STATS=$STATS OUTPUT_DIR=\$SCRATCH/corrdiff_mini_derot \\"
-echo "              sbatch --gpus=h100:2 training_mini/slurm/train_regression.sh"
+echo "              sbatch --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh"

@@ -21,7 +21,8 @@
 # Output NetCDF (truth/prediction/input groups) lands in training_mini/ as corrdiff_output.nc.
 
 #SBATCH --account=def-stockie_gpu
-#SBATCH --gpus=h100:1
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=h100:1
 #SBATCH --job-name=corrdiff_gen
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G

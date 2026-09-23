@@ -315,3 +315,29 @@ check_gpu_alloc() {
   echo "         more GPUs than this trains on a subset for the full walltime without failing." >&2
   echo "         Set NPROC=$vis explicitly if that is not what you meant." >&2
 }
+
+# ---------------------------------------------------------------------------------------
+# One node, please
+#
+# `--gpus=h100:3` is a JOB-level count, and SLURM may satisfy it however it likes -- including
+# three nodes holding one GPU each. That is what job 60887527 got: .extern showed cpu=48,gpu=3
+# across the allocation while .batch (which runs on the first node only) showed cpu=16,gpu=1.
+# torchrun --standalone --nnodes=1 can only ever use the first node, so the run trained on one
+# GPU for its full 12 hours while all three were billed.
+#
+# --gpus-per-node=h100:N with --nodes=1 asks for what we can actually use. The guard below
+# catches a multi-node allocation regardless of how it was requested.
+# ---------------------------------------------------------------------------------------
+
+# require_single_node -- refuse a multi-node allocation the launcher cannot use.
+require_single_node() {
+  local n="${1-${SLURM_JOB_NUM_NODES:-${SLURM_NNODES:-1}}}"
+  [[ "$n" =~ ^[0-9]+$ ]] || return 0
+  (( n <= 1 )) && return 0
+  echo "ERROR: allocation spans $n nodes, but training launches with" >&2
+  echo "       torchrun --standalone --nnodes=1 -- only the first node's GPUs are reachable." >&2
+  echo "       A job-level --gpus=h100:N can be satisfied as N nodes holding one GPU each, and" >&2
+  echo "       the idle nodes still bill. Request per-node instead:" >&2
+  echo "         --nodes=1 --gpus-per-node=h100:N" >&2
+  return 1
+}

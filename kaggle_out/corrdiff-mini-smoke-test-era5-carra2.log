@@ -1,0 +1,153 @@
+[{"stream_name":"stderr","time":5.320730866,"data":"/usr/local/lib/python3.12/dist-packages/nbformat/__init__.py:96: MissingIDFieldWarning: Cell is missing an id field, this will become a hard error in future nbformat versions. You may want to use `normalize()` on your notebooks before validations (available since nbformat 5.1.4). Previous versions of nbformat are fixing this issue transparently, and will stop doing so in the future.\n"}
+,{"stream_name":"stderr","time":5.320810191,"data":"  validate(nb)\n"}
+,{"stream_name":"stderr","time":6.06151635,"data":"0.00s - Debugger warning: It seems that frozen modules are being used, which may\n"}
+,{"stream_name":"stderr","time":6.061551415,"data":"0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off\n"}
+,{"stream_name":"stderr","time":6.061555293,"data":"0.00s - to python to disable frozen modules.\n"}
+,{"stream_name":"stderr","time":6.061557809,"data":"0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.\n"}
+,{"stream_name":"stderr","time":6.616043208,"data":"0.00s - Debugger warning: It seems that frozen modules are being used, which may\n"}
+,{"stream_name":"stderr","time":6.61607882,"data":"0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off\n"}
+,{"stream_name":"stderr","time":6.616082303,"data":"0.00s - to python to disable frozen modules.\n"}
+,{"stream_name":"stderr","time":6.616084941,"data":"0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.\n"}
+,{"stream_name":"stdout","time":11.803190599,"data":"torch 2.10.0+cu128 | cuda avail True\n"}
+,{"stream_name":"stdout","time":11.803244702,"data":"device: Tesla P100-PCIE-16GB\n"}
+,{"stream_name":"stderr","time":11.804216234,"data":"/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:435: UserWarning: \n"}
+,{"stream_name":"stderr","time":11.80424195,"data":"    Found GPU0 Tesla P100-PCIE-16GB which is of cuda capability 6.0.\n"}
+,{"stream_name":"stderr","time":11.804247765,"data":"    Minimum and Maximum cuda capability supported by this version of PyTorch is\n"}
+,{"stream_name":"stderr","time":11.804252489,"data":"    (7.0) - (12.0)\n"}
+,{"stream_name":"stderr","time":11.804257967,"data":"    \n"}
+,{"stream_name":"stderr","time":11.804262426,"data":"  queued_call()\n"}
+,{"stream_name":"stderr","time":11.804266952999999,"data":"/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:435: UserWarning: \n"}
+,{"stream_name":"stderr","time":11.804271561,"data":"    Please install PyTorch with a following CUDA\n"}
+,{"stream_name":"stderr","time":11.804276387,"data":"    configurations:  12.6 following instructions at\n"}
+,{"stream_name":"stderr","time":11.804281626,"data":"    https://pytorch.org/get-started/locally/\n"}
+,{"stream_name":"stderr","time":11.804286545,"data":"    \n"}
+,{"stream_name":"stderr","time":11.804290903,"data":"  queued_call()\n"}
+,{"stream_name":"stderr","time":11.804295374,"data":"/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:435: UserWarning: \n"}
+,{"stream_name":"stderr","time":11.804300362,"data":"Tesla P100-PCIE-16GB with CUDA capability sm_60 is not compatible with the current PyTorch installation.\n"}
+,{"stream_name":"stderr","time":11.804305064,"data":"The current PyTorch install supports CUDA capabilities sm_70 sm_75 sm_80 sm_86 sm_90 sm_100 sm_120.\n"}
+,{"stream_name":"stderr","time":11.804310439,"data":"If you want to use the Tesla P100-PCIE-16GB GPU with PyTorch, please check the instructions at https://pytorch.org/get-started/locally/\n"}
+,{"stream_name":"stderr","time":11.804315575,"data":"\n"}
+,{"stream_name":"stderr","time":11.804319893,"data":"  queued_call()\n"}
+,{"stream_name":"stderr","time":11.804342581,"data":"\n"}
+,{"stream_name":"stderr","time":11.804346966,"data":"/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:435: UserWarning: \n"}
+,{"stream_name":"stderr","time":11.804350422,"data":"    Found GPU0 Tesla P100-PCIE-16GB which is of cuda capability 6.0.\n"}
+,{"stream_name":"stderr","time":11.804354204,"data":"    Minimum and Maximum cuda capability supported by this version of PyTorch is\n"}
+,{"stream_name":"stderr","time":11.804358048,"data":"    (7.0) - (12.0)\n"}
+,{"stream_name":"stderr","time":11.80436162,"data":"    \n"}
+,{"stream_name":"stderr","time":11.804364817,"data":"  queued_call()\n"}
+,{"stream_name":"stderr","time":11.80436834,"data":"/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:435: UserWarning: \n"}
+,{"stream_name":"stderr","time":11.804372169,"data":"    Please install PyTorch with a following CUDA\n"}
+,{"stream_name":"stderr","time":11.804375939,"data":"    configurations:  12.6 following instructions at\n"}
+,{"stream_name":"stderr","time":11.80438008,"data":"    https://pytorch.org/get-started/locally/\n"}
+,{"stream_name":"stderr","time":11.804383411,"data":"    \n"}
+,{"stream_name":"stderr","time":11.804386467,"data":"  queued_call()\n"}
+,{"stream_name":"stderr","time":11.804389726,"data":"/usr/local/lib/python3.12/dist-packages/torch/cuda/__init__.py:435: UserWarning: \n"}
+,{"stream_name":"stderr","time":11.804393127,"data":"Tesla P100-PCIE-16GB with CUDA capability sm_60 is not compatible with the current PyTorch installation.\n"}
+,{"stream_name":"stderr","time":11.804396684,"data":"The current PyTorch install supports CUDA capabilities sm_70 sm_75 sm_80 sm_86 sm_90 sm_100 sm_120.\n"}
+,{"stream_name":"stderr","time":11.804400272,"data":"If you want to use the Tesla P100-PCIE-16GB GPU with PyTorch, please check the instructions at https://pytorch.org/get-started/locally/\n"}
+,{"stream_name":"stderr","time":11.80440429,"data":"\n"}
+,{"stream_name":"stderr","time":11.804407552,"data":"  queued_call()\n"}
+,{"stream_name":"stdout","time":18.508176127,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 9.3 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":18.595590752,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 42.0 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":18.653663671,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 212.5/212.5 kB 18.5 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":18.710190175,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 9.3 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":18.710221273,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 42.0 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":18.710226023,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 212.5/212.5 kB 18.5 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":18.713051629,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 154.7/154.7 kB 12.2 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":18.771689919,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.6/56.6 kB 4.3 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":18.888813064,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 465.5/465.5 kB 35.4 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":18.915035894,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 154.7/154.7 kB 12.2 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":18.915063809,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.6/56.6 kB 4.3 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":18.915069032,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 465.5/465.5 kB 35.4 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":19.00242188,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 131.1/131.1 kB 10.9 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":19.204620709,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 131.1/131.1 kB 10.9 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":21.257325395,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 138.7/138.7 MB 12.2 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":21.315926084,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 89.5/89.5 kB 7.0 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":21.374166752,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 203.9/203.9 kB 17.7 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":21.459358905,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 138.7/138.7 MB 12.2 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":21.459391725,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 89.5/89.5 kB 7.0 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":21.459397157,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 203.9/203.9 kB 17.7 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":21.831432864,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.0/15.0 MB 53.5 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":22.033520083,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.0/15.0 MB 53.5 MB/s eta 0:00:00\n"}
+,{"stream_name":"stderr","time":34.360130553,"data":"ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\n"}
+,{"stream_name":"stderr","time":34.360179696,"data":"bigframes 2.39.0 requires google-cloud-bigquery-storage\u003c3.0.0,\u003e=2.30.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":34.360188358,"data":"google-adk 1.29.0 requires google-cloud-bigquery-storage\u003e=2.0.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":34.360193676,"data":"datasets 5.0.0 requires fsspec[http]\u003c=2026.4.0,\u003e=2023.1.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":34.360198894,"data":"boto3 1.43.36 requires botocore\u003c1.44.0,\u003e=1.43.36, but you have botocore 1.43.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":34.360214227,"data":"gcsfs 2025.3.0 requires fsspec==2025.3.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":34.562236427,"data":"ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\n"}
+,{"stream_name":"stderr","time":34.562271059,"data":"bigframes 2.39.0 requires google-cloud-bigquery-storage\u003c3.0.0,\u003e=2.30.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":34.562276335,"data":"google-adk 1.29.0 requires google-cloud-bigquery-storage\u003e=2.0.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":34.562280403,"data":"datasets 5.0.0 requires fsspec[http]\u003c=2026.4.0,\u003e=2023.1.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":34.562283775,"data":"boto3 1.43.36 requires botocore\u003c1.44.0,\u003e=1.43.36, but you have botocore 1.43.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":34.562287899,"data":"gcsfs 2025.3.0 requires fsspec==2025.3.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":34.562291959,"data":"\n"}
+,{"stream_name":"stderr","time":34.56229555,"data":"ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\n"}
+,{"stream_name":"stderr","time":34.562299193,"data":"bigframes 2.39.0 requires google-cloud-bigquery-storage\u003c3.0.0,\u003e=2.30.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":34.562302802,"data":"google-adk 1.29.0 requires google-cloud-bigquery-storage\u003e=2.0.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":34.562306451,"data":"datasets 5.0.0 requires fsspec[http]\u003c=2026.4.0,\u003e=2023.1.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":34.562310251,"data":"boto3 1.43.36 requires botocore\u003c1.44.0,\u003e=1.43.36, but you have botocore 1.43.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":34.562313827,"data":"gcsfs 2025.3.0 requires fsspec==2025.3.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":40.229703508,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":40.22973733,"data":"  File \"\u003cstring\u003e\", line 1, in \u003cmodule\u003e\n"}
+,{"stream_name":"stderr","time":40.229743861,"data":"  File \"/usr/local/lib/python3.12/dist-packages/papermill/execute.py\", line 131, in execute_notebook\n"}
+,{"stream_name":"stderr","time":40.229855225,"data":"    raise_for_execution_errors(nb, output_path)\n"}
+,{"stream_name":"stderr","time":40.230335481,"data":"  File \"/usr/local/lib/python3.12/dist-packages/papermill/execute.py\", line 251, in raise_for_execution_errors\n"}
+,{"stream_name":"stderr","time":40.230356911,"data":"    raise error\n"}
+,{"stream_name":"stderr","time":40.23036313,"data":"papermill.exceptions.PapermillExecutionError: \n"}
+,{"stream_name":"stderr","time":40.230368142,"data":"---------------------------------------------------------------------------\n"}
+,{"stream_name":"stderr","time":40.230372672,"data":"Exception encountered at \"In [3]\":\n"}
+,{"stream_name":"stderr","time":40.230377595,"data":"---------------------------------------------------------------------------\n"}
+,{"stream_name":"stderr","time":40.230382211,"data":"RuntimeError                              Traceback (most recent call last)\n"}
+,{"stream_name":"stderr","time":40.230388561,"data":"/tmp/ipykernel_24/2561410403.py in \u003ccell line: 0\u003e()\n"}
+,{"stream_name":"stderr","time":40.230406413,"data":"      9 \n"}
+,{"stream_name":"stderr","time":40.230408955,"data":"     10 import importlib\n"}
+,{"stream_name":"stderr","time":40.23041127,"data":"---\u003e 11 importlib.reload(torch)\n"}
+,{"stream_name":"stderr","time":40.230413763,"data":"     12 print(\"torch before:\", torch_before, \"| after:\", torch.__version__,\n"}
+,{"stream_name":"stderr","time":40.230416301,"data":"     13       \"| cuda:\", torch.cuda.is_available())\n"}
+,{"stream_name":"stderr","time":40.230418658,"data":"\n"}
+,{"stream_name":"stderr","time":40.230420966,"data":"/usr/lib/python3.12/importlib/__init__.py in reload(module)\n"}
+,{"stream_name":"stderr","time":40.23042327,"data":"    129         if spec is None:\n"}
+,{"stream_name":"stderr","time":40.23042557,"data":"    130             raise ModuleNotFoundError(f\"spec not found for the module {name!r}\", name=name)\n"}
+,{"stream_name":"stderr","time":40.23042798,"data":"--\u003e 131         _bootstrap._exec(spec, module)\n"}
+,{"stream_name":"stderr","time":40.230430404,"data":"    132         # The module may have replaced itself in sys.modules!\n"}
+,{"stream_name":"stderr","time":40.23043271,"data":"    133         return sys.modules[name]\n"}
+,{"stream_name":"stderr","time":40.230434975,"data":"\n"}
+,{"stream_name":"stderr","time":40.230437114,"data":"/usr/lib/python3.12/importlib/_bootstrap.py in _exec(spec, module)\n"}
+,{"stream_name":"stderr","time":40.230439513,"data":"\n"}
+,{"stream_name":"stderr","time":40.230441646,"data":"/usr/lib/python3.12/importlib/_bootstrap_external.py in exec_module(self, module)\n"}
+,{"stream_name":"stderr","time":40.230443965,"data":"\n"}
+,{"stream_name":"stderr","time":40.230446075,"data":"/usr/lib/python3.12/importlib/_bootstrap.py in _call_with_frames_removed(f, *args, **kwds)\n"}
+,{"stream_name":"stderr","time":40.230448482,"data":"\n"}
+,{"stream_name":"stderr","time":40.230450623,"data":"/usr/local/lib/python3.12/dist-packages/torch/__init__.py in \u003cmodule\u003e\n"}
+,{"stream_name":"stderr","time":40.230453037,"data":"   2802 \n"}
+,{"stream_name":"stderr","time":40.230455213,"data":"   2803 \n"}
+,{"stream_name":"stderr","time":40.230457371,"data":"-\u003e 2804 class _TritonLibrary:\n"}
+,{"stream_name":"stderr","time":40.230459666,"data":"   2805     lib = torch.library.Library(\"triton\", \"DEF\")\n"}
+,{"stream_name":"stderr","time":40.230462113,"data":"   2806     ops_table: dict[tuple[str, str], _Callable] = {}\n"}
+,{"stream_name":"stderr","time":40.230464411,"data":"\n"}
+,{"stream_name":"stderr","time":40.23046652,"data":"/usr/local/lib/python3.12/dist-packages/torch/__init__.py in _TritonLibrary()\n"}
+,{"stream_name":"stderr","time":40.23046886,"data":"   2803 \n"}
+,{"stream_name":"stderr","time":40.230471024,"data":"   2804 class _TritonLibrary:\n"}
+,{"stream_name":"stderr","time":40.230473266,"data":"-\u003e 2805     lib = torch.library.Library(\"triton\", \"DEF\")\n"}
+,{"stream_name":"stderr","time":40.23047571,"data":"   2806     ops_table: dict[tuple[str, str], _Callable] = {}\n"}
+,{"stream_name":"stderr","time":40.230478,"data":"   2807 \n"}
+,{"stream_name":"stderr","time":40.230480263,"data":"\n"}
+,{"stream_name":"stderr","time":40.230482419,"data":"/usr/local/lib/python3.12/dist-packages/torch/library.py in __init__(self, ns, kind, dispatch_key)\n"}
+,{"stream_name":"stderr","time":40.23048476,"data":"     99         frame = traceback.extract_stack(limit=2)[0]\n"}
+,{"stream_name":"stderr","time":40.23048717,"data":"    100         filename, lineno = frame.filename, frame.lineno\n"}
+,{"stream_name":"stderr","time":40.230492425,"data":"--\u003e 101         self.m: Any | None = torch._C._dispatch_library(\n"}
+,{"stream_name":"stderr","time":40.230494876,"data":"    102             kind, ns, dispatch_key, filename, lineno\n"}
+,{"stream_name":"stderr","time":40.230497155,"data":"    103         )\n"}
+,{"stream_name":"stderr","time":40.23049934,"data":"\n"}
+,{"stream_name":"stderr","time":40.230502091,"data":"RuntimeError: Only a single TORCH_LIBRARY can be used to register the namespace triton; please put all of your definitions in a single TORCH_LIBRARY block.  If you were trying to specify implementations, consider using TORCH_LIBRARY_IMPL (which can be duplicated).  If you really intended to define operators for a single namespace in a distributed way, you can use TORCH_LIBRARY_FRAGMENT to explicitly indicate this.  Previous registration of TORCH_LIBRARY was registered at /usr/local/lib/python3.12/dist-packages/torch/__init__.py:2805; latest registration was registered at /usr/local/lib/python3.12/dist-packages/torch/__init__.py:2805\n"}
+,{"stream_name":"stderr","time":40.230513111,"data":"\n"}
+,{"stream_name":"stderr","time":42.41600012,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":42.416042524,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":42.559494482,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":42.559525853,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":43.14679038,"data":"[NbConvertApp] Converting notebook __notebook__.ipynb to notebook\n"}
+,{"stream_name":"stderr","time":43.458076997,"data":"[NbConvertApp] Writing 29072 bytes to __notebook__.ipynb\n"}
+,{"stream_name":"stderr","time":45.850907231,"data":"[NbConvertApp] Converting notebook __notebook__.ipynb to html\n"}
+,{"stream_name":"stderr","time":46.679041251,"data":"[NbConvertApp] Writing 323778 bytes to __results__.html\n"}
+]

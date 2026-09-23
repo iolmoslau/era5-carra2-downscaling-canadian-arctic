@@ -38,7 +38,7 @@ DATA=$PROJECT/data/derot
 
 # 1. TRAIN  (re-submit the same line until it reaches TRAIN_DURATION -- it resumes)
 DATA_DIR=$DATA  STATS=$DATA/stats_train_2011_2018.json  OUTPUT_DIR=$OUT  TRAIN_DURATION=800000 \
-  bash training_mini/slurm/submit.sh --gpus=h100:2 training_mini/slurm/train_regression.sh
+  bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
 
 # 2. GENERATE a sample on the 2019 validation year (deterministic mean)
 DATA_DIR=$DATA  OUTPUT_DIR=$OUT \
@@ -74,7 +74,7 @@ REG=$(latest_ckpt $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression)
 
 # 1. TRAIN diffusion on the regression checkpoint (re-submit to resume)
 DATA_DIR=$DATA  STATS=$DATA/stats_train_2011_2018.json  OUTPUT_DIR=$OUT  TRAIN_DURATION=2000000 \
-  bash training_mini/slurm/submit.sh --gpus=h100:2 training_mini/slurm/train_diffusion.sh "$REG"
+  bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_diffusion.sh "$REG"
 
 # 2. GENERATE an ensemble (regression mean + diffusion residual). NUM_ENS members per input
 #    time gives the spread -> per-channel variance in metrics.json / runs.csv.
@@ -160,7 +160,7 @@ The per-run `tensorboard/` deliberately lives with the run's checkpoints under `
   press on — it passes through `submit.sh` like any other env var:
   ```bash
   CORRDIFF_ALLOW_BAD_CHECKPOINT=1 DATA_DIR=$DATA OUTPUT_DIR=$OUT \
-    bash training_mini/slurm/submit.sh --gpus=h100:2 training_mini/slurm/train_regression.sh
+    bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
   ```
   A **missing** optimizer `.pt` is only a warning, not an error — restoring a `.mdlus`-only
   archive (section C) resumes fine, with Adam moments reset and a transient loss bump.
@@ -174,6 +174,21 @@ The per-run `tensorboard/` deliberately lives with the run's checkpoints under `
   repeatedly on the opportunistic queue it pays for itself within a couple of resubmissions. The
   archives are verified against the loose stores and the originals are kept; come back with
   `REMOVE_SRC=1` to reclaim the inodes only after a real training job has run off them.
+- **Ask for GPUs with `--gpus-per-node`, never `--gpus`.** `--gpus=h100:3` is a *job-level* count
+  and SLURM may satisfy it as **three nodes holding one GPU each**. Training launches with
+  `torchrun --standalone --nnodes=1`, which only ever uses the first node, so the run trains on
+  one GPU while the whole allocation bills. This happened: job `60887527` ran 12 h that way, and
+  `sacct` showed it plainly — `.extern` (the whole allocation) `cpu=48,gpu=3`, `.batch` (first
+  node only) `cpu=16,gpu=1`. Both train scripts now carry `#SBATCH --nodes=1` and
+  `--gpus-per-node`, and `require_single_node` refuses a multi-node allocation up front.
+  The line to skim in any job's `.out` is `Launching regression (...) on N H100`.
+- **Valid GPU counts are constrained by the batch size.** CorrDiff requires
+  `batch_size_per_gpu × accumulation_rounds × world_size == total_batch_size` with both factors
+  computed by integer division, so a count that merely divides `total_batch_size` is not enough.
+  At the shipped `64 / 4`: **1, 2, 4, 8, 16** — not 3, 5, 6 or 7. `require_world_size` checks this
+  before staging; `batch_size_per_gpu: "auto"` does not get you out of it.
+  Changing the count between resubmissions is otherwise safe — `cur_nimg` and the LR schedule are
+  both absolute in samples, so a run started on 1 GPU resumes correctly on 4.
 - **Checkpointing dials** (both train scripts): `CKPT_FREQ` = samples between checkpoints
   (config default 5000, i.e. ~every 78 steps at `total_batch_size: 64`), `KEEP_CKPTS` = how many
   to retain (default `-1`, keep everything). Writes are synchronous behind a barrier and stall
@@ -182,7 +197,7 @@ The per-run `tensorboard/` deliberately lives with the run's checkpoints under `
   partway through one you may want to bisect.
   ```bash
   CKPT_FREQ=50000 KEEP_CKPTS=3 DATA_DIR=$DATA OUTPUT_DIR=$OUT \
-    bash training_mini/slurm/submit.sh --gpus=h100:2 training_mini/slurm/train_regression.sh
+    bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
   ```
 - **No-sea-ice variants**: add `CONFIG=config_training_era5_carra2_mini_regression_noice`
   (or `..._diffusion_noice`) to the train step, and for generation add

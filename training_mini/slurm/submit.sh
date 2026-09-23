@@ -12,7 +12,7 @@
 #     bash training_mini/slurm/submit.sh <sbatch opts> <script.sh> [script args]
 #   e.g.
 #     DATA_DIR=$DATA OUTPUT_DIR=$OUT TRAIN_DURATION=800000 \
-#       bash training_mini/slurm/submit.sh --gpus=h100:2 training_mini/slurm/train_regression.sh
+#       bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
 #
 # Env-var prefixes (DATA_DIR=, OUTPUT_DIR=, ...) and sbatch flags (--gpus=, ...) both pass through:
 # the prefixes are exported into this wrapper's environment and sbatch forwards them to the job

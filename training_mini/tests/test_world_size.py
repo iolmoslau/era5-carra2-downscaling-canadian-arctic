@@ -217,3 +217,33 @@ def test_falls_back_when_no_devices_are_visible():
                  "export SLURM_GPUS_ON_NODE=2") == "2"
     assert nproc("unset CUDA_VISIBLE_DEVICES SLURM_GPUS_ON_NODE; "
                  "visible_gpus() { printf '0\\n'; }") == "1"
+
+
+# ------------------------------------------------------------------ one node, please
+# Job 60887527: --gpus=h100:3 was satisfied as THREE nodes with one GPU each. .extern reported
+# cpu=48,gpu=3 for the allocation; .batch, which runs on the first node only, reported
+# cpu=16,gpu=1. The run trained on one GPU for 12 hours and billed for three.
+def test_multi_node_allocation_is_refused():
+    out = sh("require_single_node 3")
+    assert out.returncode == 1
+    assert "--nodes=1 --gpus-per-node=h100:N" in out.stderr
+
+
+def test_single_node_passes():
+    assert sh("require_single_node 1").returncode == 0
+    assert sh("SLURM_JOB_NUM_NODES=1 require_single_node").returncode == 0
+
+
+def test_absent_node_count_is_not_an_error():
+    """Outside a job there is no SLURM_JOB_NUM_NODES; the guard must not block a local run."""
+    assert sh("unset SLURM_JOB_NUM_NODES SLURM_NNODES; require_single_node").returncode == 0
+    assert sh('require_single_node ""').returncode == 0
+
+
+def test_the_scripts_request_one_node_per_node_gpus():
+    """The SBATCH defaults must not reintroduce the job-level --gpus that caused this."""
+    for name in ("train_regression.sh", "train_diffusion.sh"):
+        text = (TRAIN_DIR / "slurm" / name).read_text()
+        assert "#SBATCH --nodes=1" in text, name
+        assert "#SBATCH --gpus-per-node=h100:" in text, name
+        assert "\n#SBATCH --gpus=" not in text, f"{name} still uses the job-level --gpus"

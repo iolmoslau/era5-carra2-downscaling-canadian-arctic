@@ -1,0 +1,438 @@
+[{"stream_name":"stderr","time":5.932982541,"data":"0.00s - Debugger warning: It seems that frozen modules are being used, which may\n"}
+,{"stream_name":"stderr","time":5.93306459,"data":"0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off\n"}
+,{"stream_name":"stderr","time":5.933071942,"data":"0.00s - to python to disable frozen modules.\n"}
+,{"stream_name":"stderr","time":5.933076123,"data":"0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.\n"}
+,{"stream_name":"stderr","time":6.483066752,"data":"0.00s - Debugger warning: It seems that frozen modules are being used, which may\n"}
+,{"stream_name":"stderr","time":6.483112266,"data":"0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off\n"}
+,{"stream_name":"stderr","time":6.483116496,"data":"0.00s - to python to disable frozen modules.\n"}
+,{"stream_name":"stderr","time":6.483118981,"data":"0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.\n"}
+,{"stream_name":"stdout","time":13.669971694000001,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 9.3 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":13.745633231,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 57.3 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":13.803985086,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 212.5/212.5 kB 17.6 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":13.860838461,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 154.7/154.7 kB 14.5 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":13.872031239,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 9.3 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":13.872056221,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 57.3 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":13.872063781,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 212.5/212.5 kB 17.6 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":13.872069477,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 154.7/154.7 kB 14.5 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":13.91824443,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.6/56.6 kB 4.7 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":14.032599002,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 465.5/465.5 kB 33.8 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":14.11987858,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 56.6/56.6 kB 4.7 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":14.119904979,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 465.5/465.5 kB 33.8 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":14.143189771,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 131.1/131.1 kB 11.4 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":14.34501118,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 131.1/131.1 kB 11.4 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":16.37330662,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 138.7/138.7 MB 12.7 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":16.43177599,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 89.5/89.5 kB 7.4 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":16.490890465,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 203.9/203.9 kB 16.0 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":16.575040881,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 138.7/138.7 MB 12.7 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":16.575068408,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 89.5/89.5 kB 7.4 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":16.575074487,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 203.9/203.9 kB 16.0 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":16.94574275,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.0/15.0 MB 51.9 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":17.147516132,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.0/15.0 MB 51.9 MB/s eta 0:00:00\n"}
+,{"stream_name":"stderr","time":28.897389648,"data":"ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\n"}
+,{"stream_name":"stderr","time":28.897422036000002,"data":"bigframes 2.39.0 requires google-cloud-bigquery-storage\u003c3.0.0,\u003e=2.30.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":28.897428867,"data":"google-adk 1.29.0 requires google-cloud-bigquery-storage\u003e=2.0.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":28.897433415,"data":"datasets 5.0.0 requires fsspec[http]\u003c=2026.4.0,\u003e=2023.1.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":28.89743779,"data":"boto3 1.43.36 requires botocore\u003c1.44.0,\u003e=1.43.36, but you have botocore 1.43.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":28.897442168,"data":"gcsfs 2025.3.0 requires fsspec==2025.3.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":29.099598308,"data":"ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\n"}
+,{"stream_name":"stderr","time":29.099663844,"data":"bigframes 2.39.0 requires google-cloud-bigquery-storage\u003c3.0.0,\u003e=2.30.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":29.099672596,"data":"google-adk 1.29.0 requires google-cloud-bigquery-storage\u003e=2.0.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":29.099677804,"data":"datasets 5.0.0 requires fsspec[http]\u003c=2026.4.0,\u003e=2023.1.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":29.099683235,"data":"boto3 1.43.36 requires botocore\u003c1.44.0,\u003e=1.43.36, but you have botocore 1.43.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":29.099701382,"data":"gcsfs 2025.3.0 requires fsspec==2025.3.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":29.099705255,"data":"\n"}
+,{"stream_name":"stderr","time":29.099708461,"data":"ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.\n"}
+,{"stream_name":"stderr","time":29.099712309,"data":"bigframes 2.39.0 requires google-cloud-bigquery-storage\u003c3.0.0,\u003e=2.30.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":29.099717532,"data":"google-adk 1.29.0 requires google-cloud-bigquery-storage\u003e=2.0.0, which is not installed.\n"}
+,{"stream_name":"stderr","time":29.099724201,"data":"datasets 5.0.0 requires fsspec[http]\u003c=2026.4.0,\u003e=2023.1.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":29.099726664,"data":"boto3 1.43.36 requires botocore\u003c1.44.0,\u003e=1.43.36, but you have botocore 1.43.0 which is incompatible.\n"}
+,{"stream_name":"stderr","time":29.099729169,"data":"gcsfs 2025.3.0 requires fsspec==2025.3.0, but you have fsspec 2026.6.0 which is incompatible.\n"}
+,{"stream_name":"stdout","time":31.440430433,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 319.6/319.6 kB 2.1 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":31.642221876,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 319.6/319.6 kB 2.1 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":31.784842249,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.1/10.1 MB 34.8 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":31.986604648,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.1/10.1 MB 34.8 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":32.048419623,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.2/9.2 MB 61.9 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":32.251016173,"data":"   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.2/9.2 MB 61.9 MB/s eta 0:00:00\n"}
+,{"stream_name":"stdout","time":34.949328015,"data":"installs complete\n"}
+,{"stream_name":"stdout","time":39.234263075,"data":"torch 2.10.0+cu128 | cuda avail True\n"}
+,{"stream_name":"stdout","time":39.234302555,"data":"device: Tesla T4 | compute capability sm_75\n"}
+,{"stream_name":"stdout","time":39.919995507,"data":"physicsnemo 2.1.1\n"}
+,{"stream_name":"stderr","time":39.96043813,"data":"Cloning into '/tmp/corrdiff_code'...\n"}
+,{"stream_name":"stderr","time":40.162331403,"data":"Cloning into '/tmp/corrdiff_code'...\n"}
+,{"stream_name":"stderr","time":40.162370786,"data":"\n"}
+,{"stream_name":"stderr","time":40.162377698,"data":"Cloning into '/tmp/corrdiff_code'...\n"}
+,{"stream_name":"stdout","time":41.017461311,"data":"cwd: /tmp/corrdiff_code/training_mini\n"}
+,{"stream_name":"stdout","time":41.017493125,"data":"['README.md', 'conf', 'datasets', 'generate.py', 'helpers', 'kaggle', 'requirements.txt', 'slurm', 'testing', 'tests', 'tools', 'train.py']\n"}
+,{"stream_name":"stdout","time":41.061602946,"data":"store root found: /kaggle/input/datasets/israelolmos/shard-2011-smoke\n"}
+,{"stream_name":"stdout","time":41.061643293,"data":"SMOKE = /tmp/smoke_store.zarr\n"}
+,{"stream_name":"stdout","time":41.06166067,"data":"store contents: ['hr', 'hr_lat', 'hr_lon', 'land_sea_mask', 'lat', 'lon', 'lr', 'time', 'zarr.json']\n"}
+,{"stream_name":"stdout","time":41.080537527,"data":"$ python tools/make_stats.py --stores '/tmp/smoke_store.zarr' --out '/kaggle/working/stats_smoke.json'\n"}
+,{"stream_name":"stdout","time":51.485184979,"data":"[make_stats] computing LR/HR stats over 1 shard(s):\n"}
+,{"stream_name":"stdout","time":51.485253728,"data":"  - /tmp/smoke_store.zarr\n"}
+,{"stream_name":"stdout","time":51.485262492,"data":"[make_stats] wrote /kaggle/working/stats_smoke.json\n"}
+,{"stream_name":"stdout","time":51.485267977,"data":"  lr_channels = ['t2m', 'u10', 'v10', 't500', 't850', 'z500', 'z850', 'u500', 'u850', 'v500', 'v850', 'siconc']\n"}
+,{"stream_name":"stdout","time":51.485273186,"data":"  hr_channels = ['t2m', 'u10', 'v10']\n"}
+,{"stream_name":"stdout","time":51.48527838,"data":"  lsm_mean=0.7557 lsm_std=0.4297\n"}
+,{"stream_name":"stdout","time":51.687630017000004,"data":"[make_stats] computing LR/HR stats over 1 shard(s):\n"}
+,{"stream_name":"stdout","time":51.687692173,"data":"  - /tmp/smoke_store.zarr\n"}
+,{"stream_name":"stdout","time":51.687699341,"data":"[make_stats] wrote /kaggle/working/stats_smoke.json\n"}
+,{"stream_name":"stdout","time":51.687704372,"data":"  lr_channels = ['t2m', 'u10', 'v10', 't500', 't850', 'z500', 'z850', 'u500', 'u850', 'v500', 'v850', 'siconc']\n"}
+,{"stream_name":"stdout","time":51.687710116,"data":"  hr_channels = ['t2m', 'u10', 'v10']\n"}
+,{"stream_name":"stdout","time":51.687714802,"data":"  lsm_mean=0.7557 lsm_std=0.4297\n"}
+,{"stream_name":"stdout","time":52.383638127,"data":"$ python train.py --config-name=config_training_era5_carra2_mini_regression ++dataset.data_path='/tmp/smoke_store.zarr' ++dataset.stats_path='/kaggle/working/stats_smoke.json' '~validation' ++training.hp.training_duration=2000 ++training.hp.total_batch_size=2 ++training.hp.batch_size_per_gpu=1 ++training.perf.fp_optimizations=fp32 ++training.perf.dataloader_workers=2 ++training.io.print_progress_freq=100 ++training.io.save_checkpoint_freq=1000\n"}
+,{"stream_name":"stderr","time":86.855253422,"data":"/tmp/corrdiff_code/training_mini/train.py:46: ExperimentalFeatureWarning: You are importing from 'physicsnemo.experimental'. The APIs in this namespace are experimental, under active development, and may change without notice. Expect possible back-compatibility breaking changes and only partial test coverage.\n"}
+,{"stream_name":"stderr","time":86.855291859,"data":"  from physicsnemo.experimental.metrics.diffusion import tEDMResidualLoss\n"}
+,{"stream_name":"stderr","time":87.060947988,"data":"/tmp/corrdiff_code/training_mini/train.py:46: ExperimentalFeatureWarning: You are importing from 'physicsnemo.experimental'. The APIs in this namespace are experimental, under active development, and may change without notice. Expect possible back-compatibility breaking changes and only partial test coverage.\n"}
+,{"stream_name":"stderr","time":87.060989698,"data":"  from physicsnemo.experimental.metrics.diffusion import tEDMResidualLoss\n"}
+,{"stream_name":"stderr","time":87.060996732,"data":"\n"}
+,{"stream_name":"stderr","time":87.061001418,"data":"/tmp/corrdiff_code/training_mini/train.py:46: ExperimentalFeatureWarning: You are importing from 'physicsnemo.experimental'. The APIs in this namespace are experimental, under active development, and may change without notice. Expect possible back-compatibility breaking changes and only partial test coverage.\n"}
+,{"stream_name":"stderr","time":87.061006777,"data":"  from physicsnemo.experimental.metrics.diffusion import tEDMResidualLoss\n"}
+,{"stream_name":"stderr","time":87.848767116,"data":"/usr/local/lib/python3.12/dist-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config_training_era5_carra2_mini_regression': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information\n"}
+,{"stream_name":"stderr","time":87.848809972,"data":"  warnings.warn(msg, UserWarning)\n"}
+,{"stream_name":"stderr","time":88.023774309,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/distributed/manager.py:415: UserWarning: Could not initialize using ENV, SLURM or OPENMPI methods. Assuming this is a single process job\n"}
+,{"stream_name":"stderr","time":88.02381155,"data":"  warn(\n"}
+,{"stream_name":"stderr","time":88.050871815,"data":"/usr/local/lib/python3.12/dist-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config_training_era5_carra2_mini_regression': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information\n"}
+,{"stream_name":"stderr","time":88.050890697,"data":"  warnings.warn(msg, UserWarning)\n"}
+,{"stream_name":"stderr","time":88.050895055,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/distributed/manager.py:415: UserWarning: Could not initialize using ENV, SLURM or OPENMPI methods. Assuming this is a single process job\n"}
+,{"stream_name":"stderr","time":88.050899283,"data":"  warn(\n"}
+,{"stream_name":"stderr","time":88.050902613,"data":"\n"}
+,{"stream_name":"stderr","time":88.050905952,"data":"/usr/local/lib/python3.12/dist-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config_training_era5_carra2_mini_regression': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information\n"}
+,{"stream_name":"stderr","time":88.050910263,"data":"  warnings.warn(msg, UserWarning)\n"}
+,{"stream_name":"stderr","time":88.050913918,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/distributed/manager.py:415: UserWarning: Could not initialize using ENV, SLURM or OPENMPI methods. Assuming this is a single process job\n"}
+,{"stream_name":"stderr","time":88.050917711,"data":"  warn(\n"}
+,{"stream_name":"stderr","time":88.797015677,"data":"wandb: Tracking run with wandb version 0.26.1\n"}
+,{"stream_name":"stderr","time":88.797351104,"data":"wandb: W\u0026B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.\n"}
+,{"stream_name":"stderr","time":88.797392004,"data":"wandb: Run data is saved locally in wandb/wandb/offline-run-20260703_211408-5a1fukwq\n"}
+,{"stream_name":"stderr","time":88.999200574,"data":"wandb: Tracking run with wandb version 0.26.1\n"}
+,{"stream_name":"stderr","time":88.999254166,"data":"wandb: W\u0026B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.\n"}
+,{"stream_name":"stderr","time":88.999261594,"data":"wandb: Run data is saved locally in wandb/wandb/offline-run-20260703_211408-5a1fukwq\n"}
+,{"stream_name":"stderr","time":88.999265239,"data":"\n"}
+,{"stream_name":"stderr","time":88.999268906,"data":"wandb: Tracking run with wandb version 0.26.1\n"}
+,{"stream_name":"stderr","time":88.999272829,"data":"wandb: W\u0026B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.\n"}
+,{"stream_name":"stderr","time":88.9992763,"data":"wandb: Run data is saved locally in wandb/wandb/offline-run-20260703_211408-5a1fukwq\n"}
+,{"stream_name":"stdout","time":89.472149225,"data":"[2026-07-03 21:14:09,407][main][INFO] - Using dataset: datasets/era5_carra2.py::ERA5CARRA2Dataset\n"}
+,{"stream_name":"stdout","time":89.47330149,"data":"[2026-07-03 21:14:09,409][main][INFO] - Saving the outputs in /tmp/corrdiff_code/training_mini\n"}
+,{"stream_name":"stdout","time":89.474267366,"data":"[2026-07-03 21:14:09,410][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_regression does not exist, skipping load\n"}
+,{"stream_name":"stdout","time":89.674681695,"data":"[2026-07-03 21:14:09,407][main][INFO] - Using dataset: datasets/era5_carra2.py::ERA5CARRA2Dataset\n"}
+,{"stream_name":"stdout","time":89.674712252,"data":"[2026-07-03 21:14:09,409][main][INFO] - Saving the outputs in /tmp/corrdiff_code/training_mini\n"}
+,{"stream_name":"stdout","time":89.674715989,"data":"[2026-07-03 21:14:09,410][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_regression does not exist, skipping load\n"}
+,{"stream_name":"stdout","time":90.476678517,"data":"[2026-07-03 21:14:10,411][main][INFO] - Enabled GPU LR conditioner (upsample + static invariant append)\n"}
+,{"stream_name":"stdout","time":90.480347407,"data":"[2026-07-03 21:14:10,416][main][INFO] - Patch-based training disabled\n"}
+,{"stream_name":"stderr","time":90.651260057,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/models/diffusion_unets/song_unet.py:962: FutureWarning: gridtype=\"sinusoidal\" uses a legacy frequency-band formula that does not produce exact octave doublings. Use \"sinusoidal_octave\" for new models. Only use \"sinusoidal\" when loading pre-trained checkpoints.\n"}
+,{"stream_name":"stderr","time":90.651308355,"data":"  \"pos_embd\", self._get_positional_embedding().float(), persistent=False\n"}
+,{"stream_name":"stdout","time":90.680818203,"data":"[2026-07-03 21:14:10,411][main][INFO] - Enabled GPU LR conditioner (upsample + static invariant append)\n"}
+,{"stream_name":"stdout","time":90.680859433,"data":"[2026-07-03 21:14:10,416][main][INFO] - Patch-based training disabled\n"}
+,{"stream_name":"stdout","time":90.694176631,"data":"[2026-07-03 21:14:10,630][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_regression does not exist, skipping load\n"}
+,{"stream_name":"stdout","time":90.694999564,"data":"[2026-07-03 21:14:10,630][main][INFO] - Using 2 gradient accumulation rounds\n"}
+,{"stream_name":"stdout","time":90.695901479,"data":"[2026-07-03 21:14:10,631][main][INFO] - Training a non-patched model: patch gradient accumulation automatically disabled.\n"}
+,{"stream_name":"stdout","time":90.697492871,"data":"[2026-07-03 21:14:10,633][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_regression does not exist, skipping load\n"}
+,{"stream_name":"stdout","time":90.698282615,"data":"[2026-07-03 21:14:10,634][main][INFO] - Training for 2000 images...\n"}
+,{"stream_name":"stderr","time":90.854283865,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/models/diffusion_unets/song_unet.py:962: FutureWarning: gridtype=\"sinusoidal\" uses a legacy frequency-band formula that does not produce exact octave doublings. Use \"sinusoidal_octave\" for new models. Only use \"sinusoidal\" when loading pre-trained checkpoints.\n"}
+,{"stream_name":"stderr","time":90.854314828,"data":"  \"pos_embd\", self._get_positional_embedding().float(), persistent=False\n"}
+,{"stream_name":"stderr","time":90.85432016,"data":"\n"}
+,{"stream_name":"stderr","time":90.854324688,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/models/diffusion_unets/song_unet.py:962: FutureWarning: gridtype=\"sinusoidal\" uses a legacy frequency-band formula that does not produce exact octave doublings. Use \"sinusoidal_octave\" for new models. Only use \"sinusoidal\" when loading pre-trained checkpoints.\n"}
+,{"stream_name":"stderr","time":90.854330235,"data":"  \"pos_embd\", self._get_positional_embedding().float(), persistent=False\n"}
+,{"stream_name":"stdout","time":90.896735019,"data":"[2026-07-03 21:14:10,630][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_regression does not exist, skipping load\n"}
+,{"stream_name":"stdout","time":90.896796459,"data":"[2026-07-03 21:14:10,630][main][INFO] - Using 2 gradient accumulation rounds\n"}
+,{"stream_name":"stdout","time":90.896803216,"data":"[2026-07-03 21:14:10,631][main][INFO] - Training a non-patched model: patch gradient accumulation automatically disabled.\n"}
+,{"stream_name":"stdout","time":90.896807,"data":"[2026-07-03 21:14:10,633][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_regression does not exist, skipping load\n"}
+,{"stream_name":"stdout","time":90.896810943,"data":"[2026-07-03 21:14:10,634][main][INFO] - Training for 2000 images...\n"}
+,{"stream_name":"stderr","time":105.940776912,"data":"/tmp/corrdiff_code/training_mini/train.py:634: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.\n"}
+,{"stream_name":"stderr","time":105.940830304,"data":"Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)\n"}
+,{"stream_name":"stderr","time":105.940836616,"data":"  loss_sum = torch.tensor([loss_accum], device=dist.device)\n"}
+,{"stream_name":"stderr","time":106.14373347,"data":"/tmp/corrdiff_code/training_mini/train.py:634: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.\n"}
+,{"stream_name":"stderr","time":106.143791218,"data":"Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)\n"}
+,{"stream_name":"stderr","time":106.14379968,"data":"  loss_sum = torch.tensor([loss_accum], device=dist.device)\n"}
+,{"stream_name":"stderr","time":106.143805319,"data":"\n"}
+,{"stream_name":"stderr","time":106.143810179,"data":"/tmp/corrdiff_code/training_mini/train.py:634: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.\n"}
+,{"stream_name":"stderr","time":106.143815588,"data":"Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)\n"}
+,{"stream_name":"stderr","time":106.143820903,"data":"  loss_sum = torch.tensor([loss_accum], device=dist.device)\n"}
+,{"stream_name":"stdout","time":147.287957637,"data":"[2026-07-03 21:15:07,223][main][INFO] - Starting Profiler at 48\n"}
+,{"stream_name":"stdout","time":147.493855923,"data":"[2026-07-03 21:15:07,223][main][INFO] - Starting Profiler at 48\n"}
+,{"stream_name":"stdout","time":149.156606292,"data":"[2026-07-03 21:15:09,092][main][INFO] - Stopping Profiler at 50\n"}
+,{"stream_name":"stdout","time":149.35895282,"data":"[2026-07-03 21:15:09,092][main][INFO] - Stopping Profiler at 50\n"}
+,{"stream_name":"stdout","time":199.807550419,"data":"[2026-07-03 21:15:59,743][main][INFO] - samples 100.0     training_loss 151681.81 training_loss_running_mean 317244.90 learning_rate 0.00020000 total_sec 109.1   sec_per_tick 2.1     sec_per_sample 1.06    cpu_mem_gb 2.73   peak_gpu_mem_gb 13.29  peak_gpu_mem_reserved_gb 13.67 \n"}
+,{"stream_name":"stdout","time":200.013590111,"data":"[2026-07-03 21:15:59,743][main][INFO] - samples 100.0     training_loss 151681.81 training_loss_running_mean 317244.90 learning_rate 0.00020000 total_sec 109.1   sec_per_tick 2.1     sec_per_sample 1.06    cpu_mem_gb 2.73   peak_gpu_mem_gb 13.29  peak_gpu_mem_reserved_gb 13.67 \n"}
+,{"stream_name":"stdout","time":299.928034253,"data":"[2026-07-03 21:17:39,863][main][INFO] - samples 200.0     training_loss 137259.03 training_loss_running_mean 192732.76 learning_rate 0.00020000 total_sec 209.2   sec_per_tick 2.0     sec_per_sample 1.02    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":300.141419797,"data":"[2026-07-03 21:17:39,863][main][INFO] - samples 200.0     training_loss 137259.03 training_loss_running_mean 192732.76 learning_rate 0.00020000 total_sec 209.2   sec_per_tick 2.0     sec_per_sample 1.02    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":400.111345549,"data":"[2026-07-03 21:19:20,046][main][INFO] - samples 300.0     training_loss 165862.64 training_loss_running_mean 173350.72 learning_rate 0.00020000 total_sec 309.4   sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":400.323159661,"data":"[2026-07-03 21:19:20,046][main][INFO] - samples 300.0     training_loss 165862.64 training_loss_running_mean 173350.72 learning_rate 0.00020000 total_sec 309.4   sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":500.100960991,"data":"[2026-07-03 21:21:00,036][main][INFO] - samples 400.0     training_loss 188211.66 training_loss_running_mean 166354.88 learning_rate 0.00020000 total_sec 409.4   sec_per_tick 2.0     sec_per_sample 1.01    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":500.307144067,"data":"[2026-07-03 21:21:00,036][main][INFO] - samples 400.0     training_loss 188211.66 training_loss_running_mean 166354.88 learning_rate 0.00020000 total_sec 409.4   sec_per_tick 2.0     sec_per_sample 1.01    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":600.548644721,"data":"[2026-07-03 21:22:40,484][main][INFO] - samples 500.0     training_loss 186675.97 training_loss_running_mean 154226.46 learning_rate 0.00020000 total_sec 509.9   sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":600.755407345,"data":"[2026-07-03 21:22:40,484][main][INFO] - samples 500.0     training_loss 186675.97 training_loss_running_mean 154226.46 learning_rate 0.00020000 total_sec 509.9   sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":700.436579468,"data":"[2026-07-03 21:24:20,372][main][INFO] - samples 600.0     training_loss 180108.92 training_loss_running_mean 158218.53 learning_rate 0.00020000 total_sec 609.7   sec_per_tick 2.0     sec_per_sample 0.99    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":700.642742742,"data":"[2026-07-03 21:24:20,372][main][INFO] - samples 600.0     training_loss 180108.92 training_loss_running_mean 158218.53 learning_rate 0.00020000 total_sec 609.7   sec_per_tick 2.0     sec_per_sample 0.99    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":800.23075425,"data":"[2026-07-03 21:26:00,166][main][INFO] - samples 700.0     training_loss 115442.09 training_loss_running_mean 151517.19 learning_rate 0.00020000 total_sec 709.5   sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":800.437670121,"data":"[2026-07-03 21:26:00,166][main][INFO] - samples 700.0     training_loss 115442.09 training_loss_running_mean 151517.19 learning_rate 0.00020000 total_sec 709.5   sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":900.49697351,"data":"[2026-07-03 21:27:40,432][main][INFO] - samples 800.0     training_loss 146060.94 training_loss_running_mean 143224.31 learning_rate 0.00020000 total_sec 809.8   sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":900.70923023,"data":"[2026-07-03 21:27:40,432][main][INFO] - samples 800.0     training_loss 146060.94 training_loss_running_mean 143224.31 learning_rate 0.00020000 total_sec 809.8   sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1001.032777374,"data":"[2026-07-03 21:29:20,968][main][INFO] - samples 900.0     training_loss 152087.52 training_loss_running_mean 144725.08 learning_rate 0.00020000 total_sec 910.3   sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1001.245624234,"data":"[2026-07-03 21:29:20,968][main][INFO] - samples 900.0     training_loss 152087.52 training_loss_running_mean 144725.08 learning_rate 0.00020000 total_sec 910.3   sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1101.076927719,"data":"[2026-07-03 21:31:01,012][main][INFO] - samples 1000.0    training_loss 126519.19 training_loss_running_mean 140620.45 learning_rate 0.00020000 total_sec 1010.4  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1101.078191964,"data":"[2026-07-03 21:31:01,014][checkpoint][WARNING] - Output directory ./checkpoints_regression does not exist, will attempt to create\n"}
+,{"stream_name":"stdout","time":1101.291254796,"data":"[2026-07-03 21:31:01,012][main][INFO] - samples 1000.0    training_loss 126519.19 training_loss_running_mean 140620.45 learning_rate 0.00020000 total_sec 1010.4  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1101.291303176,"data":"[2026-07-03 21:31:01,014][checkpoint][WARNING] - Output directory ./checkpoints_regression does not exist, will attempt to create\n"}
+,{"stream_name":"stdout","time":1101.329453302,"data":"[2026-07-03 21:31:01,265][checkpoint][INFO] - Saved model state dictionary: /tmp/corrdiff_code/training_mini/checkpoints_regression/CorrDiffRegressionUNet.0.1000.mdlus\n"}
+,{"stream_name":"stdout","time":1101.531693416,"data":"[2026-07-03 21:31:01,265][checkpoint][INFO] - Saved model state dictionary: /tmp/corrdiff_code/training_mini/checkpoints_regression/CorrDiffRegressionUNet.0.1000.mdlus\n"}
+,{"stream_name":"stdout","time":1101.56239952,"data":"[2026-07-03 21:31:01,498][checkpoint][INFO] - Saved training checkpoint: /tmp/corrdiff_code/training_mini/checkpoints_regression/checkpoint.0.1000.pt\n"}
+,{"stream_name":"stdout","time":1101.764900806,"data":"[2026-07-03 21:31:01,498][checkpoint][INFO] - Saved training checkpoint: /tmp/corrdiff_code/training_mini/checkpoints_regression/checkpoint.0.1000.pt\n"}
+,{"stream_name":"stdout","time":1201.588300879,"data":"[2026-07-03 21:32:41,523][main][INFO] - samples 1100.0    training_loss 171850.88 training_loss_running_mean 138237.09 learning_rate 0.00020000 total_sec 1110.9  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1201.794900541,"data":"[2026-07-03 21:32:41,523][main][INFO] - samples 1100.0    training_loss 171850.88 training_loss_running_mean 138237.09 learning_rate 0.00020000 total_sec 1110.9  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1301.996780329,"data":"[2026-07-03 21:34:21,932][main][INFO] - samples 1200.0    training_loss 123442.70 training_loss_running_mean 141098.19 learning_rate 0.00020000 total_sec 1211.3  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1302.204006837,"data":"[2026-07-03 21:34:21,932][main][INFO] - samples 1200.0    training_loss 123442.70 training_loss_running_mean 141098.19 learning_rate 0.00020000 total_sec 1211.3  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1401.983862126,"data":"[2026-07-03 21:36:01,919][main][INFO] - samples 1300.0    training_loss 134857.50 training_loss_running_mean 134393.16 learning_rate 0.00020000 total_sec 1311.3  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1402.19064432,"data":"[2026-07-03 21:36:01,919][main][INFO] - samples 1300.0    training_loss 134857.50 training_loss_running_mean 134393.16 learning_rate 0.00020000 total_sec 1311.3  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1501.998381869,"data":"[2026-07-03 21:37:41,934][main][INFO] - samples 1400.0    training_loss 138538.94 training_loss_running_mean 133574.39 learning_rate 0.00020000 total_sec 1411.3  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1502.204935066,"data":"[2026-07-03 21:37:41,934][main][INFO] - samples 1400.0    training_loss 138538.94 training_loss_running_mean 133574.39 learning_rate 0.00020000 total_sec 1411.3  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1602.649467929,"data":"[2026-07-03 21:39:22,585][main][INFO] - samples 1500.0    training_loss 123022.66 training_loss_running_mean 136619.99 learning_rate 0.00020000 total_sec 1512.0  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1602.856043568,"data":"[2026-07-03 21:39:22,585][main][INFO] - samples 1500.0    training_loss 123022.66 training_loss_running_mean 136619.99 learning_rate 0.00020000 total_sec 1512.0  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1703.174367305,"data":"[2026-07-03 21:41:03,110][main][INFO] - samples 1600.0    training_loss 133295.11 training_loss_running_mean 131445.44 learning_rate 0.00020000 total_sec 1612.5  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1703.387503316,"data":"[2026-07-03 21:41:03,110][main][INFO] - samples 1600.0    training_loss 133295.11 training_loss_running_mean 131445.44 learning_rate 0.00020000 total_sec 1612.5  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1803.310508191,"data":"[2026-07-03 21:42:43,246][main][INFO] - samples 1700.0    training_loss 98754.71 training_loss_running_mean 135043.85 learning_rate 0.00020000 total_sec 1712.6  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1803.523873565,"data":"[2026-07-03 21:42:43,246][main][INFO] - samples 1700.0    training_loss 98754.71 training_loss_running_mean 135043.85 learning_rate 0.00020000 total_sec 1712.6  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1903.422931618,"data":"[2026-07-03 21:44:23,358][main][INFO] - samples 1800.0    training_loss 146807.78 training_loss_running_mean 133513.85 learning_rate 0.00020000 total_sec 1812.7  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":1903.629795282,"data":"[2026-07-03 21:44:23,358][main][INFO] - samples 1800.0    training_loss 146807.78 training_loss_running_mean 133513.85 learning_rate 0.00020000 total_sec 1812.7  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":2003.900319613,"data":"[2026-07-03 21:46:03,836][main][INFO] - samples 1900.0    training_loss 154708.44 training_loss_running_mean 131755.07 learning_rate 0.00020000 total_sec 1913.2  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":2004.107354302,"data":"[2026-07-03 21:46:03,836][main][INFO] - samples 1900.0    training_loss 154708.44 training_loss_running_mean 131755.07 learning_rate 0.00020000 total_sec 1913.2  sec_per_tick 2.0     sec_per_sample 1.00    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":2104.539714677,"data":"[2026-07-03 21:47:44,475][main][INFO] - samples 2000.0    training_loss 127179.17 training_loss_running_mean 128059.21 learning_rate 0.00020000 total_sec 2013.8  sec_per_tick 2.0     sec_per_sample 1.01    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":2104.746533774,"data":"[2026-07-03 21:47:44,475][main][INFO] - samples 2000.0    training_loss 127179.17 training_loss_running_mean 128059.21 learning_rate 0.00020000 total_sec 2013.8  sec_per_tick 2.0     sec_per_sample 1.01    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.03   peak_gpu_mem_reserved_gb 10.17 \n"}
+,{"stream_name":"stdout","time":2104.770182483,"data":"[2026-07-03 21:47:44,705][checkpoint][INFO] - Saved model state dictionary: /tmp/corrdiff_code/training_mini/checkpoints_regression/CorrDiffRegressionUNet.0.2000.mdlus\n"}
+,{"stream_name":"stdout","time":2104.963993402,"data":"[2026-07-03 21:47:44,899][checkpoint][INFO] - Saved training checkpoint: /tmp/corrdiff_code/training_mini/checkpoints_regression/checkpoint.0.2000.pt\n"}
+,{"stream_name":"stdout","time":2104.964763624,"data":"[2026-07-03 21:47:44,900][main][INFO] - Training Completed.\n"}
+,{"stream_name":"stdout","time":2104.972759324,"data":"[2026-07-03 21:47:44,705][checkpoint][INFO] - Saved model state dictionary: /tmp/corrdiff_code/training_mini/checkpoints_regression/CorrDiffRegressionUNet.0.2000.mdlus\n"}
+,{"stream_name":"stdout","time":2104.972779795,"data":"[2026-07-03 21:47:44,899][checkpoint][INFO] - Saved training checkpoint: /tmp/corrdiff_code/training_mini/checkpoints_regression/checkpoint.0.2000.pt\n"}
+,{"stream_name":"stdout","time":2104.972785349,"data":"[2026-07-03 21:47:44,900][main][INFO] - Training Completed.\n"}
+,{"stream_name":"stdout","time":2105.13945837,"data":"\u001b[1;34mwandb\u001b[0m: \n"}
+,{"stream_name":"stdout","time":2105.139493207,"data":"\u001b[1;34mwandb\u001b[0m: You can sync this run to the cloud by running:\n"}
+,{"stream_name":"stdout","time":2105.139499945,"data":"\u001b[1;34mwandb\u001b[0m: \u001b[1mwandb sync wandb/wandb/offline-run-20260703_211408-5a1fukwq\u001b[0m\n"}
+,{"stream_name":"stdout","time":2105.341620291,"data":"\u001b[1;34mwandb\u001b[0m: \n"}
+,{"stream_name":"stdout","time":2105.341650547,"data":"\u001b[1;34mwandb\u001b[0m: You can sync this run to the cloud by running:\n"}
+,{"stream_name":"stdout","time":2105.341657559,"data":"\u001b[1;34mwandb\u001b[0m: \u001b[1mwandb sync wandb/wandb/offline-run-20260703_211408-5a1fukwq\u001b[0m\n"}
+,{"stream_name":"stdout","time":2109.742991744,"data":"REG_CKPT = /tmp/corrdiff_code/training_mini/checkpoints_regression/CorrDiffRegressionUNet.0.2000.mdlus\n"}
+,{"stream_name":"stdout","time":2109.7692338,"data":"$ python train.py --config-name=config_training_era5_carra2_mini_diffusion ++dataset.data_path='/tmp/smoke_store.zarr' ++dataset.stats_path='/kaggle/working/stats_smoke.json' '~validation' ++training.io.regression_checkpoint_path='/tmp/corrdiff_code/training_mini/checkpoints_regression/CorrDiffRegressionUNet.0.2000.mdlus' ++training.hp.training_duration=2000 ++training.hp.total_batch_size=2 ++training.hp.batch_size_per_gpu=1 ++training.perf.fp_optimizations=fp32 ++training.perf.dataloader_workers=2 ++training.io.print_progress_freq=100 ++training.io.save_checkpoint_freq=1000\n"}
+,{"stream_name":"stderr","time":2123.265691881,"data":"/tmp/corrdiff_code/training_mini/train.py:46: ExperimentalFeatureWarning: You are importing from 'physicsnemo.experimental'. The APIs in this namespace are experimental, under active development, and may change without notice. Expect possible back-compatibility breaking changes and only partial test coverage.\n"}
+,{"stream_name":"stderr","time":2123.265745109,"data":"  from physicsnemo.experimental.metrics.diffusion import tEDMResidualLoss\n"}
+,{"stream_name":"stderr","time":2123.468121687,"data":"/tmp/corrdiff_code/training_mini/train.py:46: ExperimentalFeatureWarning: You are importing from 'physicsnemo.experimental'. The APIs in this namespace are experimental, under active development, and may change without notice. Expect possible back-compatibility breaking changes and only partial test coverage.\n"}
+,{"stream_name":"stderr","time":2123.468156432,"data":"  from physicsnemo.experimental.metrics.diffusion import tEDMResidualLoss\n"}
+,{"stream_name":"stderr","time":2123.468163115,"data":"\n"}
+,{"stream_name":"stderr","time":2123.468167282,"data":"/tmp/corrdiff_code/training_mini/train.py:46: ExperimentalFeatureWarning: You are importing from 'physicsnemo.experimental'. The APIs in this namespace are experimental, under active development, and may change without notice. Expect possible back-compatibility breaking changes and only partial test coverage.\n"}
+,{"stream_name":"stderr","time":2123.468172119,"data":"  from physicsnemo.experimental.metrics.diffusion import tEDMResidualLoss\n"}
+,{"stream_name":"stderr","time":2123.699985383,"data":"/usr/local/lib/python3.12/dist-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config_training_era5_carra2_mini_diffusion': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information\n"}
+,{"stream_name":"stderr","time":2123.700016989,"data":"  warnings.warn(msg, UserWarning)\n"}
+,{"stream_name":"stderr","time":2123.878014136,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/distributed/manager.py:415: UserWarning: Could not initialize using ENV, SLURM or OPENMPI methods. Assuming this is a single process job\n"}
+,{"stream_name":"stderr","time":2123.878049847,"data":"  warn(\n"}
+,{"stream_name":"stderr","time":2123.902051634,"data":"/usr/local/lib/python3.12/dist-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config_training_era5_carra2_mini_diffusion': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information\n"}
+,{"stream_name":"stderr","time":2123.902082025,"data":"  warnings.warn(msg, UserWarning)\n"}
+,{"stream_name":"stderr","time":2123.902088364,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/distributed/manager.py:415: UserWarning: Could not initialize using ENV, SLURM or OPENMPI methods. Assuming this is a single process job\n"}
+,{"stream_name":"stderr","time":2123.902093452,"data":"  warn(\n"}
+,{"stream_name":"stderr","time":2123.902098059,"data":"\n"}
+,{"stream_name":"stderr","time":2123.902102803,"data":"/usr/local/lib/python3.12/dist-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config_training_era5_carra2_mini_diffusion': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information\n"}
+,{"stream_name":"stderr","time":2123.902146752,"data":"  warnings.warn(msg, UserWarning)\n"}
+,{"stream_name":"stderr","time":2123.902150117,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/distributed/manager.py:415: UserWarning: Could not initialize using ENV, SLURM or OPENMPI methods. Assuming this is a single process job\n"}
+,{"stream_name":"stderr","time":2123.902152662,"data":"  warn(\n"}
+,{"stream_name":"stderr","time":2124.272653077,"data":"wandb: Tracking run with wandb version 0.26.1\n"}
+,{"stream_name":"stderr","time":2124.273058409,"data":"wandb: W\u0026B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.\n"}
+,{"stream_name":"stderr","time":2124.273121869,"data":"wandb: Run data is saved locally in wandb/wandb/offline-run-20260703_214803-l1rjvg92\n"}
+,{"stream_name":"stderr","time":2124.475713699,"data":"wandb: Tracking run with wandb version 0.26.1\n"}
+,{"stream_name":"stderr","time":2124.475742975,"data":"wandb: W\u0026B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.\n"}
+,{"stream_name":"stderr","time":2124.475748904,"data":"wandb: Run data is saved locally in wandb/wandb/offline-run-20260703_214803-l1rjvg92\n"}
+,{"stream_name":"stderr","time":2124.475752651,"data":"\n"}
+,{"stream_name":"stderr","time":2124.475756773,"data":"wandb: Tracking run with wandb version 0.26.1\n"}
+,{"stream_name":"stderr","time":2124.475760714,"data":"wandb: W\u0026B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.\n"}
+,{"stream_name":"stderr","time":2124.475771125,"data":"wandb: Run data is saved locally in wandb/wandb/offline-run-20260703_214803-l1rjvg92\n"}
+,{"stream_name":"stdout","time":2124.918196652,"data":"[2026-07-03 21:48:04,854][main][INFO] - Using dataset: datasets/era5_carra2.py::ERA5CARRA2Dataset\n"}
+,{"stream_name":"stdout","time":2124.91918072,"data":"[2026-07-03 21:48:04,855][main][INFO] - Saving the outputs in /tmp/corrdiff_code/training_mini\n"}
+,{"stream_name":"stdout","time":2124.920417977,"data":"[2026-07-03 21:48:04,856][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_diffusion does not exist, skipping load\n"}
+,{"stream_name":"stdout","time":2125.120657914,"data":"[2026-07-03 21:48:04,854][main][INFO] - Using dataset: datasets/era5_carra2.py::ERA5CARRA2Dataset\n"}
+,{"stream_name":"stdout","time":2125.120759147,"data":"[2026-07-03 21:48:04,855][main][INFO] - Saving the outputs in /tmp/corrdiff_code/training_mini\n"}
+,{"stream_name":"stdout","time":2125.120766432,"data":"[2026-07-03 21:48:04,856][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_diffusion does not exist, skipping load\n"}
+,{"stream_name":"stdout","time":2125.858318795,"data":"[2026-07-03 21:48:05,793][main][INFO] - Enabled GPU LR conditioner (upsample + static invariant append)\n"}
+,{"stream_name":"stdout","time":2125.860784286,"data":"[2026-07-03 21:48:05,796][main][INFO] - Patch-based training disabled\n"}
+,{"stream_name":"stderr","time":2126.016991256,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/models/diffusion_unets/song_unet.py:962: FutureWarning: gridtype=\"sinusoidal\" uses a legacy frequency-band formula that does not produce exact octave doublings. Use \"sinusoidal_octave\" for new models. Only use \"sinusoidal\" when loading pre-trained checkpoints.\n"}
+,{"stream_name":"stderr","time":2126.017026528,"data":"  \"pos_embd\", self._get_positional_embedding().float(), persistent=False\n"}
+,{"stream_name":"stdout","time":2126.060985961,"data":"[2026-07-03 21:48:05,793][main][INFO] - Enabled GPU LR conditioner (upsample + static invariant append)\n"}
+,{"stream_name":"stdout","time":2126.061031763,"data":"[2026-07-03 21:48:05,796][main][INFO] - Patch-based training disabled\n"}
+,{"stream_name":"stdout","time":2126.06245038,"data":"[2026-07-03 21:48:05,998][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_diffusion does not exist, skipping load\n"}
+,{"stream_name":"stderr","time":2126.219364037,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/models/diffusion_unets/song_unet.py:962: FutureWarning: gridtype=\"sinusoidal\" uses a legacy frequency-band formula that does not produce exact octave doublings. Use \"sinusoidal_octave\" for new models. Only use \"sinusoidal\" when loading pre-trained checkpoints.\n"}
+,{"stream_name":"stderr","time":2126.219469662,"data":"  \"pos_embd\", self._get_positional_embedding().float(), persistent=False\n"}
+,{"stream_name":"stderr","time":2126.219479081,"data":"\n"}
+,{"stream_name":"stderr","time":2126.219484616,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/models/diffusion_unets/song_unet.py:962: FutureWarning: gridtype=\"sinusoidal\" uses a legacy frequency-band formula that does not produce exact octave doublings. Use \"sinusoidal_octave\" for new models. Only use \"sinusoidal\" when loading pre-trained checkpoints.\n"}
+,{"stream_name":"stderr","time":2126.219491318,"data":"  \"pos_embd\", self._get_positional_embedding().float(), persistent=False\n"}
+,{"stream_name":"stdout","time":2126.264921105,"data":"[2026-07-03 21:48:05,998][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_diffusion does not exist, skipping load\n"}
+,{"stream_name":"stdout","time":2126.47324096,"data":"[2026-07-03 21:48:06,408][main][INFO] - Loaded the pre-trained regression model\n"}
+,{"stream_name":"stdout","time":2126.47392313,"data":"[2026-07-03 21:48:06,409][main][INFO] - Using 2 gradient accumulation rounds\n"}
+,{"stream_name":"stdout","time":2126.474918645,"data":"[2026-07-03 21:48:06,410][main][INFO] - Training a non-patched model: patch gradient accumulation automatically disabled.\n"}
+,{"stream_name":"stdout","time":2126.477132493,"data":"[2026-07-03 21:48:06,412][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_diffusion does not exist, skipping load\n"}
+,{"stream_name":"stdout","time":2126.477525092,"data":"[2026-07-03 21:48:06,413][main][INFO] - Training for 2000 images...\n"}
+,{"stream_name":"stdout","time":2126.675674443,"data":"[2026-07-03 21:48:06,408][main][INFO] - Loaded the pre-trained regression model\n"}
+,{"stream_name":"stdout","time":2126.675722043,"data":"[2026-07-03 21:48:06,409][main][INFO] - Using 2 gradient accumulation rounds\n"}
+,{"stream_name":"stdout","time":2126.67572852,"data":"[2026-07-03 21:48:06,410][main][INFO] - Training a non-patched model: patch gradient accumulation automatically disabled.\n"}
+,{"stream_name":"stdout","time":2126.675733634,"data":"[2026-07-03 21:48:06,412][checkpoint][WARNING] - Provided checkpoint directory ./checkpoints_diffusion does not exist, skipping load\n"}
+,{"stream_name":"stdout","time":2126.675739253,"data":"[2026-07-03 21:48:06,413][main][INFO] - Training for 2000 images...\n"}
+,{"stream_name":"stderr","time":2143.434737197,"data":"/tmp/corrdiff_code/training_mini/train.py:634: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.\n"}
+,{"stream_name":"stderr","time":2143.434777222,"data":"Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)\n"}
+,{"stream_name":"stderr","time":2143.434783365,"data":"  loss_sum = torch.tensor([loss_accum], device=dist.device)\n"}
+,{"stream_name":"stderr","time":2143.64795051,"data":"/tmp/corrdiff_code/training_mini/train.py:634: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.\n"}
+,{"stream_name":"stderr","time":2143.648003578,"data":"Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)\n"}
+,{"stream_name":"stderr","time":2143.648009421,"data":"  loss_sum = torch.tensor([loss_accum], device=dist.device)\n"}
+,{"stream_name":"stderr","time":2143.648014469,"data":"\n"}
+,{"stream_name":"stderr","time":2143.648021889,"data":"/tmp/corrdiff_code/training_mini/train.py:634: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.\n"}
+,{"stream_name":"stderr","time":2143.64802483,"data":"Consider using tensor.detach() first. (Triggered internally at /pytorch/torch/csrc/autograd/generated/python_variable_methods.cpp:836.)\n"}
+,{"stream_name":"stderr","time":2143.648027275,"data":"  loss_sum = torch.tensor([loss_accum], device=dist.device)\n"}
+,{"stream_name":"stdout","time":2208.795128206,"data":"[2026-07-03 21:49:28,730][main][INFO] - Starting Profiler at 48\n"}
+,{"stream_name":"stdout","time":2209.002284524,"data":"[2026-07-03 21:49:28,730][main][INFO] - Starting Profiler at 48\n"}
+,{"stream_name":"stdout","time":2211.489015573,"data":"[2026-07-03 21:49:31,424][main][INFO] - Stopping Profiler at 50\n"}
+,{"stream_name":"stdout","time":2211.691850694,"data":"[2026-07-03 21:49:31,424][main][INFO] - Stopping Profiler at 50\n"}
+,{"stream_name":"stdout","time":2281.483626267,"data":"[2026-07-03 21:50:41,419][main][INFO] - samples 100.0     training_loss 383378.06 training_loss_running_mean 470186.63 learning_rate 0.00020000 total_sec 155.0   sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.74   peak_gpu_mem_gb 13.34  peak_gpu_mem_reserved_gb 13.69 \n"}
+,{"stream_name":"stdout","time":2281.691144567,"data":"[2026-07-03 21:50:41,419][main][INFO] - samples 100.0     training_loss 383378.06 training_loss_running_mean 470186.63 learning_rate 0.00020000 total_sec 155.0   sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.74   peak_gpu_mem_gb 13.34  peak_gpu_mem_reserved_gb 13.69 \n"}
+,{"stream_name":"stdout","time":2420.740561925,"data":"[2026-07-03 21:53:00,676][main][INFO] - samples 200.0     training_loss 316837.06 training_loss_running_mean 400223.37 learning_rate 0.00020000 total_sec 294.3   sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":2420.948526852,"data":"[2026-07-03 21:53:00,676][main][INFO] - samples 200.0     training_loss 316837.06 training_loss_running_mean 400223.37 learning_rate 0.00020000 total_sec 294.3   sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":2559.4932629,"data":"[2026-07-03 21:55:19,428][main][INFO] - samples 300.0     training_loss 303331.09 training_loss_running_mean 386306.20 learning_rate 0.00020000 total_sec 433.0   sec_per_tick 2.8     sec_per_sample 1.38    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":2559.708305187,"data":"[2026-07-03 21:55:19,428][main][INFO] - samples 300.0     training_loss 303331.09 training_loss_running_mean 386306.20 learning_rate 0.00020000 total_sec 433.0   sec_per_tick 2.8     sec_per_sample 1.38    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":2698.003550909,"data":"[2026-07-03 21:57:37,939][main][INFO] - samples 400.0     training_loss 280505.22 training_loss_running_mean 338703.41 learning_rate 0.00020000 total_sec 571.5   sec_per_tick 2.8     sec_per_sample 1.38    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":2698.219157807,"data":"[2026-07-03 21:57:37,939][main][INFO] - samples 400.0     training_loss 280505.22 training_loss_running_mean 338703.41 learning_rate 0.00020000 total_sec 571.5   sec_per_tick 2.8     sec_per_sample 1.38    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":2837.201410962,"data":"[2026-07-03 21:59:57,136][main][INFO] - samples 500.0     training_loss 271354.00 training_loss_running_mean 330873.37 learning_rate 0.00020000 total_sec 710.7   sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":2837.409746872,"data":"[2026-07-03 21:59:57,136][main][INFO] - samples 500.0     training_loss 271354.00 training_loss_running_mean 330873.37 learning_rate 0.00020000 total_sec 710.7   sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":2976.975705087,"data":"[2026-07-03 22:02:16,911][main][INFO] - samples 600.0     training_loss 203420.52 training_loss_running_mean 323767.81 learning_rate 0.00020000 total_sec 850.5   sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":2977.182987729,"data":"[2026-07-03 22:02:16,911][main][INFO] - samples 600.0     training_loss 203420.52 training_loss_running_mean 323767.81 learning_rate 0.00020000 total_sec 850.5   sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3116.918168593,"data":"[2026-07-03 22:04:36,853][main][INFO] - samples 700.0     training_loss 235860.30 training_loss_running_mean 290329.67 learning_rate 0.00020000 total_sec 990.4   sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3117.126092997,"data":"[2026-07-03 22:04:36,853][main][INFO] - samples 700.0     training_loss 235860.30 training_loss_running_mean 290329.67 learning_rate 0.00020000 total_sec 990.4   sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3255.678456901,"data":"[2026-07-03 22:06:55,614][main][INFO] - samples 800.0     training_loss 189260.55 training_loss_running_mean 269847.76 learning_rate 0.00020000 total_sec 1129.2  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3255.895110358,"data":"[2026-07-03 22:06:55,614][main][INFO] - samples 800.0     training_loss 189260.55 training_loss_running_mean 269847.76 learning_rate 0.00020000 total_sec 1129.2  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3394.501595475,"data":"[2026-07-03 22:09:14,437][main][INFO] - samples 900.0     training_loss 304937.00 training_loss_running_mean 267839.90 learning_rate 0.00020000 total_sec 1268.0  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3394.717496439,"data":"[2026-07-03 22:09:14,437][main][INFO] - samples 900.0     training_loss 304937.00 training_loss_running_mean 267839.90 learning_rate 0.00020000 total_sec 1268.0  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3534.423656312,"data":"[2026-07-03 22:11:34,359][main][INFO] - samples 1000.0    training_loss 195414.36 training_loss_running_mean 256182.85 learning_rate 0.00020000 total_sec 1407.9  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3534.425434452,"data":"[2026-07-03 22:11:34,361][checkpoint][WARNING] - Output directory ./checkpoints_diffusion does not exist, will attempt to create\n"}
+,{"stream_name":"stdout","time":3534.641915964,"data":"[2026-07-03 22:11:34,359][main][INFO] - samples 1000.0    training_loss 195414.36 training_loss_running_mean 256182.85 learning_rate 0.00020000 total_sec 1407.9  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3534.6419499,"data":"[2026-07-03 22:11:34,361][checkpoint][WARNING] - Output directory ./checkpoints_diffusion does not exist, will attempt to create\n"}
+,{"stream_name":"stdout","time":3534.664896993,"data":"[2026-07-03 22:11:34,600][checkpoint][INFO] - Saved model state dictionary: /tmp/corrdiff_code/training_mini/checkpoints_diffusion/EDMPrecondSuperResolution.0.1000.mdlus\n"}
+,{"stream_name":"stdout","time":3534.85269769,"data":"[2026-07-03 22:11:34,788][checkpoint][INFO] - Saved training checkpoint: /tmp/corrdiff_code/training_mini/checkpoints_diffusion/checkpoint.0.1000.pt\n"}
+,{"stream_name":"stdout","time":3534.867004074,"data":"[2026-07-03 22:11:34,600][checkpoint][INFO] - Saved model state dictionary: /tmp/corrdiff_code/training_mini/checkpoints_diffusion/EDMPrecondSuperResolution.0.1000.mdlus\n"}
+,{"stream_name":"stdout","time":3534.867036033,"data":"[2026-07-03 22:11:34,788][checkpoint][INFO] - Saved training checkpoint: /tmp/corrdiff_code/training_mini/checkpoints_diffusion/checkpoint.0.1000.pt\n"}
+,{"stream_name":"stdout","time":3674.676329391,"data":"[2026-07-03 22:13:54,611][main][INFO] - samples 1100.0    training_loss 264893.97 training_loss_running_mean 242009.38 learning_rate 0.00020000 total_sec 1548.2  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3674.892577092,"data":"[2026-07-03 22:13:54,611][main][INFO] - samples 1100.0    training_loss 264893.97 training_loss_running_mean 242009.38 learning_rate 0.00020000 total_sec 1548.2  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3813.608202885,"data":"[2026-07-03 22:16:13,543][main][INFO] - samples 1200.0    training_loss 292605.09 training_loss_running_mean 265191.69 learning_rate 0.00020000 total_sec 1687.1  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3813.822326064,"data":"[2026-07-03 22:16:13,543][main][INFO] - samples 1200.0    training_loss 292605.09 training_loss_running_mean 265191.69 learning_rate 0.00020000 total_sec 1687.1  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.74   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3952.342585321,"data":"[2026-07-03 22:18:32,278][main][INFO] - samples 1300.0    training_loss 247679.31 training_loss_running_mean 209338.76 learning_rate 0.00020000 total_sec 1825.9  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":3952.559086908,"data":"[2026-07-03 22:18:32,278][main][INFO] - samples 1300.0    training_loss 247679.31 training_loss_running_mean 209338.76 learning_rate 0.00020000 total_sec 1825.9  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4091.682495129,"data":"[2026-07-03 22:20:51,617][main][INFO] - samples 1400.0    training_loss 279794.31 training_loss_running_mean 226352.14 learning_rate 0.00020000 total_sec 1965.2  sec_per_tick 2.8     sec_per_sample 1.38    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4091.890460769,"data":"[2026-07-03 22:20:51,617][main][INFO] - samples 1400.0    training_loss 279794.31 training_loss_running_mean 226352.14 learning_rate 0.00020000 total_sec 1965.2  sec_per_tick 2.8     sec_per_sample 1.38    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4230.584932786,"data":"[2026-07-03 22:23:10,520][main][INFO] - samples 1500.0    training_loss 252766.39 training_loss_running_mean 246674.86 learning_rate 0.00020000 total_sec 2104.1  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4230.793491021,"data":"[2026-07-03 22:23:10,520][main][INFO] - samples 1500.0    training_loss 252766.39 training_loss_running_mean 246674.86 learning_rate 0.00020000 total_sec 2104.1  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4370.684645467,"data":"[2026-07-03 22:25:30,620][main][INFO] - samples 1600.0    training_loss 181622.28 training_loss_running_mean 203134.20 learning_rate 0.00020000 total_sec 2244.2  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4370.89278003,"data":"[2026-07-03 22:25:30,620][main][INFO] - samples 1600.0    training_loss 181622.28 training_loss_running_mean 203134.20 learning_rate 0.00020000 total_sec 2244.2  sec_per_tick 2.8     sec_per_sample 1.40    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4509.871789467,"data":"[2026-07-03 22:27:49,807][main][INFO] - samples 1700.0    training_loss 207055.25 training_loss_running_mean 232733.32 learning_rate 0.00020000 total_sec 2383.4  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4510.086852204,"data":"[2026-07-03 22:27:49,807][main][INFO] - samples 1700.0    training_loss 207055.25 training_loss_running_mean 232733.32 learning_rate 0.00020000 total_sec 2383.4  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4648.820938087,"data":"[2026-07-03 22:30:08,756][main][INFO] - samples 1800.0    training_loss 167180.70 training_loss_running_mean 230542.35 learning_rate 0.00020000 total_sec 2522.3  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4649.029541883,"data":"[2026-07-03 22:30:08,756][main][INFO] - samples 1800.0    training_loss 167180.70 training_loss_running_mean 230542.35 learning_rate 0.00020000 total_sec 2522.3  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4787.787372049,"data":"[2026-07-03 22:32:27,723][main][INFO] - samples 1900.0    training_loss 295053.94 training_loss_running_mean 247613.22 learning_rate 0.00020000 total_sec 2661.3  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4788.003739709,"data":"[2026-07-03 22:32:27,723][main][INFO] - samples 1900.0    training_loss 295053.94 training_loss_running_mean 247613.22 learning_rate 0.00020000 total_sec 2661.3  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4927.937716116,"data":"[2026-07-03 22:34:47,873][main][INFO] - samples 2000.0    training_loss 198667.67 training_loss_running_mean 207870.19 learning_rate 0.00020000 total_sec 2801.5  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4928.155948476,"data":"[2026-07-03 22:34:47,873][main][INFO] - samples 2000.0    training_loss 198667.67 training_loss_running_mean 207870.19 learning_rate 0.00020000 total_sec 2801.5  sec_per_tick 2.8     sec_per_sample 1.39    cpu_mem_gb 2.73   peak_gpu_mem_gb 8.05   peak_gpu_mem_reserved_gb 10.21 \n"}
+,{"stream_name":"stdout","time":4928.168686609,"data":"[2026-07-03 22:34:48,104][checkpoint][INFO] - Saved model state dictionary: /tmp/corrdiff_code/training_mini/checkpoints_diffusion/EDMPrecondSuperResolution.0.2000.mdlus\n"}
+,{"stream_name":"stdout","time":4928.370813901,"data":"[2026-07-03 22:34:48,104][checkpoint][INFO] - Saved model state dictionary: /tmp/corrdiff_code/training_mini/checkpoints_diffusion/EDMPrecondSuperResolution.0.2000.mdlus\n"}
+,{"stream_name":"stdout","time":4928.373069616,"data":"[2026-07-03 22:34:48,308][checkpoint][INFO] - Saved training checkpoint: /tmp/corrdiff_code/training_mini/checkpoints_diffusion/checkpoint.0.2000.pt\n"}
+,{"stream_name":"stdout","time":4928.37543871,"data":"[2026-07-03 22:34:48,311][main][INFO] - Training Completed.\n"}
+,{"stream_name":"stdout","time":4928.541938161,"data":"\u001b[1;34mwandb\u001b[0m: \n"}
+,{"stream_name":"stdout","time":4928.541964508,"data":"\u001b[1;34mwandb\u001b[0m: You can sync this run to the cloud by running:\n"}
+,{"stream_name":"stdout","time":4928.541969078,"data":"\u001b[1;34mwandb\u001b[0m: \u001b[1mwandb sync wandb/wandb/offline-run-20260703_214803-l1rjvg92\u001b[0m\n"}
+,{"stream_name":"stdout","time":4928.575120577,"data":"[2026-07-03 22:34:48,308][checkpoint][INFO] - Saved training checkpoint: /tmp/corrdiff_code/training_mini/checkpoints_diffusion/checkpoint.0.2000.pt\n"}
+,{"stream_name":"stdout","time":4928.575140893,"data":"[2026-07-03 22:34:48,311][main][INFO] - Training Completed.\n"}
+,{"stream_name":"stdout","time":4928.575145384,"data":"\u001b[1;34mwandb\u001b[0m: \n"}
+,{"stream_name":"stdout","time":4928.575149485,"data":"\u001b[1;34mwandb\u001b[0m: You can sync this run to the cloud by running:\n"}
+,{"stream_name":"stdout","time":4928.575153321,"data":"\u001b[1;34mwandb\u001b[0m: \u001b[1mwandb sync wandb/wandb/offline-run-20260703_214803-l1rjvg92\u001b[0m\n"}
+,{"stream_name":"stdout","time":4931.715848442,"data":"RES_CKPT = /tmp/corrdiff_code/training_mini/checkpoints_diffusion/EDMPrecondSuperResolution.0.2000.mdlus\n"}
+,{"stream_name":"stdout","time":4931.74622763,"data":"$ python generate.py --config-name=config_generate_era5_carra2_mini ++dataset.data_path='/tmp/smoke_store.zarr' ++dataset.stats_path='/kaggle/working/stats_smoke.json' ++generation.io.reg_ckpt_filename='/tmp/corrdiff_code/training_mini/checkpoints_regression/CorrDiffRegressionUNet.0.2000.mdlus' ++generation.io.res_ckpt_filename='/tmp/corrdiff_code/training_mini/checkpoints_diffusion/EDMPrecondSuperResolution.0.2000.mdlus' '++generation.times=[2011-01-01T00:00:00,2011-01-05T12:00:00]'\n"}
+,{"stream_name":"stderr","time":4943.364054195,"data":"/tmp/corrdiff_code/training_mini/generate.py:47: ExperimentalFeatureWarning: You are importing from 'physicsnemo.experimental'. The APIs in this namespace are experimental, under active development, and may change without notice. Expect possible back-compatibility breaking changes and only partial test coverage.\n"}
+,{"stream_name":"stderr","time":4943.36408976,"data":"  from physicsnemo.experimental.models.diffusion.preconditioning import (\n"}
+,{"stream_name":"stderr","time":4943.396196009,"data":"/usr/local/lib/python3.12/dist-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config_generate_era5_carra2_mini': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information\n"}
+,{"stream_name":"stderr","time":4943.396263757,"data":"  warnings.warn(msg, UserWarning)\n"}
+,{"stream_name":"stderr","time":4943.556005761,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/distributed/manager.py:415: UserWarning: Could not initialize using ENV, SLURM or OPENMPI methods. Assuming this is a single process job\n"}
+,{"stream_name":"stderr","time":4943.556028908,"data":"  warn(\n"}
+,{"stream_name":"stdout","time":4943.559581927,"data":"[2026-07-03 22:35:03,495][generate][INFO] - Using dataset: datasets/era5_carra2.py::ERA5CARRA2Dataset\n"}
+,{"stream_name":"stderr","time":4943.567079294,"data":"/tmp/corrdiff_code/training_mini/generate.py:47: ExperimentalFeatureWarning: You are importing from 'physicsnemo.experimental'. The APIs in this namespace are experimental, under active development, and may change without notice. Expect possible back-compatibility breaking changes and only partial test coverage.\n"}
+,{"stream_name":"stderr","time":4943.567099169,"data":"  from physicsnemo.experimental.models.diffusion.preconditioning import (\n"}
+,{"stream_name":"stderr","time":4943.567105236,"data":"/usr/local/lib/python3.12/dist-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config_generate_era5_carra2_mini': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information\n"}
+,{"stream_name":"stderr","time":4943.567110419,"data":"  warnings.warn(msg, UserWarning)\n"}
+,{"stream_name":"stderr","time":4943.567114693,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/distributed/manager.py:415: UserWarning: Could not initialize using ENV, SLURM or OPENMPI methods. Assuming this is a single process job\n"}
+,{"stream_name":"stderr","time":4943.567118714,"data":"  warn(\n"}
+,{"stream_name":"stderr","time":4943.567122019,"data":"\n"}
+,{"stream_name":"stderr","time":4943.567125705,"data":"/tmp/corrdiff_code/training_mini/generate.py:47: ExperimentalFeatureWarning: You are importing from 'physicsnemo.experimental'. The APIs in this namespace are experimental, under active development, and may change without notice. Expect possible back-compatibility breaking changes and only partial test coverage.\n"}
+,{"stream_name":"stderr","time":4943.567130196,"data":"  from physicsnemo.experimental.models.diffusion.preconditioning import (\n"}
+,{"stream_name":"stderr","time":4943.567137214,"data":"/usr/local/lib/python3.12/dist-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config_generate_era5_carra2_mini': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information\n"}
+,{"stream_name":"stderr","time":4943.567140046,"data":"  warnings.warn(msg, UserWarning)\n"}
+,{"stream_name":"stderr","time":4943.567142333,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/distributed/manager.py:415: UserWarning: Could not initialize using ENV, SLURM or OPENMPI methods. Assuming this is a single process job\n"}
+,{"stream_name":"stderr","time":4943.567144974,"data":"  warn(\n"}
+,{"stream_name":"stdout","time":4943.762224923,"data":"[2026-07-03 22:35:03,495][generate][INFO] - Using dataset: datasets/era5_carra2.py::ERA5CARRA2Dataset\n"}
+,{"stream_name":"stdout","time":4944.354507154,"data":"[2026-07-03 22:35:04,290][generate][INFO] - Patch-based training disabled\n"}
+,{"stream_name":"stdout","time":4944.354790312,"data":"[2026-07-03 22:35:04,290][generate][INFO] - Loading residual network from \"/tmp/corrdiff_code/training_mini/checkpoints_diffusion/EDMPrecondSuperResolution.0.2000.mdlus\"...\n"}
+,{"stream_name":"stdout","time":4944.557138733,"data":"[2026-07-03 22:35:04,290][generate][INFO] - Patch-based training disabled\n"}
+,{"stream_name":"stdout","time":4944.557198295,"data":"[2026-07-03 22:35:04,290][generate][INFO] - Loading residual network from \"/tmp/corrdiff_code/training_mini/checkpoints_diffusion/EDMPrecondSuperResolution.0.2000.mdlus\"...\n"}
+,{"stream_name":"stderr","time":4944.911491856,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/models/diffusion_unets/song_unet.py:962: FutureWarning: gridtype=\"sinusoidal\" uses a legacy frequency-band formula that does not produce exact octave doublings. Use \"sinusoidal_octave\" for new models. Only use \"sinusoidal\" when loading pre-trained checkpoints.\n"}
+,{"stream_name":"stderr","time":4944.911552282,"data":"  \"pos_embd\", self._get_positional_embedding().float(), persistent=False\n"}
+,{"stream_name":"stdout","time":4945.107309327,"data":"[2026-07-03 22:35:05,043][generate][INFO] - Loading network from \"/tmp/corrdiff_code/training_mini/checkpoints_regression/CorrDiffRegressionUNet.0.2000.mdlus\"...\n"}
+,{"stream_name":"stderr","time":4945.114603218,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/models/diffusion_unets/song_unet.py:962: FutureWarning: gridtype=\"sinusoidal\" uses a legacy frequency-band formula that does not produce exact octave doublings. Use \"sinusoidal_octave\" for new models. Only use \"sinusoidal\" when loading pre-trained checkpoints.\n"}
+,{"stream_name":"stderr","time":4945.114624203,"data":"  \"pos_embd\", self._get_positional_embedding().float(), persistent=False\n"}
+,{"stream_name":"stderr","time":4945.114628029,"data":"\n"}
+,{"stream_name":"stderr","time":4945.114631046,"data":"/usr/local/lib/python3.12/dist-packages/physicsnemo/models/diffusion_unets/song_unet.py:962: FutureWarning: gridtype=\"sinusoidal\" uses a legacy frequency-band formula that does not produce exact octave doublings. Use \"sinusoidal_octave\" for new models. Only use \"sinusoidal\" when loading pre-trained checkpoints.\n"}
+,{"stream_name":"stderr","time":4945.114635052,"data":"  \"pos_embd\", self._get_positional_embedding().float(), persistent=False\n"}
+,{"stream_name":"stdout","time":4945.31028545,"data":"[2026-07-03 22:35:05,043][generate][INFO] - Loading network from \"/tmp/corrdiff_code/training_mini/checkpoints_regression/CorrDiffRegressionUNet.0.2000.mdlus\"...\n"}
+,{"stream_name":"stdout","time":4945.423143895,"data":"[2026-07-03 22:35:05,358][generate][INFO] - Generating images, saving results to corrdiff_output.nc...\n"}
+,{"stream_name":"stdout","time":4945.483491284,"data":"[2026-07-03 22:35:05,419][generate][INFO] - starting index: 0\n"}
+,{"stream_name":"stdout","time":4945.625579007,"data":"[2026-07-03 22:35:05,358][generate][INFO] - Generating images, saving results to corrdiff_output.nc...\n"}
+,{"stream_name":"stdout","time":4945.625621033,"data":"[2026-07-03 22:35:05,419][generate][INFO] - starting index: 0\n"}
+,{"stream_name":"stderr","time":4946.777197361,"data":"\r  0%|          | 0/4 [00:00\u003c?, ?batch/s]\r  0%|          | 0/4 [00:00\u003c?, ?batch/s]\n"}
+,{"stream_name":"stderr","time":4965.168748318,"data":"\r  0%|          | 0/4 [00:00\u003c?, ?batch/s]\r 25%|██▌       | 1/4 [00:18\u003c00:55, 18.38s/batch]\r 25%|██▌       | 1/4 [00:18\u003c00:55, 18.38s/batch]\n"}
+,{"stream_name":"stderr","time":4985.253000189,"data":"\r 25%|██▌       | 1/4 [00:18\u003c00:55, 18.38s/batch]\r 50%|█████     | 2/4 [00:38\u003c00:38, 19.39s/batch]\r 50%|█████     | 2/4 [00:38\u003c00:38, 19.39s/batch]\n"}
+,{"stream_name":"stderr","time":5004.646066062,"data":"\r 50%|█████     | 2/4 [00:38\u003c00:38, 19.39s/batch]\r 75%|███████▌  | 3/4 [00:57\u003c00:19, 19.38s/batch]\r 75%|███████▌  | 3/4 [00:57\u003c00:19, 19.38s/batch]\n"}
+,{"stream_name":"stderr","time":5022.806431635,"data":"\r 75%|███████▌  | 3/4 [00:57\u003c00:19, 19.38s/batch]\r100%|██████████| 4/4 [01:16\u003c00:00, 18.99s/batch]\r100%|██████████| 4/4 [01:16\u003c00:00, 19.06s/batch]\n"}
+,{"stream_name":"stderr","time":5023.008853322,"data":"\r100%|██████████| 4/4 [01:16\u003c00:00, 18.99s/batch]\r100%|██████████| 4/4 [01:16\u003c00:00, 19.06s/batch]\n"}
+,{"stream_name":"stderr","time":5023.008976989,"data":"\n"}
+,{"stream_name":"stderr","time":5023.008984127,"data":"\r100%|██████████| 4/4 [01:16\u003c00:00, 18.99s/batch]\r100%|██████████| 4/4 [01:16\u003c00:00, 19.06s/batch]\n"}
+,{"stream_name":"stdout","time":5023.253313309,"data":"[2026-07-03 22:36:23,187][generate][INFO] - starting index: 1\n"}
+,{"stream_name":"stdout","time":5023.454011911,"data":"[2026-07-03 22:36:23,187][generate][INFO] - starting index: 1\n"}
+,{"stream_name":"stderr","time":5023.570257705,"data":"\r  0%|          | 0/4 [00:00\u003c?, ?batch/s]\r  0%|          | 0/4 [00:00\u003c?, ?batch/s]\n"}
+,{"stream_name":"stderr","time":5041.956290607,"data":"\r  0%|          | 0/4 [00:00\u003c?, ?batch/s]\r 25%|██▌       | 1/4 [00:18\u003c00:55, 18.38s/batch]\r 25%|██▌       | 1/4 [00:18\u003c00:55, 18.38s/batch]\n"}
+,{"stream_name":"stderr","time":5060.802584177,"data":"\r 25%|██▌       | 1/4 [00:18\u003c00:55, 18.38s/batch]\r 50%|█████     | 2/4 [00:37\u003c00:37, 18.66s/batch]\r 50%|█████     | 2/4 [00:37\u003c00:37, 18.66s/batch]\n"}
+,{"stream_name":"stderr","time":5079.934772382,"data":"\r 50%|█████     | 2/4 [00:37\u003c00:37, 18.66s/batch]\r 75%|███████▌  | 3/4 [00:56\u003c00:18, 18.87s/batch]\r 75%|███████▌  | 3/4 [00:56\u003c00:18, 18.87s/batch]\n"}
+,{"stream_name":"stderr","time":5098.833326096,"data":"\r 75%|███████▌  | 3/4 [00:56\u003c00:18, 18.87s/batch]\r100%|██████████| 4/4 [01:15\u003c00:00, 18.96s/batch]\r100%|██████████| 4/4 [01:15\u003c00:00, 18.87s/batch]\n"}
+,{"stream_name":"stderr","time":5099.035069526,"data":"\r100%|██████████| 4/4 [01:15\u003c00:00, 18.96s/batch]\r100%|██████████| 4/4 [01:15\u003c00:00, 18.87s/batch]\n"}
+,{"stream_name":"stderr","time":5099.035104661,"data":"\n"}
+,{"stream_name":"stderr","time":5099.035110513,"data":"\r100%|██████████| 4/4 [01:15\u003c00:00, 18.96s/batch]\r100%|██████████| 4/4 [01:15\u003c00:00, 18.87s/batch]\n"}
+,{"stream_name":"stdout","time":5099.267017624,"data":"[2026-07-03 22:37:39,202][generate][INFO] - Total time to run 1 steps and 4 members = 76.01390625 s\n"}
+,{"stream_name":"stdout","time":5099.267059598,"data":"[2026-07-03 22:37:39,203][generate][INFO] - Average time per batch element = 19.0034765625 s\n"}
+,{"stream_name":"stdout","time":5099.335303884,"data":"[2026-07-03 22:37:39,271][generate][INFO] - Generation Completed.\n"}
+,{"stream_name":"stdout","time":5099.469327092,"data":"[2026-07-03 22:37:39,202][generate][INFO] - Total time to run 1 steps and 4 members = 76.01390625 s\n"}
+,{"stream_name":"stdout","time":5099.469364472,"data":"[2026-07-03 22:37:39,203][generate][INFO] - Average time per batch element = 19.0034765625 s\n"}
+,{"stream_name":"stdout","time":5099.469370307,"data":"[2026-07-03 22:37:39,271][generate][INFO] - Generation Completed.\n"}
+,{"stream_name":"stdout","time":5102.166752236,"data":"NetCDF outputs: ['/tmp/corrdiff_code/training_mini/corrdiff_output.nc']\n"}
+,{"stream_name":"stderr","time":5103.311732929,"data":"Traceback (most recent call last):\n"}
+,{"stream_name":"stderr","time":5103.311769009,"data":"  File \"\u003cstring\u003e\", line 1, in \u003cmodule\u003e\n"}
+,{"stream_name":"stderr","time":5103.311773746,"data":"  File \"/usr/local/lib/python3.12/dist-packages/papermill/execute.py\", line 131, in execute_notebook\n"}
+,{"stream_name":"stderr","time":5103.31193693,"data":"    raise_for_execution_errors(nb, output_path)\n"}
+,{"stream_name":"stderr","time":5103.312334725,"data":"  File \"/usr/local/lib/python3.12/dist-packages/papermill/execute.py\", line 251, in raise_for_execution_errors\n"}
+,{"stream_name":"stderr","time":5103.312364445,"data":"    raise error\n"}
+,{"stream_name":"stderr","time":5103.312368865,"data":"papermill.exceptions.PapermillExecutionError: \n"}
+,{"stream_name":"stderr","time":5103.312372354,"data":"---------------------------------------------------------------------------\n"}
+,{"stream_name":"stderr","time":5103.312376113,"data":"Exception encountered at \"In [10]\":\n"}
+,{"stream_name":"stderr","time":5103.312379645,"data":"---------------------------------------------------------------------------\n"}
+,{"stream_name":"stderr","time":5103.312383126,"data":"ValueError                                Traceback (most recent call last)\n"}
+,{"stream_name":"stderr","time":5103.312386539,"data":"/tmp/ipykernel_23/141568581.py in \u003ccell line: 0\u003e()\n"}
+,{"stream_name":"stderr","time":5103.312390281,"data":"      8 truth = xr.open_dataset(nc, group=\"truth\")\n"}
+,{"stream_name":"stderr","time":5103.31239389,"data":"      9 var = list(truth.data_vars)[0]\n"}
+,{"stream_name":"stderr","time":5103.312397351,"data":"---\u003e 10 print(\"plotting channel:\", var, \"| pred dims:\", dict(pred[var].dims))\n"}
+,{"stream_name":"stderr","time":5103.312406525,"data":"     11 \n"}
+,{"stream_name":"stderr","time":5103.31240949,"data":"     12 p = np.asarray(pred[var].isel(ensemble=0, time=0))\n"}
+,{"stream_name":"stderr","time":5103.312411834,"data":"\n"}
+,{"stream_name":"stderr","time":5103.312609233,"data":"ValueError: dictionary update sequence element #0 has length 8; 2 is required\n"}
+,{"stream_name":"stderr","time":5103.312614552,"data":"\n"}
+,{"stream_name":"stderr","time":5105.265473157,"data":"/usr/local/lib/python3.12/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\\|'\n"}
+,{"stream_name":"stderr","time":5105.265520961,"data":"  cells[i][c] = re.sub('\\\\\\\\\\|', '|', cell)\n"}
+,{"stream_name":"stderr","time":5105.406922368,"data":"/usr/local/lib/python3.12/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\\_'\n"}
+,{"stream_name":"stderr","time":5105.406960581,"data":"  text = re.sub(r'_', '\\_', text) # Escape underscores in display text\n"}
+,{"stream_name":"stderr","time":5106.025059716,"data":"[NbConvertApp] Converting notebook __notebook__.ipynb to notebook\n"}
+,{"stream_name":"stderr","time":5106.341290093,"data":"[NbConvertApp] Writing 56022 bytes to __notebook__.ipynb\n"}
+,{"stream_name":"stderr","time":5108.616822631,"data":"[NbConvertApp] Converting notebook __notebook__.ipynb to html\n"}
+,{"stream_name":"stderr","time":5109.420548643,"data":"[NbConvertApp] Writing 354900 bytes to __results__.html\n"}
+]

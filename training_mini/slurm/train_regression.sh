@@ -2,7 +2,7 @@
 # CorrDiff-Mini STAGE 1 (regression / mean predictor) on Fir (H100).
 #
 # One-time env setup first:  bash training_mini/slurm/setup_env.sh
-# Submit:                    bash training_mini/slurm/submit.sh --gpus=h100:2 training_mini/slurm/train_regression.sh
+# Submit:                    bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
 # Quick env test on Fir:     TRAIN_DURATION=2000 STAGE=0 bash training_mini/slurm/submit.sh training_mini/slurm/train_regression.sh
 # No-sea-ice variant:        CONFIG=config_training_era5_carra2_mini_regression_noice \
 #                                bash training_mini/slurm/submit.sh training_mini/slurm/train_regression.sh
@@ -24,9 +24,12 @@
 # checkpoint in $OUTPUT_DIR (train.py loads cur_nimg automatically).
 
 #SBATCH --account=def-stockie_gpu
-# Multi-GPU speedup: override on submit, e.g. `sbatch --gpus=h100:4 <script>` (torchrun scales
-# automatically via SLURM_GPUS_ON_NODE). 1 GPU backfills faster on the opportunistic queue.
-#SBATCH --gpus=h100:2
+# Multi-GPU speedup: override on submit, e.g. `--gpus-per-node=h100:4`. Use --gpus-per-node,
+# NOT --gpus: the latter is a job-level count SLURM may spread across nodes (one GPU each), and
+# torchrun --standalone --nnodes=1 can only reach the first node. 1 GPU backfills faster on the
+# opportunistic queue. Valid counts are constrained by total_batch_size -- see require_world_size.
+#SBATCH --nodes=1
+#SBATCH --gpus-per-node=h100:2
 #SBATCH --job-name=corrdiff_reg
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=48G
@@ -78,6 +81,7 @@ mkdir -p "$CORRDIFF_LOG_DIR" "$OUTPUT_DIR"
 
 # ---- preflight: do the ranks match the GPUs, and can that count carry this batch? ----------
 # Before staging, because staging is the slow part and the allocation is already burning.
+require_single_node || exit 1
 check_gpu_alloc "$NPROC" || exit 1
 # Read into private names: TOTAL_BATCH/BATCH_PER_GPU stay purely user overrides, so filling
 # them here would silently start appending ++training.hp.* to every launch line.
