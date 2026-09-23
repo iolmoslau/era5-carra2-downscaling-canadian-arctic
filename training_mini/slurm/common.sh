@@ -212,3 +212,65 @@ require_divisor() {
     return 1
   fi
 }
+
+# ---------------------------------------------------------------------------------------
+# GPU count vs batch arithmetic
+#
+# CorrDiff does NOT simply split total_batch_size across ranks. compute_num_accumulation_rounds
+# (helpers/train_helpers.py) takes two integer divisions and then demands the product come back
+# exact:
+#     batch_gpu_total = total_batch_size // world_size
+#     bpg             = min(batch_size_per_gpu, batch_gpu_total)
+#     rounds          = batch_gpu_total // bpg
+#     require  bpg * rounds * world_size == total_batch_size
+#
+# Two floors mean "world_size divides total_batch_size" is NOT sufficient. At total=64, bpg=4:
+# world=3 gives 64//3 = 21, 21//4 = 5, and 4*5*3 = 60 != 64 -> ValueError. So an --gpus=h100:3
+# resubmission of a run trained on 2 GPUs dies -- but only AFTER the allocation is granted and
+# the shards are staged, which is the expensive part. Hence a preflight.
+#
+# Changing the GPU count BETWEEN resubmissions is otherwise safe: cur_nimg advances by
+# total_batch_size per step regardless of world_size, and the LR schedule (lr_rampup, lr_decay,
+# lr_decay_rate) is absolute in samples, so neither depends on how many GPUs a given submission
+# happened to get.
+# ---------------------------------------------------------------------------------------
+
+# _ws_fits <world> <total_batch> <batch_per_gpu> -- mirrors compute_num_accumulation_rounds.
+_ws_fits() {
+  local w="$1" total="$2" bpg="$3" bgt rounds
+  (( w > 0 )) || return 1
+  bgt=$(( total / w ))
+  (( bgt > 0 )) || return 1
+  if [[ ! "$bpg" =~ ^[0-9]+$ ]] || (( bpg > bgt )); then bpg=$bgt; fi   # "auto"/None, or capped
+  rounds=$(( bgt / bpg ))
+  (( rounds > 0 )) && (( bpg * rounds * w == total ))
+}
+
+# require_world_size <world> <total_batch> <batch_per_gpu> -- fail with the usable GPU counts.
+# Unknown/non-numeric total_batch is not an error: the config simply did not pin it.
+require_world_size() {
+  local w="${1:-}" total="${2:-}" bpg="${3:-}" d ok=""
+  [[ "$total" =~ ^[0-9]+$ ]] || return 0
+  [[ "$w" =~ ^[0-9]+$ ]] || return 0
+  _ws_fits "$w" "$total" "$bpg" && return 0
+  for (( d = 1; d <= 16; d++ )); do _ws_fits "$d" "$total" "$bpg" && ok+="$d "; done
+  echo "ERROR: $w GPU(s) cannot divide total_batch_size=$total with batch_size_per_gpu=$bpg." >&2
+  echo "       CorrDiff requires batch_size_per_gpu * accumulation_rounds * world_size to equal" >&2
+  echo "       total_batch_size exactly, and both are computed with integer division -- so a" >&2
+  echo "       GPU count that merely divides $total is not enough." >&2
+  echo "       Usable --gpus counts here: ${ok:-<none>}" >&2
+  echo "       Resubmitting a run on a different GPU count is otherwise fine: cur_nimg and the" >&2
+  echo "       LR schedule are both absolute in samples." >&2
+  return 1
+}
+
+# config_hp <config.yaml> <key> -- one training.hp value, empty if the config does not set it.
+config_hp() {
+  python - "${1:?config path required}" "${2:?key required}" <<'PY'
+import sys, yaml
+cfg = yaml.safe_load(open(sys.argv[1])) or {}
+hp = ((cfg.get("training") or {}).get("hp") or {})
+v = hp.get(sys.argv[2])
+print("" if v is None else v)
+PY
+}

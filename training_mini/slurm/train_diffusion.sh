@@ -80,6 +80,12 @@ cd "$TRAIN_DIR"
 export CORRDIFF_LOG_DIR="$REPO/logs"   # Hydra run dir, wandb offline, generate.log all go here
 mkdir -p "$CORRDIFF_LOG_DIR" "$OUTPUT_DIR"
 
+# ---- preflight: can this GPU count carry this batch? ---------------------------------------
+# Before staging, because staging is the slow part and the allocation is already burning.
+TOTAL_BATCH="${TOTAL_BATCH:-$(config_hp "$TRAIN_DIR/conf/$CONFIG.yaml" total_batch_size)}"
+BATCH_PER_GPU="${BATCH_PER_GPU:-$(config_hp "$TRAIN_DIR/conf/$CONFIG.yaml" batch_size_per_gpu)}"
+require_world_size "$NPROC" "$TOTAL_BATCH" "$BATCH_PER_GPU" || exit 1
+
 # Years come from the CONFIG (dataset.years + validation.years) so staging can never drift from
 # what the run reads; override with YEARS="2011 2012" for a quick subset.
 YEARS="${YEARS:-$(config_years "$TRAIN_DIR/conf/$CONFIG.yaml")}"
