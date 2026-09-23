@@ -274,3 +274,44 @@ v = hp.get(sys.argv[2])
 print("" if v is None else v)
 PY
 }
+
+# ---------------------------------------------------------------------------------------
+# Ranks vs GPUs actually allocated
+#
+# NPROC="${SLURM_GPUS_ON_NODE:-1}" is a silent fallback: a job that asks for 3 GPUs but whose
+# SLURM_GPUS_ON_NODE is unset launches ONE rank and trains happily on one card for the whole
+# walltime, paying for three. Nothing fails, so nothing tells you -- the only trace is the
+# "Launching ... on N H100" echo and the accumulation-round count.
+#
+# Mismatch the other way (more ranks than visible devices) is a hard error, not waste.
+# ---------------------------------------------------------------------------------------
+
+# visible_gpus -- how many CUDA devices this process can actually see. Empty if undeterminable.
+visible_gpus() {
+  if [[ -n "${CUDA_VISIBLE_DEVICES:-}" ]]; then
+    awk -F, '{print NF}' <<< "$CUDA_VISIBLE_DEVICES"
+  elif command -v nvidia-smi >/dev/null 2>&1; then
+    nvidia-smi -L 2>/dev/null | grep -c '^GPU' || true
+  else
+    printf ''
+  fi
+}
+
+# check_gpu_alloc <nproc> [visible] -- reconcile the rank count with the devices on offer.
+# Returns 1 only when ranks EXCEED devices; under-use is a loud warning, since a job that is
+# merely wasting GPUs should still be allowed to run.
+check_gpu_alloc() {
+  local n="${1:-}" vis="${2-$(visible_gpus)}"
+  [[ "$vis" =~ ^[0-9]+$ ]] || return 0          # cannot tell (no nvidia-smi, CPU-only test)
+  [[ "$n" =~ ^[0-9]+$ ]] || return 0
+  (( vis == n )) && return 0
+  if (( n > vis )); then
+    echo "ERROR: launching $n ranks but only $vis CUDA device(s) are visible." >&2
+    echo "       Ranks beyond the device count collide or fail at NCCL init." >&2
+    return 1
+  fi
+  echo "WARNING: $vis GPU(s) allocated but only $n rank(s) launching -- $(( vis - n )) idle." >&2
+  echo "         NPROC comes from \$SLURM_GPUS_ON_NODE (unset -> 1), so a job that requested" >&2
+  echo "         more GPUs than this trains on a subset for the full walltime without failing." >&2
+  echo "         Set NPROC=$vis explicitly if that is not what you meant." >&2
+}

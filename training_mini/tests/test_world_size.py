@@ -142,3 +142,37 @@ def test_every_shipped_config_runs_on_two_gpus():
     for path in sorted(CONF.glob("config_training_era5_carra2_mini_*.yaml")):
         hp = yaml.safe_load(path.read_text())["training"]["hp"]
         assert reference(2, hp["total_batch_size"], hp["batch_size_per_gpu"]), path.name
+
+
+# ------------------------------------------------------------------ ranks vs allocated GPUs
+# The other half of the same incident: a job that asks for 3 GPUs but whose SLURM_GPUS_ON_NODE
+# is unset launches ONE rank -- world=1 satisfies the batch arithmetic, so it trains happily on
+# a third of the allocation for the full walltime and nothing ever fails.
+def test_more_ranks_than_devices_is_an_error():
+    out = sh("check_gpu_alloc 3 2")
+    assert out.returncode == 1
+    assert "only 2 CUDA device(s) are visible" in out.stderr
+
+
+def test_fewer_ranks_than_devices_warns_but_runs():
+    """Waste must not kill a job that is otherwise valid -- but it must be impossible to miss."""
+    out = sh("check_gpu_alloc 1 3")
+    assert out.returncode == 0
+    assert "2 idle" in out.stderr
+    assert "SLURM_GPUS_ON_NODE" in out.stderr
+
+
+def test_matching_counts_are_silent():
+    out = sh("check_gpu_alloc 2 2")
+    assert out.returncode == 0 and out.stderr == ""
+
+
+def test_undeterminable_device_count_does_not_block():
+    """No nvidia-smi (a login node, this laptop) must not make the guard refuse to run."""
+    assert sh('check_gpu_alloc 2 ""').returncode == 0
+    assert sh('check_gpu_alloc "" 2').returncode == 0
+
+
+def test_visible_gpus_counts_the_cuda_list():
+    assert sh("CUDA_VISIBLE_DEVICES=0,1,2 visible_gpus").stdout.strip() == "3"
+    assert sh("CUDA_VISIBLE_DEVICES=1 visible_gpus").stdout.strip() == "1"

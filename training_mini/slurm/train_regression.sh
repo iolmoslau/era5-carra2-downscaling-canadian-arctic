@@ -48,7 +48,7 @@ OUTPUT_DIR="${OUTPUT_DIR:-$SCRATCH/corrdiff_mini}"    # checkpoints (persistent;
 CONFIG="${CONFIG:-config_training_era5_carra2_mini_regression}"
 STATS="${STATS:-$DATA_DIR/stats_train_2011_2018.json}"
 STAGE="${STAGE:-1}"                                   # 1 = copy shards to fast node-local $SLURM_TMPDIR
-NPROC="${SLURM_GPUS_ON_NODE:-1}"
+NPROC="${NPROC:-${SLURM_GPUS_ON_NODE:-1}}"            # overridable; the :-1 fallback is checked below
 
 # ---- sanity: log resolved paths, fail fast on a bad OUTPUT_DIR/DATA_DIR --------------------
 echo "[paths] OUTPUT_DIR=$OUTPUT_DIR"
@@ -68,11 +68,14 @@ cd "$TRAIN_DIR"
 export CORRDIFF_LOG_DIR="$REPO/logs"   # Hydra run dir, wandb offline, generate.log all go here
 mkdir -p "$CORRDIFF_LOG_DIR" "$OUTPUT_DIR"
 
-# ---- preflight: can this GPU count carry this batch? ---------------------------------------
+# ---- preflight: do the ranks match the GPUs, and can that count carry this batch? ----------
 # Before staging, because staging is the slow part and the allocation is already burning.
-TOTAL_BATCH="${TOTAL_BATCH:-$(config_hp "$TRAIN_DIR/conf/$CONFIG.yaml" total_batch_size)}"
-BATCH_PER_GPU="${BATCH_PER_GPU:-$(config_hp "$TRAIN_DIR/conf/$CONFIG.yaml" batch_size_per_gpu)}"
-require_world_size "$NPROC" "$TOTAL_BATCH" "$BATCH_PER_GPU" || exit 1
+check_gpu_alloc "$NPROC" || exit 1
+# Read into private names: TOTAL_BATCH/BATCH_PER_GPU stay purely user overrides, so filling
+# them here would silently start appending ++training.hp.* to every launch line.
+_tb="${TOTAL_BATCH:-$(config_hp "$TRAIN_DIR/conf/$CONFIG.yaml" total_batch_size)}"
+_bpg="${BATCH_PER_GPU:-$(config_hp "$TRAIN_DIR/conf/$CONFIG.yaml" batch_size_per_gpu)}"
+require_world_size "$NPROC" "$_tb" "$_bpg" || exit 1
 
 # ---- stage zarr shards to node-local storage (many tiny files -> avoid /project thrash) ----
 # Years come from the CONFIG (dataset.years + validation.years) so staging can never drift from
