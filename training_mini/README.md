@@ -41,8 +41,12 @@ upsampling is identical to the reverse — stats stay exact. The **two model var
 / without sea ice) differ only by the config's `lr_channels` list (drop `siconc`).
 
 ## Data layout & splits
-- Shards: `shard_YYYY.zarr` in one directory (`dataset.data_path`).
-- Initial model: **train 2011–2018, validate 2019** (test set: future).
+- Shards: `shard_YYYY.zarr` **or** `shard_YYYY.zarr.zip` in one directory
+  (`dataset.data_path`), mixed freely — per year, the 1-inode zip archive wins when present.
+  `dataloading.dataset` resolves the form and `stage_shards` copies whichever exists, so no
+  command changes either way. A loose store is ~5,900 tiny files; see `scripts/zip_shards.sh`.
+- **Train 2011–2018, validate 2019, test 2020–2022.** The test years are held out for final
+  evaluation only (`evaluate/run_eval.sh`); nothing is fitted on them, stats included.
 - Stats: train-only (`tools/make_stats.py` over 2011–2018), one JSON reused by both variants.
 
 ## Install (GPU env — fir or Kaggle; NOT the M1 dev box)
@@ -78,10 +82,64 @@ The configs reference `./data`; on the cluster the SLURM scripts symlink it to t
 shard directory.
 
 ## On fir
+
+**Always submit through `slurm/submit.sh`, never bare `sbatch`.** SLURM cannot expand `$REPO` in
+`#SBATCH` lines, so a bare `sbatch` drops the job's `.out`/`.err` in whatever directory you
+launched from. `submit.sh` pins them to `$REPO/logs/` and forwards sbatch flags and env-var
+prefixes verbatim. Paths below are from `$REPO`; `WORKFLOW.md` is the full per-run procedure
+(train → generate → collect → archive) and this is the short form.
+
 ```bash
-sbatch slurm/train_regression.sh
-sbatch slurm/train_diffusion.sh /path/to/regression.mdlus
+NAME=regression_3
+OUT=$SCRATCH/corrdiff_runs/$NAME          # one directory per run: checkpoints + tensorboard
+DATA=$PROJECT/data/derot                  # de-rotated shards (see scripts/derotate_shards.sh)
+
+# 1. TRAIN -- re-submit the same line to resume from the last checkpoint
+DATA_DIR=$DATA STATS=$DATA/stats_train_2011_2018.json OUTPUT_DIR=$OUT TRAIN_DURATION=1200000 \
+  bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
+
+# 2. GENERATE -- regression mean on the 2019 validation year
+DATA_DIR=$DATA OUTPUT_DIR=$OUT \
+  bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
+#    -> training_mini/corrdiff_output.nc  (overwritten each time; collect before the next one)
+
+# 2b. a NO-ICE model needs NOICE=1 -- see the table below
+NOICE=1 DATA_DIR=$DATA OUTPUT_DIR=$OUT \
+  bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
+
+# 3. FULL ensemble, once a diffusion net exists (regression mean + diffusion residual)
+REG=$(latest_ckpt $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression)
+RES=$(latest_ckpt $SCRATCH/corrdiff_runs/diffusion_2/checkpoints_diffusion)
+MODE=all NUM_ENS=15 REG_CKPT=$REG RES_CKPT=$RES DATA_DIR=$DATA \
+  bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
 ```
+
+`latest_ckpt` comes from `slurm/common.sh` — `source $REPO/training_mini/slurm/common.sh` once
+per shell. It selects on the `nimg` in the filename, **not** mtime, which copying reorders.
+
+### `generate.sh` knobs
+
+| var | default | what it does |
+|---|---|---|
+| `OUTPUT_DIR` | `$SCRATCH/corrdiff_mini` | the run to generate from; the **furthest-trained** `checkpoints_regression/*.mdlus` under it is used |
+| `REG_CKPT` / `RES_CKPT` | from `OUTPUT_DIR` | pin exact checkpoints instead — needed when the diffusion net was trained against a *different* regression run |
+| `DATA_DIR` | `$PROJECT/data` | shard directory; `shard_YYYY.zarr` and `.zarr.zip` both work |
+| `MODE` | `regression` | `regression` (deterministic mean) · `diffusion` · `all` (mean + residual) |
+| `NUM_ENS` | `1` | ensemble members per time; >1 only means anything for `diffusion`/`all` |
+| `SEED_BATCH` | largest divisor of `NUM_ENS` ≤ 8 | members denoised per sampler call. **Must divide `NUM_ENS`** — the job refuses to start otherwise |
+| `NOICE` | `0` | `1` withholds `siconc` → the 11-channel no-ice stack |
+| `DROP` | *(empty)* | comma-separated channels to withhold; the general form of `NOICE`, and the hook for ablations |
+
+**On `NOICE` / `DROP`:** the channel list is read from the shard's own attributes and its length
+checked against the checkpoint's input conv width *before* the GPU does anything, so a mismatch
+fails in seconds with the fix named rather than as a conv shape error minutes in. Getting this
+wrong is not hypothetical — it killed three generation jobs on 2026-09-24. And passing the *wrong*
+11 channels is worse than passing 12: the shapes still match, so the run completes and reports
+plausible numbers for a stack the model never saw. That is why the list is never typed by hand.
+
+Scoring a run over many times (CRPS/MAE, test years) is `evaluate/run_eval.sh` — see
+`evaluate/README.md`. It takes the same `NOICE`/`DROP` flags.
+
 Edit `--account` / `--mail-user` / `module load` lines to match the cluster.
 
 ## Smoke test first
