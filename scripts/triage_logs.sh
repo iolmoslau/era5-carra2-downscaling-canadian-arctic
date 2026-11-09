@@ -31,10 +31,12 @@ PAT="${PAT:-corrdiff_}"
 # Exception names must match INDENTED too: a traceback's final line is flush-left but plenty of
 # errors are reported inside one. Matching only '^Name:' is why three generation failures first
 # showed nothing but "raise ChildFailedError" -- which says a child died, not why.
-SIGNALS='Launching (regression|diffusion)|gradient accumulation rounds|^ERROR|^WARNING|Error executing job|[A-Za-z_][A-Za-z_.]*(Error|Exception):|CANCELLED|TIME LIMIT|out of memory|No such file|command not found|Killed|exitcode'
+SIGNALS='Launching (regression|diffusion)|Generating \(|gradient accumulation rounds|^ERROR|^WARNING|Error executing job|[A-Za-z_][A-Za-z_.]*(Error|Exception):|CANCELLED|TIME LIMIT|out of memory|No such file|command not found|Killed|expected input|to have [0-9]+ channels'
 
-# torchrun wraps the real cause in its own failure; these lines are never the answer by themselves.
-NOISE='ChildFailedError|raise [A-Z]|^W[0-9]{4}|torch/distributed/elastic|Setting OMP_NUM_THREADS|^\*+$|flop_counter|ExperimentalFeatureWarning|^ *$'
+# torchrun wraps the real cause in its own failure. NONE of these name a cause, so finding only
+# these must trigger the fallback -- "exitcode: 1" in particular looks like a finding and is not.
+# (It was in SIGNALS at first, which defeated the fallback on exactly the jobs it was added for.)
+NOISE='ChildFailedError|raise [A-Z]|exitcode|failed \(exitcode|^W[0-9]{4}|^E[0-9]{4}|torch/distributed/elastic|Setting OMP_NUM_THREADS|^\*+$|flop_counter|ExperimentalFeatureWarning|^ *$|^ *time *:|^ *host *:|^ *rank *:|error_file|traceback *:'
 
 # while-read rather than mapfile: macOS ships bash 3.2, and this script has to be runnable
 # (and testable) off-cluster as well as on Fir.
