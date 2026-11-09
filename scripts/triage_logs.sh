@@ -28,7 +28,13 @@ PAT="${PAT:-corrdiff_}"
 [[ -d "$LOG_DIR" ]] || { echo "ERROR: no log directory at $LOG_DIR" >&2; exit 1; }
 
 # Lines that carry signal. Deliberately narrow: the point is a block short enough to read.
-SIGNALS='Launching (regression|diffusion)|gradient accumulation rounds|^ERROR|^WARNING|Error executing job|^[A-Za-z][A-Za-z.]*(Error|Exception):|raise [A-Z]|CANCELLED|TIME LIMIT|out of memory|No such file|FileNotFoundError'
+# Exception names must match INDENTED too: a traceback's final line is flush-left but plenty of
+# errors are reported inside one. Matching only '^Name:' is why three generation failures first
+# showed nothing but "raise ChildFailedError" -- which says a child died, not why.
+SIGNALS='Launching (regression|diffusion)|gradient accumulation rounds|^ERROR|^WARNING|Error executing job|[A-Za-z_][A-Za-z_.]*(Error|Exception):|CANCELLED|TIME LIMIT|out of memory|No such file|command not found|Killed|exitcode'
+
+# torchrun wraps the real cause in its own failure; these lines are never the answer by themselves.
+NOISE='ChildFailedError|raise [A-Z]|^W[0-9]{4}|torch/distributed/elastic|Setting OMP_NUM_THREADS|^\*+$|flop_counter|ExperimentalFeatureWarning|^ *$'
 
 # while-read rather than mapfile: macOS ships bash 3.2, and this script has to be runnable
 # (and testable) off-cluster as well as on Fir.
@@ -60,7 +66,15 @@ for out in "${files[@]}"; do
   fi
 
   # Our own echoes plus whatever went wrong, in file order so cause precedes effect.
-  grep -hE "$SIGNALS" "$out" "$err" 2>/dev/null | head -8 |
+  sig=$(grep -hE "$SIGNALS" "$out" "$err" 2>/dev/null | head -10)
+
+  # If everything we matched was torchrun boilerplate, the real cause is somewhere we did not
+  # think to look -- so show the tail of the stderr instead of confidently reporting nothing.
+  if [[ -z "$(printf '%s\n' "$sig" | grep -vE "$NOISE")" ]]; then
+    sig=$(grep -hvE "$NOISE" "$err" "$out" 2>/dev/null | tail -14)
+    [[ -n "$sig" ]] && printf '  (no known signal -- tail of stderr)\n'
+  fi
+  printf '%s\n' "$sig" | grep -v '^$' | cut -c1-200 |
     sed 's/[[:space:]]*$//; s/^/  | /'
 
   # Last sign of life: the most recent progress line, which says how far it actually got.
