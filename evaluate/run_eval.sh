@@ -52,6 +52,11 @@ NUM_ENS="${NUM_ENS:-15}"                               # ensemble members for th
 SEED_BATCH="${SEED_BATCH:-$(seed_batch_for "$NUM_ENS")}"
 N="${N:-${1:-50}}"                                     # number of RANDOM eval times to draw
 SEED="${SEED:-0}"                                      # RNG seed: reproducible; both passes share it
+# Channels to withhold from the LR stack. NOICE=1 evaluates a no-sea-ice model; DROP is the
+# general form and the hook for the channel-ablation sweep. The list is read from the data store
+# and verified against the checkpoint (tools/lr_channels.py) -- never typed out here.
+DROP="${DROP:-}"
+[[ "${NOICE:-0}" == "1" ]] && DROP="${DROP:+$DROP,}siconc"
 YEARS="${YEARS:-2019}"                                 # space-separated year(s) to sample from
 NAME="${NAME:-}"                                       # REQUIRED run name -> results/<name>/eval
 # Small, kept artifacts (metrics JSON) go with the run's tracked results in the repo.
@@ -117,11 +122,19 @@ echo "[eval] RES_CKPT=$RES_CKPT"
 
 # shared generate.py args (torchrun so physicsnemo's DistributedManager sees RANK/WORLD_SIZE).
 # Explicit random `times` list; null out times_range so generate.py uses the list.
+# Resolve the LR channel list from the store and check it against the net that consumes it.
+# Both passes share one list, so a mismatch here would otherwise waste the full ensemble pass
+# before failing -- or, for a wrong-but-same-length subset, score the wrong model silently.
+LR_ARG=$(python tools/lr_channels.py --data-dir "$DATA_DIR" --drop "$DROP" \
+           --check-against "$REG_CKPT" --stage regression) || exit 1
+echo "[eval] lr_channels=$LR_ARG"
+
 COMMON=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
         generate.py --config-name="$CONFIG"
         hydra.run.dir="$CORRDIFF_LOG_DIR/hydra/${SLURM_JOB_ID:-manual}"
         ++dataset.data_path="$DATA_DIR"
         ++dataset.stats_path="$STATS"
+        ++dataset.lr_channels="$LR_ARG"
         ++dataset.years="[$YEARS_CSV]"
         ++generation.times="$TIMES"
         ++generation.times_range=null)

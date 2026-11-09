@@ -45,7 +45,17 @@ NUM_ENS="${NUM_ENS:-1}"                     # ensemble members (use >1 for diffu
 # must divide NUM_ENS exactly (see seed_batch_for/require_divisor in slurm/common.sh).
 SEED_BATCH="${SEED_BATCH:-$(seed_batch_for "$NUM_ENS")}"
 CONFIG="${CONFIG:-config_generate_era5_carra2_mini}"
-NPROC="${SLURM_GPUS_ON_NODE:-1}"           # torchrun processes = GPUs on the node
+# Visible devices before $SLURM_GPUS_ON_NODE: see the note on require_single_node in common.sh.
+NPROC="${NPROC:-}"
+if [[ ! "$NPROC" =~ ^[1-9][0-9]*$ ]]; then
+  NPROC=$(visible_gpus)
+  [[ "$NPROC" =~ ^[1-9][0-9]*$ ]] || NPROC="${SLURM_GPUS_ON_NODE:-1}"
+fi
+# Channels to withhold from the LR stack. NOICE=1 is the no-sea-ice model; DROP is the general
+# form, and the hook for the channel-ablation sweep. The list itself is read from the data store
+# by tools/lr_channels.py and verified against the checkpoint -- never typed out here.
+DROP="${DROP:-}"
+[[ "${NOICE:-0}" == "1" ]] && DROP="${DROP:+$DROP,}siconc"
 
 require_divisor "$NUM_ENS" "$SEED_BATCH" SEED_BATCH || exit 1
 
@@ -81,6 +91,14 @@ ln -sfn "$DATA_DIR" ./data
 
 # generate.py (like train.py) needs torchrun so physicsnemo's DistributedManager can read
 # RANK/WORLD_SIZE; plain `python generate.py` crashes in DistributedManager.initialize().
+# Resolve the LR channel list from the store and verify it against the net that will consume it.
+# BEFORE torchrun: a mismatch otherwise surfaces as a conv shape error minutes in, or -- for a
+# wrong-but-same-length subset -- not at all. The regression net is checked because it reads the
+# conditioning first; a paired diffusion net shares its LR stack.
+LR_ARG=$(python tools/lr_channels.py --data-dir "$DATA_DIR" --drop "$DROP" \
+           --check-against "$REG_CKPT" --stage regression) || exit 1
+echo "LR channels: $LR_ARG"
+
 CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
      generate.py --config-name="$CONFIG"
      hydra.run.dir="$CORRDIFF_LOG_DIR/hydra/${SLURM_JOB_ID:-manual}"
@@ -89,6 +107,7 @@ CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
      ++generation.seed_batch_size="$SEED_BATCH"
      ++dataset.data_path="$DATA_DIR"
      ++dataset.stats_path="$STATS"
+     ++dataset.lr_channels="$LR_ARG"
      ++generation.io.reg_ckpt_filename="$REG_CKPT")
 [[ -n "$RES_CKPT" ]] && CMD+=("++generation.io.res_ckpt_filename=$RES_CKPT")
 

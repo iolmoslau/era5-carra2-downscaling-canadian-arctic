@@ -200,9 +200,19 @@ The per-run `tensorboard/` deliberately lives with the run's checkpoints under `
     bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
   ```
 - **No-sea-ice variants**: add `CONFIG=config_training_era5_carra2_mini_regression_noice`
-  (or `..._diffusion_noice`) to the train step, and for generation add
-  `'++dataset.lr_channels=[t2m,u10,v10,t500,t850,z500,z850,u500,u850,v500,v850]'` — use a
-  distinct run name (e.g. `regression_3_noice`). With-ice is the **default** (`lr_channels: null`
+  (or `..._diffusion_noice`) to the train step, and **`NOICE=1`** to generation and evaluation —
+  use a distinct run name (e.g. `regression_3_noice`).
+  ```bash
+  NOICE=1 MODE=regression DATA_DIR=$DATA OUTPUT_DIR=$OUT \
+    bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
+  ```
+  `NOICE=1` is shorthand for `DROP=siconc`; `DROP` takes any comma-separated channel list, which
+  is also the hook for the channel-ablation sweep. The list itself is **read from the data store**
+  by `tools/lr_channels.py` and its length checked against the checkpoint's input conv width
+  before the GPU does anything. Forgetting the flag used to mean a conv shape error minutes into
+  the job (it killed three generation jobs on 2026-09-24); passing the *wrong* 11 channels was
+  worse, since the shapes still matched and the run reported plausible numbers for a stack the
+  model never saw. With-ice is the **default** (`lr_channels: null`
   = all 12), and every run collected so far is with-ice — `runs.csv` reads `sea_ice=yes, lr_n=12`
   for all five, confirmed from the checkpoints and corroborated by the NetCDF `input` group names.
   So the sea-ice comparison is the *no-ice* run, not the other way round.
