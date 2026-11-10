@@ -39,11 +39,14 @@ DATA=$PROJECT/data/derot
 # 1. TRAIN  (re-submit the same line until it reaches TRAIN_DURATION -- it resumes)
 DATA_DIR=$DATA  STATS=$DATA/stats_train_2011_2018.json  OUTPUT_DIR=$OUT  TRAIN_DURATION=800000 \
   bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
+#    NO-ICE variant: prepend CONFIG=config_training_era5_carra2_mini_regression_noice
+#    (training selects channels by CONFIG; generation uses NOICE=1 -- see the note below)
 
 # 2. GENERATE a sample on the 2019 validation year (deterministic mean)
 DATA_DIR=$DATA  OUTPUT_DIR=$OUT \
   bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
 #    -> writes training_mini/corrdiff_output.nc
+#    NO-ICE model: prepend NOICE=1
 
 # 3. COLLECT (login node, corrdiff-env with cartopy)
 module load python/3.11 mpi4py/4.1.0 && source ~/corrdiff-env/bin/activate
@@ -75,12 +78,25 @@ REG=$(latest_ckpt $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression)
 # 1. TRAIN diffusion on the regression checkpoint (re-submit to resume)
 DATA_DIR=$DATA  STATS=$DATA/stats_train_2011_2018.json  OUTPUT_DIR=$OUT  TRAIN_DURATION=2000000 \
   bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_diffusion.sh "$REG"
+#    NO-ICE variant: prepend CONFIG=config_training_era5_carra2_mini_diffusion_noice, and point
+#    $REG at the NO-ICE regression run. The job refuses to start if the base was trained on
+#    different channels than CONFIG declares -- pairing a no-ice diffusion net with a with-ice
+#    regression base is one typo away, and it would otherwise fail only after the allocation,
+#    the staging pass and the model build. Example, built on regression_3:
+#      NAME=diffusion_3
+#      REG=$(latest_ckpt $SCRATCH/corrdiff_runs/regression_3/checkpoints_regression)
+#      CONFIG=config_training_era5_carra2_mini_diffusion_noice \
+#      DATA_DIR=$DATA STATS=$DATA/stats_train_2011_2018.json \
+#      OUTPUT_DIR=$SCRATCH/corrdiff_runs/diffusion_3 TRAIN_DURATION=2000000 \
+#        bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 \
+#          training_mini/slurm/train_diffusion.sh "$REG"
 
 # 2. GENERATE an ensemble (regression mean + diffusion residual). NUM_ENS members per input
 #    time gives the spread -> per-channel variance in metrics.json / runs.csv.
 RES=$(latest_ckpt $OUT/checkpoints_diffusion)
 MODE=all  NUM_ENS=15  REG_CKPT="$REG"  RES_CKPT="$RES"  DATA_DIR=$DATA \
   bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
+#    NO-ICE pair: prepend NOICE=1 (both nets must be the no-ice ones)
 
 # 3. COLLECT (login node)
 module load python/3.11 mpi4py/4.1.0 && source ~/corrdiff-env/bin/activate
@@ -212,23 +228,30 @@ The per-run `tensorboard/` deliberately lives with the run's checkpoints under `
   CKPT_FREQ=50000 KEEP_CKPTS=3 DATA_DIR=$DATA OUTPUT_DIR=$OUT \
     bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
   ```
-- **No-sea-ice variants**: add `CONFIG=config_training_era5_carra2_mini_regression_noice`
-  (or `..._diffusion_noice`) to the train step, and **`NOICE=1`** to generation and evaluation —
-  use a distinct run name (e.g. `regression_3_noice`).
-  ```bash
-  NOICE=1 MODE=regression DATA_DIR=$DATA OUTPUT_DIR=$OUT \
-    bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
-  ```
+- **No-sea-ice variants — two different knobs.** Training picks a **`CONFIG`**; generation and
+  evaluation pass **`NOICE=1`**. They are not interchangeable, and the reason is structural: a
+  training config's `lr_channels` fixes the network's input conv width when the model is built,
+  whereas at inference that width is already baked into the checkpoint and the *dataset* has to be
+  told to match it. Both forms are shown inline in sections A and B above.
+
+  | step | knob |
+  |---|---|
+  | `train_regression.sh` / `train_diffusion.sh` | `CONFIG=config_training_era5_carra2_mini_{regression,diffusion}_noice` |
+  | `generate.sh` / `run_eval.sh` | `NOICE=1` |
+
+  Use a distinct run name for a no-ice run (`regression_3`, `diffusion_3`) — the run directory is
+  how `generate.sh` finds a checkpoint, so mixing variants in one is unrecoverable confusion.
   `NOICE=1` is shorthand for `DROP=siconc`; `DROP` takes any comma-separated channel list, which
   is also the hook for the channel-ablation sweep. The list itself is **read from the data store**
   by `tools/lr_channels.py` and its length checked against the checkpoint's input conv width
   before the GPU does anything. Forgetting the flag used to mean a conv shape error minutes into
   the job (it killed three generation jobs on 2026-09-24); passing the *wrong* 11 channels was
   worse, since the shapes still matched and the run reported plausible numbers for a stack the
-  model never saw. With-ice is the **default** (`lr_channels: null`
-  = all 12), and every run collected so far is with-ice — `runs.csv` reads `sea_ice=yes, lr_n=12`
-  for all five, confirmed from the checkpoints and corroborated by the NetCDF `input` group names.
-  So the sea-ice comparison is the *no-ice* run, not the other way round.
+  model never saw. With-ice is the **default** (`lr_channels: null` = all 12), so `CONFIG` is only
+  needed for the no-ice variants. The five runs in `runs.csv` are all with-ice
+  (`sea_ice=yes, lr_n=12`, confirmed from the checkpoints and corroborated by the NetCDF `input`
+  group names); **`regression_3` is the first no-ice run** — 11 channels, 1,200,000 samples,
+  completed 2026-09-23 — so it is the no-ice side of the sea-ice comparison.
 - **Generate overwrites** `corrdiff_output.nc`, so collect right after generating (before the
   next run's generation). `collect_run` copies the plot into `results/<name>/`.
 - **collect_run tops up rather than overwrites** — re-running with the same `--name` replaces its
