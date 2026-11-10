@@ -284,6 +284,13 @@ The per-run `tensorboard/` deliberately lives with the run's checkpoints under `
   whereas at inference that width is already baked into the checkpoint and the *dataset* has to be
   told to match it. Both forms are shown inline in sections A and B above.
 
+  **Put `CONFIG=` in the same `VAR=value` prefix as the others, or `export` it.** A bare
+  `CONFIG=...` on its own line is a plain *shell* variable; `sbatch --export=ALL` exports the
+  *environment*, so an unexported one never reaches the job and it silently uses the with-ice
+  default. That is what happened to `diffusion_3` on 2026-11-10 — the guard caught the mismatch
+  against the no-ice base, but only after the allocation. Both train scripts now echo
+  `[config] CONFIG=...` in their first lines; check it there.
+
   | step | knob |
   |---|---|
   | `train_regression.sh` / `train_diffusion.sh` | `CONFIG=config_training_era5_carra2_mini_{regression,diffusion}_noice` |

@@ -143,11 +143,32 @@ def main() -> int:
                   f"{want} LR + {prov['in_channels'] - want} fixed "
                   f"(lsm + grid + latents)", file=sys.stderr)
             print(f"       resolved:   {resolved}", file=sys.stderr)
-            if want == len(channels) - 1 and "siconc" in channels and "siconc" not in drop:
-                print("       This looks like the no-ice model. Re-run with NOICE=1 "
-                      "(or --drop siconc).", file=sys.stderr)
-            elif want == len(channels) and drop:
-                print(f"       This looks like the full model. Drop the --drop {drop}.",
+            # The remediation differs by caller, and naming the wrong knob sends people round in
+            # circles: TRAINING selects a CONFIG, generation/evaluation passes NOICE=1. This is
+            # invoked from both, so the advice follows --config rather than assuming.
+            if args.config:
+                if want < len(resolved):
+                    print("       The config selects more channels than this checkpoint was "
+                          "trained on, so it is\n       the with-ice config against a no-ice "
+                          "base. Use the *_noice config.", file=sys.stderr)
+                else:
+                    print("       The config selects fewer channels than this checkpoint was "
+                          "trained on, so it is\n       a _noice config against a with-ice "
+                          "base. Use the config without _noice,\n       or point at the no-ice "
+                          "regression run.", file=sys.stderr)
+                # The failure mode that actually happened: `CONFIG=... ` typed on its own line is
+                # a plain shell variable. sbatch --export=ALL exports the ENVIRONMENT, so an
+                # unexported CONFIG never reaches the job and it silently uses the default.
+                print(f"       NOTE: CONFIG reached this job as '{pathlib.Path(args.config).stem}'"
+                      ".\n       `CONFIG=... ` on its own line is NOT exported -- put it in the "
+                      "same VAR=value\n       prefix as DATA_DIR/OUTPUT_DIR, or `export CONFIG=..."
+                      "` first.", file=sys.stderr)
+            elif want < len(resolved):
+                print("       Re-run with NOICE=1 (or DROP=siconc) to withhold sea ice.",
+                      file=sys.stderr)
+            else:
+                print(f"       This looks like the full model. Drop "
+                      f"{'DROP=' + ','.join(drop) if drop else 'the NOICE/DROP flag'}.",
                       file=sys.stderr)
             return 1
 

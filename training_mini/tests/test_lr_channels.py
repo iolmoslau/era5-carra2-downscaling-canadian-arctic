@@ -231,3 +231,72 @@ def test_diffusion_training_checks_its_regression_base():
     text = (REPO / "training_mini/slurm/train_diffusion.sh").read_text()
     assert "--config \"conf/$CONFIG.yaml\"" in text, "train_diffusion.sh must check the pairing"
     assert "--check-against \"$REG_CKPT\"" in text
+
+
+# ------------------------------------------------------------------ the advice must fit the caller
+# A real failure (diffusion_3, 2026-11-10): `CONFIG=..._noice` was typed on its own line, so it
+# was a plain shell variable, never exported, and sbatch --export=ALL passed the DEFAULT with-ice
+# config to the job. The guard caught the mismatch but told the user to "re-run with NOICE=1" --
+# which does nothing for a training job. Naming the wrong knob sends people round in circles.
+def _mismatch(tmp_path, monkeypatch, capsys, *, use_config, ckpt_lr_n=11, ckpt_in=19):
+    monkeypatch.setattr(lr_channels, "store_channels", lambda *a, **k: list(FULL))
+    import collect_run
+    monkeypatch.setattr(collect_run, "checkpoint_provenance",
+                        lambda p, s: {"in_channels": ckpt_in, "lr_n": ckpt_lr_n})
+    argv = ["lr_channels.py", "--data-dir", str(tmp_path),
+            "--check-against", "/r3.mdlus", "--stage", "regression"]
+    if use_config:
+        cfg = tmp_path / "config_training_era5_carra2_mini_diffusion.yaml"
+        cfg.write_text("dataset:\n    lr_channels: null\n")
+        argv += ["--config", str(cfg)]
+    monkeypatch.setattr(sys, "argv", argv)
+    rc = lr_channels.main()
+    return rc, capsys.readouterr().err
+
+
+def test_training_caller_is_told_about_the_config_not_noice(tmp_path, monkeypatch, capsys):
+    rc, err = _mismatch(tmp_path, monkeypatch, capsys, use_config=True)
+    assert rc == 1
+    assert "_noice config" in err
+    assert "NOICE=1" not in err, "NOICE is not a training knob; advising it wastes a submission"
+
+
+def test_training_caller_is_warned_about_the_export_gotcha(tmp_path, monkeypatch, capsys):
+    """The config that REACHED the job is named, so an unexported CONFIG is self-evident."""
+    rc, err = _mismatch(tmp_path, monkeypatch, capsys, use_config=True)
+    assert "config_training_era5_carra2_mini_diffusion" in err
+    assert "is NOT exported" in err
+
+
+def test_inference_caller_is_told_about_noice(tmp_path, monkeypatch, capsys):
+    rc, err = _mismatch(tmp_path, monkeypatch, capsys, use_config=False)
+    assert rc == 1
+    assert "NOICE=1" in err
+    assert "_noice config" not in err, "CONFIG is not an inference knob"
+
+
+def test_the_reverse_mismatch_names_the_other_direction(tmp_path, monkeypatch, capsys):
+    """A _noice config against a with-ice base: 12-channel checkpoint, 11 resolved."""
+    monkeypatch.setattr(lr_channels, "store_channels", lambda *a, **k: list(FULL))
+    import collect_run
+    monkeypatch.setattr(collect_run, "checkpoint_provenance",
+                        lambda p, s: {"in_channels": 20, "lr_n": 12})
+    cfg = tmp_path / "c.yaml"
+    cfg.write_text("dataset:\n    lr_channels: [" + ", ".join(FULL[:-1]) + "]\n")
+    monkeypatch.setattr(sys, "argv", ["lr_channels.py", "--data-dir", str(tmp_path),
+                                      "--config", str(cfg), "--check-against", "/r2.mdlus",
+                                      "--stage", "regression"])
+    assert lr_channels.main() == 1
+    err = capsys.readouterr().err
+    assert "without _noice" in err or "with-ice base" in err
+
+
+@pytest.mark.parametrize("script", ["train_regression.sh", "train_diffusion.sh"])
+def test_training_scripts_echo_the_config_before_staging(script):
+    """A wrong CONFIG must be visible in the first lines, not only at "Launching ..." after
+    the staging pass has already been paid for."""
+    text = (TRAIN_DIR / "slurm" / script).read_text()
+    # Anchor on the invocation, not the first mention -- common.sh is sourced with a comment
+    # listing stage_shards, which is 50 lines above the echo.
+    head = text.split('stage_shards "$DATA_DIR"', 1)[0]
+    assert "[config] CONFIG=$CONFIG" in head, f"{script} does not echo CONFIG before staging"

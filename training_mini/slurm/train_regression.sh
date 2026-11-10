@@ -63,6 +63,7 @@ fi
 
 # ---- sanity: log resolved paths, fail fast on a bad OUTPUT_DIR/DATA_DIR --------------------
 echo "[paths] OUTPUT_DIR=$OUTPUT_DIR"
+echo "[config] CONFIG=$CONFIG"   # a CONFIG set on its own line is NOT exported -- check this line
 echo "[paths] DATA_DIR=$DATA_DIR  STATS=$STATS  (SCRATCH=${SCRATCH:-<unset>} PROJECT=${PROJECT:-<unset>})"
 for p in "$OUTPUT_DIR" "$DATA_DIR"; do
   case "$p" in
