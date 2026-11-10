@@ -75,7 +75,8 @@ python generate.py --config-name=config_generate_era5_carra2_mini \
   ++generation.io.reg_ckpt_filename=/path/to/regression.mdlus \
   ++generation.io.res_ckpt_filename=/path/to/diffusion.mdlus
 ```
-No-sea-ice variant: use the `*_noice` configs (regression + diffusion). Multi-GPU: launch
+No-sea-ice variant: use the `*_noice` configs (regression + diffusion) — see
+**With or without sea ice** below, since inference uses a different knob. Multi-GPU: launch
 via `torchrun --standalone --nproc_per_node=<N> train.py ...` (see `slurm/`).
 
 The configs reference `./data`; on the cluster the SLURM scripts symlink it to the real
@@ -90,32 +91,87 @@ prefixes verbatim. Paths below are from `$REPO`; `WORKFLOW.md` is the full per-r
 (train → generate → collect → archive) and this is the short form.
 
 ```bash
-NAME=regression_3
-OUT=$SCRATCH/corrdiff_runs/$NAME          # one directory per run: checkpoints + tensorboard
 DATA=$PROJECT/data/derot                  # de-rotated shards (see scripts/derotate_shards.sh)
+STATS=$DATA/stats_train_2011_2018.json
 
-# 1. TRAIN -- re-submit the same line to resume from the last checkpoint
-DATA_DIR=$DATA STATS=$DATA/stats_train_2011_2018.json OUTPUT_DIR=$OUT TRAIN_DURATION=1200000 \
+# ---- 1. REGRESSION (stage 1: the conditional mean) -------------------------------------------
+# Re-submit the identical line to resume from the last checkpoint after a timeout.
+OUT=$SCRATCH/corrdiff_runs/regression_3
+DATA_DIR=$DATA STATS=$STATS OUTPUT_DIR=$OUT TRAIN_DURATION=1200000 \
   bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
 
-# 2. GENERATE -- regression mean on the 2019 validation year
+# ...WITHOUT sea ice: pick the config. There is no NOICE flag for training (see below).
+CONFIG=config_training_era5_carra2_mini_regression_noice \
+DATA_DIR=$DATA STATS=$STATS OUTPUT_DIR=$OUT TRAIN_DURATION=1200000 \
+  bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
+
+# ---- 2. DIFFUSION (stage 2: the residual around that mean) -----------------------------------
+# Needs the regression net it is built on, as arg 1 (or REG_CKPT=). That net normally lives in a
+# DIFFERENT run directory, so it cannot be auto-discovered from this run's OUTPUT_DIR.
+OUT=$SCRATCH/corrdiff_runs/diffusion_3
+REG=$SCRATCH/corrdiff_runs/regression_3/checkpoints_regression/CorrDiffRegressionUNet.0.1200000.mdlus
+
+CONFIG=config_training_era5_carra2_mini_diffusion_noice \
+DATA_DIR=$DATA STATS=$STATS OUTPUT_DIR=$OUT TRAIN_DURATION=2000000 \
+  bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 \
+    training_mini/slurm/train_diffusion.sh "$REG"
+# The job refuses to start if $REG was trained on different channels than CONFIG declares --
+# pairing a no-ice diffusion run with a with-ice regression base is one typo away, and it would
+# otherwise fail only after the allocation, the staging pass and the model build.
+
+# ---- 3. GENERATE a sample ---------------------------------------------------------------------
 DATA_DIR=$DATA OUTPUT_DIR=$OUT \
   bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
 #    -> training_mini/corrdiff_output.nc  (overwritten each time; collect before the next one)
 
-# 2b. a NO-ICE model needs NOICE=1 -- see the table below
+# ...from a NO-ICE model: NOICE=1 here, not CONFIG (see below)
 NOICE=1 DATA_DIR=$DATA OUTPUT_DIR=$OUT \
   bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
 
-# 3. FULL ensemble, once a diffusion net exists (regression mean + diffusion residual)
-REG=$(latest_ckpt $SCRATCH/corrdiff_runs/regression_2/checkpoints_regression)
-RES=$(latest_ckpt $SCRATCH/corrdiff_runs/diffusion_2/checkpoints_diffusion)
-MODE=all NUM_ENS=15 REG_CKPT=$REG RES_CKPT=$RES DATA_DIR=$DATA \
+# ---- 4. FULL ensemble, once a diffusion net exists (mean + residual) --------------------------
+REG=$SCRATCH/corrdiff_runs/regression_3/checkpoints_regression/CorrDiffRegressionUNet.0.1200000.mdlus
+RES=$SCRATCH/corrdiff_runs/diffusion_3/checkpoints_diffusion/EDMPrecondSuperResolution.0.2000000.mdlus
+NOICE=1 MODE=all NUM_ENS=15 REG_CKPT=$REG RES_CKPT=$RES DATA_DIR=$DATA \
   bash training_mini/slurm/submit.sh training_mini/slurm/generate.sh
 ```
 
-`latest_ckpt` comes from `slurm/common.sh` — `source $REPO/training_mini/slurm/common.sh` once
-per shell. It selects on the `nimg` in the filename, **not** mtime, which copying reorders.
+### With or without sea ice — two different knobs
+
+This catches people out, so it is worth stating plainly: **training picks a config, inference
+passes a flag.** They are not interchangeable, and neither accepts the other's form.
+
+| step | knob | why |
+|---|---|---|
+| `train_regression.sh` / `train_diffusion.sh` | `CONFIG=..._noice` | the config's `dataset.lr_channels` **is** the channel selection, and it also fixes the network's input width at build time |
+| `generate.sh` / `run_eval.sh` | `NOICE=1` | no training config is involved; the channel list has to be overridden at inference to match the width already baked into the checkpoint |
+
+The four training configs:
+
+| config | stage | sea ice | LR channels |
+|---|---|---|---|
+| `config_training_era5_carra2_mini_regression` | regression | yes | 12 |
+| `config_training_era5_carra2_mini_regression_noice` | regression | no | 11 |
+| `config_training_era5_carra2_mini_diffusion` | diffusion | yes | 12 |
+| `config_training_era5_carra2_mini_diffusion_noice` | diffusion | no | 11 |
+
+With-ice is the default (`lr_channels: null` means all 12), so `CONFIG` only needs setting for
+the no-ice variants. Give no-ice runs distinct names — mixing a no-ice checkpoint into a with-ice
+run directory is unrecoverable confusion, since the directory is how `generate.sh` finds it.
+
+### Finding a checkpoint path
+
+The commands above spell checkpoint paths out in full so they can be copy-pasted. To let the
+shell find the furthest-trained one instead:
+
+```bash
+source $REPO/training_mini/slurm/common.sh      # once per shell
+REG=$(latest_ckpt $SCRATCH/corrdiff_runs/regression_3/checkpoints_regression)
+```
+
+`latest_ckpt` selects on the `nimg` in the filename, **not** mtime, which copying reorders — so
+it stays correct after an archive/restore. **Sourcing is purely for your own shell**: every job
+script sources `common.sh` itself, and resuming a training run needs none of it, since
+PhysicsNeMo's `load_checkpoint` picks the highest `nimg` in `checkpoint_dir` on its own.
 
 ### `generate.sh` knobs
 
