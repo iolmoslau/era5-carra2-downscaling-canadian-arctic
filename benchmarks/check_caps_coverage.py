@@ -38,9 +38,12 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 EARTH_R_KM = 6371.0
-# Half the diagonal of a 2.5 km cell: the largest distance a point inside the grid can sit from
-# the nearest grid centre. A patch point further than this is outside the CAPS footprint.
-CELL_HALF_DIAG_KM = 2.5 * np.sqrt(2) / 2
+# "Outside the footprint" is measured in units of the SOURCE grid's own spacing, not in km.
+# A point inside a grid is at most half a cell diagonal (0.71 spacings) from the nearest centre,
+# so 1.0 is a generous cut that no interior point reaches while an exterior one blows past it.
+# Hardcoding 2.5 km instead reported 70% of a fully-covering grid as "outside" purely because
+# that grid was coarser -- coverage and resolution are different questions.
+OUTSIDE_SPACINGS = 1.0
 
 
 def load_latlon(path: str, ni: int, nj: int) -> tuple[np.ndarray, np.ndarray]:
@@ -65,6 +68,24 @@ def load_latlon(path: str, ni: int, nj: int) -> tuple[np.ndarray, np.ndarray]:
 def _unit_xyz(lat: np.ndarray, lon: np.ndarray) -> np.ndarray:
     la, lo = np.deg2rad(lat.ravel()), np.deg2rad(lon.ravel())
     return np.column_stack([np.cos(la) * np.cos(lo), np.cos(la) * np.sin(lo), np.sin(la)])
+
+
+def native_spacing_km(lat: np.ndarray, lon: np.ndarray, sample: int = 20000,
+                      seed: int = 0) -> float:
+    """The grid's own point spacing: median distance from a point to its nearest neighbour.
+
+    Derived rather than assumed, so the coverage test works for any source grid -- CAPS at
+    2.5 km today, a coarser dynamical model tomorrow.
+    """
+    from scipy.spatial import cKDTree  # noqa: PLC0415
+
+    xyz = _unit_xyz(lat, lon)
+    rng = np.random.default_rng(seed)
+    idx = rng.choice(xyz.shape[0], size=min(sample, xyz.shape[0]), replace=False)
+    tree = cKDTree(xyz)
+    chord, _ = tree.query(xyz[idx], k=2)            # k=1 is the point itself
+    arc = 2.0 * np.arcsin(np.clip(chord[:, 1] / 2.0, 0.0, 1.0))
+    return float(np.median(arc) * EARTH_R_KM)
 
 
 def nearest_km(src_lat, src_lon, dst_lat, dst_lon):
@@ -115,12 +136,19 @@ def main() -> int:
 
     # ---------------------------------------------------------------- coverage
     dist, idx = nearest_km(caps_lat, caps_lon, hr_lat, hr_lon)
-    outside = dist > CELL_HALF_DIAG_KM
+    spacing = native_spacing_km(caps_lat, caps_lon)
+    cut = OUTSIDE_SPACINGS * spacing
+    outside = dist > cut
     print("\n---- coverage ------------------------------------------------")
+    print(f"  CAPS native spacing (measured): {spacing:.2f} km")
     print(f"  nearest CAPS point: median {np.median(dist):.2f} km, "
           f"mean {dist.mean():.2f} km, max {dist.max():.2f} km")
-    print(f"  cell half-diagonal: {CELL_HALF_DIAG_KM:.2f} km "
-          f"(a patch point beyond this is outside the CAPS footprint)")
+    # 0.71 = half a cell diagonal, the interior bound for an ISOTROPIC grid. CAPS is isotropic
+    # (Dx = Dy = 2500 m); on an anisotropic grid the median nearest spacing is the smaller axis
+    # and interior points can sit a little beyond 0.71 of it, which is why the cut is at 1.0.
+    print(f"  as a fraction of spacing: median {np.median(dist) / spacing:.2f}, "
+          f"max {dist.max() / spacing:.2f}  (interior bound ~0.71 for an isotropic grid)")
+    print(f"  outside cut: {cut:.2f} km = {OUTSIDE_SPACINGS:.1f} x spacing")
     print(f"  patch points outside: {int(outside.sum())} of {dist.size} "
           f"({100.0 * outside.mean():.2f}%)")
     if outside.any():
