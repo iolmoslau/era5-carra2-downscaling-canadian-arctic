@@ -48,6 +48,12 @@ module load python/3.11 mpi4py/4.1.0 >/dev/null 2>&1
 # shellcheck disable=SC1091
 source "$ENV_DIR/bin/activate" 2>/dev/null || { echo "ERROR: no venv at $ENV_DIR" >&2; exit 1; }
 echo "python:     $(command -v python)"
+# Record the MPI stack versions. The error names ext3x -- OpenMPI's EXTERNAL PMIx 3.x client --
+# while a pmix/4.x module may be what is loaded, and that mismatch is a candidate cause. These
+# are also the numbers to compare against if this ever works again.
+echo "openmpi:    ${EBVERSIONOPENMPI:-<unset>}   pmix: ${EBVERSIONPMIX:-<unset>}" \
+     "  mpi4py: ${EBVERSIONMPI4PY:-<unset>}"
+echo "node:       $(hostname -s)   (the September failures were fc10514 / fc10512, November fc10609)"
 echo
 
 cat > "${TMPDIR:-/tmp}/_probe_nc.py" <<'PY'
