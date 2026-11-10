@@ -1,0 +1,90 @@
+{
+  "run": "regression_3",
+  "stage": "regression",
+  "date": "2026-11-10",
+  "checkpoint": "/scratch/iolmos/corrdiff_runs/regression_3/checkpoints_regression/CorrDiffRegressionUNet.0.1200000.mdlus",
+  "train_samples": "1200000",
+  "nc": "corrdiff_output.nc",
+  "tensorboard": "/scratch/iolmos/corrdiff_runs/regression_3/tensorboard",
+  "provenance": {
+    "config": "/home/iolmos/thesis/era5-carra2-downscaling-canadian-arctic/logs/hydra/3332518/.hydra/config.yaml",
+    "data": "/project/def-stockie/iolmos/data/derot",
+    "stats": "/project/def-stockie/iolmos/data/derot/stats_train_2011_2018.json",
+    "git": "378781c",
+    "versions": {
+      "physicsnemo": "2.1.1",
+      "torch": "2.12.1",
+      "numpy": "2.4.2",
+      "xarray": "2026.4.0+computecanada",
+      "zarr": "3.1.6"
+    },
+    "in_channels": 19,
+    "lr_n": 11,
+    "sea_ice": "no",
+    "conv": "model.enc.448x448_conv.weight",
+    "nc_input_channels": [
+      "t2m",
+      "u10",
+      "v10",
+      "t500",
+      "t850",
+      "z500",
+      "z850",
+      "u500",
+      "u850",
+      "v500",
+      "v850",
+      "lsm"
+    ],
+    "nc_lr_n": 11,
+    "nc_sea_ice": "no",
+    "hydra_config": "/home/iolmos/thesis/era5-carra2-downscaling-canadian-arctic/logs/hydra/3332518/.hydra/config.yaml",
+    "model_name": null,
+    "lr_channels": [
+      "t2m",
+      "u10",
+      "v10",
+      "t500",
+      "t850",
+      "z500",
+      "z850",
+      "u500",
+      "u850",
+      "v500",
+      "v850"
+    ],
+    "include_lsm": true,
+    "years": [
+      2019
+    ],
+    "stats_path": "/project/def-stockie/iolmos/data/derot/stats_train_2011_2018.json",
+    "data_path": "/project/def-stockie/iolmos/data/derot",
+    "training_duration": null,
+    "total_batch_size": null
+  },
+  "git": "378781c",
+  "notes": "Regression 3 - NO ICE variant 1200000 samples",
+  "metrics": {
+    "t2m": {
+      "rmse": 2.9355,
+      "rmse_over_sigma_pct": 37.95,
+      "bias": -1.2944,
+      "truth_min": 229.406,
+      "truth_max": 269.345
+    },
+    "u10": {
+      "rmse": 0.8686,
+      "rmse_over_sigma_pct": 25.41,
+      "bias": 0.1584,
+      "truth_min": -18.188,
+      "truth_max": 11.521
+    },
+    "v10": {
+      "rmse": 0.7037,
+      "rmse_over_sigma_pct": 41.63,
+      "bias": -0.0986,
+      "truth_min": -8.86,
+      "truth_max": 11.65
+    }
+  }
+}
