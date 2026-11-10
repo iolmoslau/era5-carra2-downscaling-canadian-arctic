@@ -13,7 +13,7 @@
 #
 # WHY THIS EXISTS: checkpoints are named <Model>.0.<nimg>.mdlus, where <nimg> is the number
 # of processed samples -- i.e. training progress. Picking the "latest" by MODIFICATION TIME
-# (`ls -t | head -1`) agrees with that only until the files are copied: WORKFLOW.md section C
+# (`ls -t | head -1`) agrees with that only until the files are copied: WORKFLOW.md section D
 # has you archive checkpoints to $PROJECT and restore them later, and a copy resets mtimes to
 # the copy order. After that, `ls -t` returns an arbitrary checkpoint and the failure is
 # SILENT -- you generate, collect and log metrics against a model that is not the one you
@@ -135,6 +135,10 @@ stage_shards() {
 #   reads/sets: REG_RUN RES_RUN REG_CKPT RES_CKPT NC_DIR   (OUTPUT_DIR read as a fallback)
 # Returns 1 with an explanation if either net cannot be resolved.
 resolve_eval_paths() {
+  # EVAL_MODE=reg scores the regression net alone. The diffusion net is then neither needed nor
+  # looked for -- the only way to evaluate a regression run before its diffusion stage exists,
+  # e.g. regression_2 (ice) against regression_3 (no ice) at a matched sample count.
+  local mode="${EVAL_MODE:-all}"
   OUTPUT_DIR="${OUTPUT_DIR:-}"
   REG_RUN="${REG_RUN:-$OUTPUT_DIR}"
   RES_RUN="${RES_RUN:-$OUTPUT_DIR}"
@@ -157,17 +161,20 @@ resolve_eval_paths() {
     echo "         RES_RUN=\$SCRATCH/corrdiff_runs/diffusion_2" >&2
     return 1
   fi
-  if [[ -z "$RES_CKPT" || ! -f "$RES_CKPT" ]]; then
+  if [[ "$mode" != "reg" && ( -z "$RES_CKPT" || ! -f "$RES_CKPT" ) ]]; then
     echo "ERROR: no diffusion checkpoint -- needed for the full model." >&2
-    echo "       Set RES_RUN=<dir containing checkpoints_diffusion/> or RES_CKPT=<file>." >&2
+    echo "       Set RES_RUN=<dir containing checkpoints_diffusion/> or RES_CKPT=<file>," >&2
+    echo "       or EVAL_MODE=reg to score the regression net on its own." >&2
     return 1
   fi
 
-  # NetCDFs land with the run being evaluated (the diffusion one). When only RES_CKPT was
-  # given, its run dir is two levels up from the checkpoint file.
+  # NetCDFs land with the run being evaluated: the diffusion run normally, the regression run
+  # under EVAL_MODE=reg. When only a checkpoint was given, its run dir is two levels up.
   if [[ -z "${NC_DIR:-}" ]]; then
-    local base="$RES_RUN"
-    [[ -n "$base" ]] || base=$(dirname "$(dirname "$RES_CKPT")")
+    local base ckpt
+    if [[ "$mode" == "reg" ]]; then base="$REG_RUN"; ckpt="$REG_CKPT"
+    else                            base="$RES_RUN"; ckpt="$RES_CKPT"; fi
+    [[ -n "$base" ]] || base=$(dirname "$(dirname "$ckpt")")
     NC_DIR="$base/eval"
   fi
 }

@@ -16,7 +16,7 @@ The repeatable procedure for every training run. Conventions:
   the Natural Earth shapefiles) in `corrdiff-env` (which must have cartopy + tensorboard).
 - **Pick checkpoints with `latest_ckpt`**, never `ls -t`. Checkpoints are named
   `<Model>.0.<nimg>.mdlus`, and `latest_ckpt` selects on that `<nimg>` (training progress).
-  Modification times agree with it only until you archive/restore a run (section C), after which
+  Modification times agree with it only until you archive/restore a run (section D), after which
   `ls -t` silently returns an arbitrary checkpoint. Source it once per shell:
   ```bash
   source $REPO/training_mini/slurm/common.sh
@@ -116,7 +116,57 @@ python tools/collect_run.py --name $NAME \
 git add results/$NAME && git commit -m "$NAME results" && git push
 ```
 
-## C. Archive a run's checkpoint  (only for runs worth keeping)
+## C. Evaluate over many times  (CRPS / MAE on the test years)
+
+Sections A and B generate a *sample* — a couple of times, for a plot and a sanity check. The
+numbers in `runs.csv` come from that, so **they are not a result**: two times from 2019 is a
+diagnostic, not a score. A real comparison needs `evaluate/run_eval.sh`, which draws N random
+times from the chosen years (seeded, so every model is scored on the *same* times) and reports
+per-channel CRPS, MAE and RMSE.
+
+```bash
+DATA=$PROJECT/data/derot
+
+# Regression net alone -- no diffusion stage needed. CRPS == MAE at one member.
+EVAL_MODE=reg  NAME=regression_3_test  N=400  YEARS="2020 2021 2022"  NOICE=1 \
+  REG_RUN=$SCRATCH/corrdiff_runs/regression_3  DATA_DIR=$DATA \
+  bash training_mini/slurm/submit.sh --time=2:00:00 evaluate/run_eval.sh
+
+# Full model vs regression-only, once the diffusion stage exists
+NAME=diffusion_3_test  N=400  NUM_ENS=32  YEARS="2020 2021 2022"  NOICE=1 \
+  REG_RUN=$SCRATCH/corrdiff_runs/regression_3 \
+  RES_RUN=$SCRATCH/corrdiff_runs/diffusion_3  DATA_DIR=$DATA \
+  bash training_mini/slurm/submit.sh --time=5:30:00 evaluate/run_eval.sh
+
+# Commit the metrics (small, tracked); the NetCDFs stay on scratch and are gitignored
+git add training_mini/results/$NAME/eval && git commit -m "$NAME eval" && git push
+```
+
+- **`NAME` is required** and is not guessed, so an oddly-named scratch dir cannot write into the
+  wrong `results/<name>/eval/`.
+- **Two run dirs**, because a diffusion run directory holds only `checkpoints_diffusion/` — its
+  regression base lives in the run it was trained against (section B). Pairing the wrong base
+  produces quietly wrong metrics, not an error, so name both at the call site.
+- **`EVAL_MODE=reg`** scores the regression net on its own, which is the only way to evaluate a
+  regression run before its diffusion stage is trained — and the right tool for the sea-ice
+  comparison at the regression stage, where no residual is involved. It skips the full pass and
+  deliberately does **not** score a `full.nc` left behind by an earlier evaluation.
+- **`NOICE=1`** for a no-ice model, exactly as in generation. The channel list is checked against
+  the checkpoint before the GPU does anything.
+- **Same times for every model.** `N` and `SEED` fix the draw, so `N=400 SEED=0` over the same
+  `YEARS` gives the identical times to any other run — that is what makes two CRPS numbers
+  comparable. Changing either re-draws and breaks the comparison.
+- **Where the outputs go:** `metrics_crps_mae.json` → `results/<NAME>/eval/` (small, commit it);
+  `full.nc` / `reg.nc` → `$NC_DIR`, defaulting to the evaluated run's `eval/` on `$SCRATCH`
+  (several GB, gitignored, safe to delete once the metrics exist).
+- Cost scales with `N * NUM_ENS`. The 400-time, 32-member run took **4h09m** on one H100, so set
+  `--time` accordingly; `EVAL_MODE=reg` is a single deterministic pass and far cheaper.
+
+Details, including the `.zarr.zip` test-shard workflow: `evaluate/README.md`.
+
+---
+
+## D. Archive a run's checkpoint  (only for runs worth keeping)
 
 `$SCRATCH` is **purged by file age (~60 days) and is not backed up**, so checkpoints left there
 disappear. The `results/<name>/` diagnostics are safe (they're in git), but the model weights are
@@ -179,7 +229,7 @@ The per-run `tensorboard/` deliberately lives with the run's checkpoints under `
     bash training_mini/slurm/submit.sh --gpus-per-node=h100:2 training_mini/slurm/train_regression.sh
   ```
   A **missing** optimizer `.pt` is only a warning, not an error — restoring a `.mdlus`-only
-  archive (section C) resumes fine, with Adam moments reset and a transient loss bump.
+  archive (section D) resumes fine, with Adam moments reset and a transient loss bump.
 - **netCDF4 drags in MPI, and MPI cannot start in a batch step.** Alliance's netCDF4 is the
   parallel build, so importing it imports `mpi4py`, which calls `MPI_Init_thread`. OpenMPI sees
   `SLURM_*`, assumes an `srun` launch, and tries to reach a PMIx server — an `sbatch` *batch*

@@ -21,6 +21,16 @@
 # run dirs, so an oddly-named scratch dir can't silently write to the wrong results folder.
 # Cost/disk scale with N*NUM_ENS.
 #
+# EVAL_MODE=reg scores the REGRESSION NET ALONE -- one deterministic pass, no diffusion net
+# needed, so a regression run can be evaluated before its diffusion stage is trained. CRPS then
+# equals MAE by construction (a 1-member ensemble), which is also what makes the number directly
+# comparable to a full model's CRPS later. Use it for the sea-ice comparison at the regression
+# stage, where both runs must be scored on the same times with no residual involved:
+#
+#   EVAL_MODE=reg NAME=regression_3_test N=400 YEARS="2020 2021 2022" \
+#     REG_RUN=$SCRATCH/corrdiff_runs/regression_3 NOICE=1 \
+#     DATA_DIR=$PROJECT/data/derot bash training_mini/slurm/submit.sh evaluate/run_eval.sh
+#
 #SBATCH --account=def-stockie_gpu
 #SBATCH --nodes=1
 #SBATCH --gpus-per-node=h100:1
@@ -50,6 +60,7 @@ NUM_ENS="${NUM_ENS:-15}"                               # ensemble members for th
 # is pinned to 1). Defaults to the largest divisor of NUM_ENS that is <= 8, and must divide
 # NUM_ENS exactly -- see seed_batch_for/require_divisor in training_mini/slurm/common.sh.
 SEED_BATCH="${SEED_BATCH:-$(seed_batch_for "$NUM_ENS")}"
+EVAL_MODE="${EVAL_MODE:-all}"                          # all = full vs reg | reg = regression only
 N="${N:-${1:-50}}"                                     # number of RANDOM eval times to draw
 SEED="${SEED:-0}"                                      # RNG seed: reproducible; both passes share it
 # Channels to withhold from the LR stack. NOICE=1 evaluates a no-sea-ice model; DROP is the
@@ -143,15 +154,19 @@ COMMON=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
         ++generation.times="$TIMES"
         ++generation.times_range=null)
 
-echo "== FULL model (regression + diffusion, $NUM_ENS members, $SEED_BATCH per sampler call) \
+if [[ "$EVAL_MODE" == "reg" ]]; then
+  echo "== EVAL_MODE=reg: skipping the full pass (no diffusion net scored) =="
+else
+  echo "== FULL model (regression + diffusion, $NUM_ENS members, $SEED_BATCH per sampler call) \
 -> $NC_DIR/full.nc =="
-"${COMMON[@]}" \
-  ++generation.inference_mode=all \
-  ++generation.num_ensembles="$NUM_ENS" \
-  ++generation.seed_batch_size="$SEED_BATCH" \
-  ++generation.io.reg_ckpt_filename="$REG_CKPT" \
-  ++generation.io.res_ckpt_filename="$RES_CKPT" \
-  ++generation.io.output_filename="$NC_DIR/full.nc"
+  "${COMMON[@]}" \
+    ++generation.inference_mode=all \
+    ++generation.num_ensembles="$NUM_ENS" \
+    ++generation.seed_batch_size="$SEED_BATCH" \
+    ++generation.io.reg_ckpt_filename="$REG_CKPT" \
+    ++generation.io.res_ckpt_filename="$RES_CKPT" \
+    ++generation.io.output_filename="$NC_DIR/full.nc"
+fi
 
 echo "== REGRESSION only (deterministic mean) -> $NC_DIR/reg.nc =="
 "${COMMON[@]}" \
@@ -161,9 +176,18 @@ echo "== REGRESSION only (deterministic mean) -> $NC_DIR/reg.nc =="
   ++generation.io.reg_ckpt_filename="$REG_CKPT" \
   ++generation.io.output_filename="$NC_DIR/reg.nc"
 
-echo "== CRPS / MAE per channel: full vs reg =="
-python "$EVAL_DIR/eval_crps_mae.py" \
-  --nc full="$NC_DIR/full.nc" reg="$NC_DIR/reg.nc" \
-  --out "$RESULT_DIR/metrics_crps_mae.json"
+# Score whatever was produced. Passing a full.nc that this run did not write would silently
+# compare the new regression net against a STALE diffusion pass, so reg mode scores reg.nc only.
+if [[ "$EVAL_MODE" == "reg" ]]; then
+  echo "== CRPS / MAE per channel: regression only (CRPS == MAE at 1 member) =="
+  python "$EVAL_DIR/eval_crps_mae.py" \
+    --nc reg="$NC_DIR/reg.nc" \
+    --out "$RESULT_DIR/metrics_crps_mae.json"
+else
+  echo "== CRPS / MAE per channel: full vs reg =="
+  python "$EVAL_DIR/eval_crps_mae.py" \
+    --nc full="$NC_DIR/full.nc" reg="$NC_DIR/reg.nc" \
+    --out "$RESULT_DIR/metrics_crps_mae.json"
+fi
 
 echo "DONE. metrics -> $RESULT_DIR/metrics_crps_mae.json   |   NetCDFs -> $NC_DIR"

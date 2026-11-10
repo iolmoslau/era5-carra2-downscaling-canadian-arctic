@@ -589,7 +589,7 @@ def main(cfg: DictConfig) -> None:
             device=dist.device,
         )
     except Exception as exc:
-        # [thesis] the optimizer '.pt' is legitimately optional -- WORKFLOW.md section C lets
+        # [thesis] the optimizer '.pt' is legitimately optional -- WORKFLOW.md section D lets
         # you archive only the '.mdlus' when a run is kept for inference. So a MISSING .pt is a
         # warning (Adam moments reset, expect a transient loss bump), while a .pt that exists
         # but will not load is the same silent-corruption case as the weights above.

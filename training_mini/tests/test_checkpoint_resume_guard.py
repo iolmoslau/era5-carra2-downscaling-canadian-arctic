@@ -132,7 +132,7 @@ def test_works_without_a_logger(helpers, tmp_path, monkeypatch, capsys):
 
 # ------------------------------------------------------------------ optimizer .pt is optional
 def test_weights_without_optimizer_is_allowed(helpers, tmp_path):
-    """WORKFLOW.md section C archives .mdlus only -- resuming from that must not hard-fail."""
+    """WORKFLOW.md section D archives .mdlus only -- resuming from that must not hard-fail."""
     d = ckpt_dir(tmp_path, mdlus=(1500000,))          # no .pt
     assert helpers["_handle_checkpoint_load_failure"](
         str(d), OSError("x"), "resume optimizer state", Recorder(), suffix=".pt"

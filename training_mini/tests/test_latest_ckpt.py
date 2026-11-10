@@ -5,7 +5,7 @@ Checkpoints are named ``<Model>.0.<nimg>.mdlus`` where ``<nimg>`` is the process
 count. Two idioms used to be in circulation and both are wrong:
 
   ``ls -t | head -1``           -- mtime order, which a checkpoint archive/restore
-                                   (WORKFLOW.md section C) reorders arbitrarily.
+                                   (WORKFLOW.md section D) reorders arbitrarily.
   ``sort -t. -k3 -n | tail -1`` -- splits the FULL PATH on dots, so a dot anywhere in a parent
                                    directory shifts the field and picks the wrong file.
 
