@@ -164,6 +164,19 @@ The per-run `tensorboard/` deliberately lives with the run's checkpoints under `
   ```
   A **missing** optimizer `.pt` is only a warning, not an error — restoring a `.mdlus`-only
   archive (section C) resumes fine, with Adam moments reset and a transient loss bump.
+- **netCDF4 drags in MPI, and MPI cannot start in a batch step.** Alliance's netCDF4 is the
+  parallel build, so importing it imports `mpi4py`, which calls `MPI_Init_thread`. OpenMPI sees
+  `SLURM_*`, assumes an `srun` launch, and tries to reach a PMIx server — an `sbatch` *batch*
+  step has none, so it aborts with `Unreachable in ext3x_client.c at line 111`. `common.sh` now
+  exports **`MPI4PY_RC_INITIALIZE=0`**, which skips `MPI_Init` and leaves netCDF4 fully usable;
+  nothing here needs a live communicator (single-rank, serial NetCDF write, and distributed
+  training uses NCCL). Export `MPI4PY_RC_INITIALIZE=1` to opt back in.
+  This is why every `generate.py` job from 2026-09-24 died within seconds while `regression_3`
+  trained for 3h21m the day before: `train.py` never imports netCDF4, `generate.py` does. It is
+  also why `collect_run.py` kept working — it runs on a **login node**, where there are no
+  `SLURM_*` variables to mislead OpenMPI — and why `salloc` cannot reproduce it: that shell is
+  itself `srun`-launched, so it *has* a PMIx server. Reproduce with
+  `sbatch scripts/probe_mpi.sh`.
 - **Staging (`STAGE`, default `1`)**: both train scripts copy the shards the config needs
   (`dataset.years` + `validation.years`, read off the config by `config_years` — not a hardcoded
   list) to node-local `$SLURM_TMPDIR` before training. Outside a job `$SLURM_TMPDIR` is unset and

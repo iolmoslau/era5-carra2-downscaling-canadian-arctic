@@ -341,3 +341,35 @@ require_single_node() {
   echo "         --nodes=1 --gpus-per-node=h100:N" >&2
   return 1
 }
+
+# ---------------------------------------------------------------------------------------
+# netCDF4 pulls in MPI, and MPI cannot initialise in a SLURM batch step
+#
+# Alliance's netCDF4 is built WITH parallel support (__has_parallel4_support__ == 1), so
+# `import netCDF4` imports mpi4py, and importing mpi4py.MPI calls MPI_Init_thread. OpenMPI then
+# sees SLURM_* in the environment, concludes it was launched by srun, and tries to reach a PMIx
+# server. An sbatch BATCH step has none (PMIX_* count is 0), so the client reports
+#
+#     OPAL ERROR: Unreachable in file ext3x_client.c at line 111
+#     *** An error occurred in MPI_Init_thread on a NULL communicator
+#
+# and the process aborts. Measured on fc30555 with openmpi/4.1.5 + pmix/4.2.4 + mpi4py/4.1.0:
+# plain python aborts, python under torchrun aborts, and both succeed with MPI4PY_RC_INITIALIZE=0
+# (scripts/probe_mpi.sh). It is NOT a torchrun problem -- plain python fails too.
+#
+# This is why `generate.py` jobs died while training ran fine for hours: train.py never imports
+# netCDF4; generate.py imports it at module level. It also explains why collect_run.py works --
+# WORKFLOW runs it on a login node, where there are no SLURM_* variables to mislead OpenMPI.
+# And why salloc "proved" nothing: salloc's shell is itself srun-launched, so it HAS a PMIx
+# server and MPI_Init succeeds there.
+#
+# mpi4py reads MPI4PY_RC_* from the environment (>= 3.1), so this skips MPI_Init entirely while
+# leaving netCDF4 fully usable. Nothing in this pipeline needs a live communicator: generation is
+# single-rank and writes its NetCDF serially (hence generation.perf.io_synchronous), and
+# distributed training goes through torch.distributed/NCCL, not MPI.
+#
+# Set here rather than per-script so every job that sources this gets it -- the failure hits any
+# batch-step process that imports netCDF4, which includes eval_crps_mae.py inside run_eval.sh.
+# Export an explicit MPI4PY_RC_INITIALIZE=1 to opt back in if a job ever genuinely needs MPI.
+# ---------------------------------------------------------------------------------------
+export MPI4PY_RC_INITIALIZE="${MPI4PY_RC_INITIALIZE:-0}"

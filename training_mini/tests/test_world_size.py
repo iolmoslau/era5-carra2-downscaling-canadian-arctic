@@ -247,3 +247,38 @@ def test_the_scripts_request_one_node_per_node_gpus():
         assert "#SBATCH --nodes=1" in text, name
         assert "#SBATCH --gpus-per-node=h100:" in text, name
         assert "\n#SBATCH --gpus=" not in text, f"{name} still uses the job-level --gpus"
+
+
+# ------------------------------------------------------------------ netCDF4 drags in MPI
+# Measured on fc30555 (openmpi/4.1.5, pmix/4.2.4, mpi4py/4.1.0) with scripts/probe_mpi.sh:
+# Alliance's netCDF4 has parallel support, so importing it imports mpi4py and calls
+# MPI_Init_thread; in an sbatch BATCH step there is no PMIx server, so OpenMPI aborts with
+# "Unreachable in ext3x_client.c:111". Plain python AND python under torchrun both die; both
+# survive with MPI4PY_RC_INITIALIZE=0. That killed every generate job from 2026-09-24 onward
+# while training ran fine, because train.py never imports netCDF4 and generate.py does.
+def test_mpi_init_is_disabled_by_default():
+    out = sh("echo \"$MPI4PY_RC_INITIALIZE\"")
+    assert out.stdout.strip() == "0", "sourcing common.sh must suppress mpi4py's MPI_Init"
+
+
+def test_an_explicit_opt_in_is_respected():
+    """A job that genuinely needs MPI must be able to ask for it."""
+    out = sh("export MPI4PY_RC_INITIALIZE=1\nsource \"%s\"\necho \"$MPI4PY_RC_INITIALIZE\""
+             % COMMON_SH)
+    assert out.stdout.strip() == "1"
+
+
+def test_it_is_exported_not_just_set():
+    """It has to reach the python child process, not merely exist in the shell."""
+    out = sh("env | grep '^MPI4PY_RC_INITIALIZE='")
+    assert out.stdout.strip() == "MPI4PY_RC_INITIALIZE=0"
+
+
+@pytest.mark.parametrize("script", [
+    "training_mini/slurm/generate.sh", "evaluate/run_eval.sh",
+    "training_mini/slurm/train_regression.sh", "training_mini/slurm/train_diffusion.sh",
+])
+def test_every_job_script_sources_common(script):
+    """The fix lives in common.sh, so a job script that does not source it is unprotected."""
+    text = (TRAIN_DIR.parent / script).read_text()
+    assert "slurm/common.sh" in text, f"{script} does not source common.sh"
