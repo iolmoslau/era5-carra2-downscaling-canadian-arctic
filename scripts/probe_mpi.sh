@@ -23,9 +23,25 @@
 # MPI4PY_RC_INITIALIZE=0 makes `import mpi4py.MPI` skip MPI_Init entirely. generate.py writes
 # its NetCDF serially, so nothing here needs a live MPI communicator.
 #
-# MUST RUN INSIDE AN ALLOCATION -- that is the whole point:
-#     salloc --time=20:00 --mem=8G --cpus-per-task=2 --account=def-stockie_cpu
-#     bash scripts/probe_mpi.sh
+# MUST BE SUBMITTED WITH sbatch -- NOT run under salloc.
+#
+#     sbatch scripts/probe_mpi.sh          # then read logs/probe_mpi_<jobid>.out
+#
+# Why not salloc: on Alliance, salloc hands you a shell that is itself launched via srun, so you
+# sit inside a job STEP with a PMIx server running, and MPI_Init connects to it happily. An
+# sbatch script runs in the BATCH step, which has no PMIx server -- and torchrun's child is not
+# srun-launched either, so the PMIx client has nothing to reach. That is the "Unreachable".
+# A salloc run of this probe passes all four cases and proves nothing; that is exactly what
+# happened on the first attempt (job 3329168, fc30669, all four OK).
+
+#SBATCH --account=def-stockie_cpu
+#SBATCH --job-name=probe_mpi
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=8G
+#SBATCH --time=0:15:00
+#SBATCH --output=logs/probe_mpi_%j.out
+#SBATCH --error=logs/probe_mpi_%j.err
 
 set -uo pipefail
 
@@ -36,12 +52,15 @@ echo "=============================================================="
 echo " MPI init probe"
 echo "=============================================================="
 if [[ -z "${SLURM_JOB_ID:-}" ]]; then
-  echo "WARNING: \$SLURM_JOB_ID is unset -- you are NOT in an allocation." >&2
-  echo "         The failure only reproduces where SLURM_* variables exist, so this run" >&2
-  echo "         will almost certainly pass and tell you nothing. Use salloc first." >&2
+  echo "WARNING: not in a SLURM job at all -- this will pass and prove nothing." >&2
+elif [[ "${SLURM_STEP_ID:-batch}" != "batch" && -n "${SLURM_STEP_ID:-}" ]]; then
+  echo "WARNING: step id '$SLURM_STEP_ID' -- this looks like an srun-launched STEP." >&2
+  echo "         A step has a PMIx server, so MPI_Init succeeds and the failure does NOT" >&2
+  echo "         reproduce. Submit with 'sbatch scripts/probe_mpi.sh' instead of salloc." >&2
 else
-  echo "allocation: job $SLURM_JOB_ID on $(hostname -s)"
+  echo "job $SLURM_JOB_ID on $(hostname -s), step '${SLURM_STEP_ID:-batch}'"
 fi
+echo "context:    PMIX_* vars set = $(env | grep -c '^PMIX_')  (a batch step should have none)"
 echo "slurm vars: $(env | grep -c '^SLURM_') set"
 
 module load python/3.11 mpi4py/4.1.0 >/dev/null 2>&1
@@ -94,6 +113,8 @@ echo
 
 echo "=============================================================="
 echo " How to read this:"
+echo "   (if every case passes AND PMIX_* vars were set, you ran it in an srun step --"
+echo "    resubmit with sbatch; a step has a PMIx server and cannot reproduce this)"
 echo "   3 fails, 4 passes  -> MPI4PY_RC_INITIALIZE=0 is the fix; it goes in the job scripts."
 echo "   1 and 3 both fail  -> any MPI init inside an allocation is broken, not a torchrun"
 echo "                         issue. Worth an Alliance support ticket citing the SLURM"
