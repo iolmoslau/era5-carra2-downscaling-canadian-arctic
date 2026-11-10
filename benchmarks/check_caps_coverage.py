@@ -122,6 +122,12 @@ def main() -> int:
     print(f"CAPS grid   {caps_lat.shape[0]} x {caps_lat.shape[1]}  "
           f"lat {caps_lat.min():.2f}..{caps_lat.max():.2f}  "
           f"lon {caps_lon.min():.2f}..{caps_lon.max():.2f}")
+    # Cross-check the parse against what grib_ls reported for the same file. If these two points
+    # disagree with it, the dump was misread and every distance below is meaningless -- a check
+    # the point COUNT cannot make, since a column mix-up preserves the count.
+    print(f"  first point lat {caps_lat.ravel()[0]:.3f} lon {caps_lon.ravel()[0]:.3f}   "
+          f"last point lat {caps_lat.ravel()[-1]:.3f} lon {caps_lon.ravel()[-1]:.3f}")
+    print("  (grib_ls reported first 67.960/219.239, last 64.496/333.097 -- these must match)")
 
     store = shard_path(args.data_dir, args.year)
     if not store_exists(store):
@@ -157,6 +163,21 @@ def main() -> int:
               f"lon {hr_lon.ravel()[np.argmax(dist)]:.3f}  ({dist.max():.1f} km away)")
         print(f"  affected rows {oi[:, 0].min()}..{oi[:, 0].max()}, "
               f"cols {oi[:, 1].min()}..{oi[:, 1].max()}")
+
+        # WHERE the covered part is, as a picture. Row/column ranges cannot distinguish a
+        # contiguous diagonal strip (real geometry) from a scattered pattern (a parsing
+        # artifact), and they read identically -- 0..447 in both cases. The map can.
+        inside2d = (~outside).reshape(hr_lat.shape)
+        k = 16                                        # a 16x16 map of 28x28-pixel blocks
+        blocks = inside2d.reshape(k, 448 // k, k, 448 // k).mean(axis=(1, 3))
+        ramp = " .:-=+*#@"
+        print("\n  covered fraction per block (patch rows top=0, cols left=0):")
+        for row in blocks:
+            print("    " + "".join(ramp[min(int(v * len(ramp)), len(ramp) - 1)] for v in row))
+        print(f"    ' ' = none, '@' = all. covered total {100 * inside2d.mean():.1f}%")
+        if inside2d.any():
+            print(f"  covered region: lat {hr_lat[inside2d].min():.2f}..{hr_lat[inside2d].max():.2f}"
+                  f"  lon {hr_lon[inside2d].min():.2f}..{hr_lon[inside2d].max():.2f}")
         print("  => the patch is NOT fully inside CAPS. The comparison must either be "
               "restricted\n     to the covered sub-region, or CAPS filled/masked there -- "
               "and whichever it is\n     belongs in the write-up, not in silent NaNs.")
