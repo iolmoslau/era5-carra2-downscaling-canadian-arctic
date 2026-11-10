@@ -101,6 +101,17 @@ _tb="${TOTAL_BATCH:-$(config_hp "$TRAIN_DIR/conf/$CONFIG.yaml" total_batch_size)
 _bpg="${BATCH_PER_GPU:-$(config_hp "$TRAIN_DIR/conf/$CONFIG.yaml" batch_size_per_gpu)}"
 require_world_size "$NPROC" "$_tb" "$_bpg" || exit 1
 
+# The regression base must have been trained on the SAME channels as this diffusion config.
+# Generation is regression mean + diffusion residual, so a no-ice diffusion run built on a
+# with-ice regression net is one typo (regression_2 for regression_3) away -- and it fails only
+# after the allocation, the staging and the model build. The config IS the channel selection
+# here; training has no NOICE flag.
+python tools/lr_channels.py --data-dir "$DATA_DIR" --config "conf/$CONFIG.yaml" \
+  --check-against "$REG_CKPT" --stage regression >/dev/null || {
+    echo "       REG_CKPT=$REG_CKPT" >&2
+    echo "       CONFIG=$CONFIG" >&2
+    exit 1; }
+
 # Years come from the CONFIG (dataset.years + validation.years) so staging can never drift from
 # what the run reads; override with YEARS="2011 2012" for a quick subset.
 YEARS="${YEARS:-$(config_years "$TRAIN_DIR/conf/$CONFIG.yaml")}"

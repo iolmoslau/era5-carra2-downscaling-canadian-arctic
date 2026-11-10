@@ -33,6 +33,7 @@ on a mismatch, so the caller can simply `|| exit 1`.
 from __future__ import annotations
 
 import argparse
+import pathlib
 import sys
 from pathlib import Path
 
@@ -75,6 +76,11 @@ def main() -> int:
     ap.add_argument("--drop", default="",
                     help="comma-separated channels to withhold, e.g. 'siconc' for the no-ice "
                          "model. Also the hook for the channel-ablation sweep.")
+    ap.add_argument("--config", default="",
+                    help="training config YAML: take the list from its dataset.lr_channels "
+                         "instead of store-minus-drop. Training has no NOICE flag -- the config "
+                         "IS the channel selection -- so this is how a training job checks its "
+                         "regression base was trained on the same channels.")
     ap.add_argument("--check-against", default="",
                     help="checkpoint whose input conv width must match the resolved list")
     ap.add_argument("--stage", default="regression", choices=("regression", "diffusion"),
@@ -87,6 +93,24 @@ def main() -> int:
         print(f"ERROR: cannot read the LR channel manifest: {type(e).__name__}: {e}",
               file=sys.stderr)
         return 1
+
+    if args.config:
+        # dataset.lr_channels: a list selects those channels; null/absent means all of them.
+        import yaml  # noqa: PLC0415
+
+        try:
+            cfg = yaml.safe_load(pathlib.Path(args.config).read_text()) or {}
+        except Exception as e:
+            print(f"ERROR: cannot read {args.config}: {type(e).__name__}: {e}", file=sys.stderr)
+            return 1
+        declared = ((cfg.get("dataset") or {}).get("lr_channels")) or None
+        if declared is not None:
+            missing = [c for c in declared if c not in channels]
+            if missing:
+                print(f"ERROR: {args.config} asks for {missing}, absent from the store's "
+                      f"channels {channels}", file=sys.stderr)
+                return 1
+            channels = list(declared)
 
     drop = [c.strip() for c in args.drop.split(",") if c.strip()]
     unknown = [c for c in drop if c not in channels]

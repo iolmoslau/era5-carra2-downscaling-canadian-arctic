@@ -155,3 +155,79 @@ def test_submission_scripts_forward_the_resolved_list(script):
     assert "python tools/lr_channels.py" in text, f"{script} does not invoke the tool"
     after = text.split("python tools/lr_channels.py", 1)[1][:300]
     assert "|| exit 1" in after, f"{script} ignores a channel-check failure"
+
+
+# ------------------------------------------------------------------ training: the config decides
+# Training has no NOICE flag -- the config's dataset.lr_channels IS the channel selection. The
+# hazard is pairing a no-ice diffusion run with a WITH-ice regression base (regression_2 for
+# regression_3), which costs an allocation, a staging pass and a model build before it fails.
+def _cfg(tmp_path, channels):
+    import textwrap
+    p = tmp_path / "c.yaml"
+    body = "null" if channels is None else "[" + ", ".join(channels) + "]"
+    p.write_text(textwrap.dedent(f"""\
+        dataset:
+            lr_channels: {body}
+        training:
+            hp:
+                total_batch_size: 64
+        """))
+    return p
+
+
+def test_config_list_overrides_the_store(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(lr_channels, "store_channels", lambda *a, **k: list(FULL))
+    cfg = _cfg(tmp_path, FULL[:-1])                       # the noice list
+    monkeypatch.setattr(sys, "argv", ["lr_channels.py", "--data-dir", str(tmp_path),
+                                      "--config", str(cfg)])
+    assert lr_channels.main() == 0
+    assert capsys.readouterr().out.strip() == "[" + ",".join(FULL[:-1]) + "]"
+
+
+def test_null_lr_channels_means_every_channel(tmp_path, monkeypatch, capsys):
+    """`lr_channels: null` is the with-ice default -- all 12, not an empty selection."""
+    monkeypatch.setattr(lr_channels, "store_channels", lambda *a, **k: list(FULL))
+    cfg = _cfg(tmp_path, None)
+    monkeypatch.setattr(sys, "argv", ["lr_channels.py", "--data-dir", str(tmp_path),
+                                      "--config", str(cfg)])
+    assert lr_channels.main() == 0
+    assert capsys.readouterr().out.strip() == "[" + ",".join(FULL) + "]"
+
+
+def test_noice_config_against_withice_regression_base_is_refused(tmp_path, monkeypatch):
+    """THE PAIRING HAZARD: an 11-channel config with a 12-channel (in=20) regression net."""
+    monkeypatch.setattr(lr_channels, "store_channels", lambda *a, **k: list(FULL))
+    import collect_run
+    monkeypatch.setattr(collect_run, "checkpoint_provenance",
+                        lambda p, s: {"in_channels": 20, "lr_n": 12, "sea_ice": "yes"})
+    cfg = _cfg(tmp_path, FULL[:-1])
+    monkeypatch.setattr(sys, "argv", ["lr_channels.py", "--data-dir", str(tmp_path),
+                                      "--config", str(cfg), "--check-against", "/r2.mdlus",
+                                      "--stage", "regression"])
+    assert lr_channels.main() == 1
+
+
+def test_matching_config_and_base_is_accepted(tmp_path, monkeypatch):
+    monkeypatch.setattr(lr_channels, "store_channels", lambda *a, **k: list(FULL))
+    import collect_run
+    monkeypatch.setattr(collect_run, "checkpoint_provenance",
+                        lambda p, s: {"in_channels": 19, "lr_n": 11, "sea_ice": "no"})
+    cfg = _cfg(tmp_path, FULL[:-1])
+    monkeypatch.setattr(sys, "argv", ["lr_channels.py", "--data-dir", str(tmp_path),
+                                      "--config", str(cfg), "--check-against", "/r3.mdlus",
+                                      "--stage", "regression"])
+    assert lr_channels.main() == 0
+
+
+def test_config_asking_for_an_absent_channel_is_refused(tmp_path, monkeypatch):
+    monkeypatch.setattr(lr_channels, "store_channels", lambda *a, **k: list(FULL))
+    cfg = _cfg(tmp_path, ["t2m", "u10", "sst"])           # sst is not in this dataset
+    monkeypatch.setattr(sys, "argv", ["lr_channels.py", "--data-dir", str(tmp_path),
+                                      "--config", str(cfg)])
+    assert lr_channels.main() == 1
+
+
+def test_diffusion_training_checks_its_regression_base():
+    text = (REPO / "training_mini/slurm/train_diffusion.sh").read_text()
+    assert "--config \"conf/$CONFIG.yaml\"" in text, "train_diffusion.sh must check the pairing"
+    assert "--check-against \"$REG_CKPT\"" in text
