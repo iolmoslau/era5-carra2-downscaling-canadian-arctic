@@ -104,10 +104,38 @@ if command -v grib_ls >/dev/null 2>&1; then
   echo "---- eccodes grib_ls ----------------------------------------"
   grib_ls -p shortName,name,units,level,typeOfLevel,stepRange "$FILE" 2>&1 | head -40
   echo
-  echo "---- eccodes grid + wind frame ------------------------------"
-  # uvRelativeToGrid: 1 = components are grid-relative, 0 = earth-relative.
-  grib_ls -p gridType,Ni,Nj,latitudeOfFirstGridPointInDegrees,longitudeOfFirstGridPointInDegrees,uvRelativeToGrid \
-    "$FILE" 2>&1 | head -20
+  echo "---- eccodes grid geometry ----------------------------------"
+  # Dx/Dy decide whether the adapter interpolates DOWN to the 2.5 km patch or UP to it.
+  grib_ls -p gridType,Ni,Nj,DxInMetres,DyInMetres,LaDInDegrees,orientationOfTheGridInDegrees,iScansNegatively,jScansPositively \
+    "$FILE" 2>&1 | head -12
+  echo
+  echo "---- eccodes corner coordinates -----------------------------"
+  # grib_get_data prints lat/lon/value per point; the first and last lines are opposite corners.
+  # 1.2M lines is a second or two and gives the extent exactly, rather than deriving it from the
+  # projection parameters and hoping the scanning flags were read the right way round.
+  grib_get_data -w count=1 "$FILE" 2>/dev/null |
+    awk 'NR==2{print "  first point  lat="$1"  lon="$2} END{print "  last point   lat="$1"  lon="$2}'
+
+  echo
+  echo "---- WIND FRAME (the decisive fact) -------------------------"
+  # uvRelativeToGrid is undefined for some GRIB2 templates -- it came back "not_found" for CAPS.
+  # The authority is GRIB2 Flag Table 3.3, bit 5 of resolutionAndComponentFlags (counting from
+  # the MSB as bit 1): SET = u/v resolved along increasing x/y of the DEFINED GRID; CLEAR =
+  # resolved along easterly/northerly. So bit 5 set means a de-rotation is required.
+  rcf=$(grib_get -w count=1 -p resolutionAndComponentFlags "$FILE" 2>/dev/null | tr -d ' ')
+  uvr=$(grib_get -w count=1 -p uvRelativeToGrid "$FILE" 2>/dev/null | tr -d ' ')
+  echo "  resolutionAndComponentFlags = ${rcf:-<unreadable>}"
+  echo "  uvRelativeToGrid            = ${uvr:-<not defined for this template>}"
+  if [[ "$rcf" =~ ^[0-9]+$ ]]; then
+    # bit 5 from the MSB of an 8-bit field == numeric value 8
+    if (( (rcf & 8) != 0 )); then
+      echo "  -> bit 5 SET: winds are GRID-RELATIVE. adapt_caps.py MUST de-rotate."
+    else
+      echo "  -> bit 5 clear: winds are EARTH-RELATIVE. No de-rotation needed."
+    fi
+  else
+    echo "  -> could not read the flag; cross-check with 'wgrib2 -V' (winds(grid)/winds(earth))"
+  fi
 fi
 
 if (( found_tool == 0 )); then
@@ -119,7 +147,18 @@ fi
 
 # ---------------------------------------------------------------- 3. Python readers
 echo
-echo "---- GRIB readers in this Python env ------------------------"
+echo "---- GRIB readers in the Python env -------------------------"
+# Activate corrdiff-env first. Probing bare `python` tests the SYSTEM interpreter and reported
+# "no xarray" on a cluster that trains with xarray daily -- a measurement of the wrong thing.
+ENV_DIR="${ENV_DIR:-$HOME/corrdiff-env}"
+if [[ -f "$ENV_DIR/bin/activate" ]]; then
+  module load python/3.11 mpi4py/4.1.0 >/dev/null 2>&1
+  # shellcheck disable=SC1091
+  source "$ENV_DIR/bin/activate"
+  echo "  (env: $ENV_DIR)"
+else
+  echo "  (no venv at $ENV_DIR -- probing '$(command -v python || echo python)')"
+fi
 python - "$FILE" <<'PY' 2>&1 | sed 's/^/  /'
 import importlib, sys
 
