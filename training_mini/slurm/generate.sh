@@ -95,8 +95,12 @@ ln -sfn "$DATA_DIR" ./data
 # BEFORE torchrun: a mismatch otherwise surfaces as a conv shape error minutes in, or -- for a
 # wrong-but-same-length subset -- not at all. The regression net is checked because it reads the
 # conditioning first; a paired diffusion net shares its LR stack.
-LR_ARG=$(python tools/lr_channels.py --data-dir "$DATA_DIR" --drop "$DROP" \
-           --check-against "$REG_CKPT" --stage regression) || exit 1
+# SKIP_CHANNEL_CHECK=1 still resolves the list from the store but skips reading the
+# checkpoint, which needs physicsnemo + torch. Use it to take the preflight out of the picture
+# when diagnosing an unrelated import/MPI failure -- the list is still correct, just unverified.
+CHECK=(--check-against "$REG_CKPT" --stage regression)
+[[ "${SKIP_CHANNEL_CHECK:-0}" == "1" ]] && CHECK=()
+LR_ARG=$(python tools/lr_channels.py --data-dir "$DATA_DIR" --drop "$DROP" "${CHECK[@]}") || exit 1
 echo "LR channels: $LR_ARG"
 
 CMD=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"

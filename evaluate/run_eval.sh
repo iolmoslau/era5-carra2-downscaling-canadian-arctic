@@ -125,8 +125,12 @@ echo "[eval] RES_CKPT=$RES_CKPT"
 # Resolve the LR channel list from the store and check it against the net that consumes it.
 # Both passes share one list, so a mismatch here would otherwise waste the full ensemble pass
 # before failing -- or, for a wrong-but-same-length subset, score the wrong model silently.
-LR_ARG=$(python tools/lr_channels.py --data-dir "$DATA_DIR" --drop "$DROP" \
-           --check-against "$REG_CKPT" --stage regression) || exit 1
+# SKIP_CHANNEL_CHECK=1 still resolves the list from the store but skips reading the
+# checkpoint, which needs physicsnemo + torch. Use it to take the preflight out of the picture
+# when diagnosing an unrelated import/MPI failure -- the list is still correct, just unverified.
+CHECK=(--check-against "$REG_CKPT" --stage regression)
+[[ "${SKIP_CHANNEL_CHECK:-0}" == "1" ]] && CHECK=()
+LR_ARG=$(python tools/lr_channels.py --data-dir "$DATA_DIR" --drop "$DROP" "${CHECK[@]}") || exit 1
 echo "[eval] lr_channels=$LR_ARG"
 
 COMMON=(torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC"
