@@ -44,6 +44,7 @@ if not (os.environ.get("PROJ_DATA") or os.environ.get("PROJ_LIB")):
         pass
 
 import argparse  # noqa: E402
+import io  # noqa: E402
 import re  # noqa: E402
 import subprocess  # noqa: E402
 import sys  # noqa: E402
@@ -85,8 +86,8 @@ def read_caps_field(path: str, short_name: str = "2t") -> tuple[np.ndarray, ...]
                          capture_output=True, text=True)
     if out.returncode != 0 or not out.stdout.strip():
         raise RuntimeError(f"grib_get_data failed for {path}:\n{out.stderr[:800]}")
-    df = pd.read_csv(pd.io.common.StringIO(out.stdout), sep=r"\s+", header=0,
-                     names=["lat", "lon", "value"], engine="python")
+    df = pd.read_csv(io.StringIO(out.stdout), sep=r"\s+", header=0,
+                     names=["lat", "lon", "value"])
     df = df[pd.to_numeric(df["lat"], errors="coerce").notna()]
     lat = df["lat"].to_numpy(float)
     lon = np.mod(df["lon"].to_numpy(float), 360.0)
@@ -154,7 +155,7 @@ def main() -> int:
 
     if args.caps_dump:
         df = pd.read_csv(args.caps_dump, sep=r"\s+", header=0,
-                         names=["lat", "lon", "value"], engine="python")
+                         names=["lat", "lon", "value"])
         df = df[pd.to_numeric(df["lat"], errors="coerce").notna()]
         shape = (CAPS_NJ, CAPS_NI)
         c_lat = df["lat"].to_numpy(float).reshape(shape)
