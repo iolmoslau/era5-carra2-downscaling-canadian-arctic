@@ -31,6 +31,21 @@ Two further conditions make a comparison fair, and neither is enforced by the sc
 | file | what |
 |---|---|
 | `inspect_caps.sh` | interrogate the CAPS archive: variables, units, grid, **wind frame**. Run this before writing any adapter. |
+| `check_caps_coverage.py` | does the source domain contain our patch, and how much de-rotation does it need? Measures both from one `grib_get_data` dump. |
+| `plot_caps_vs_patch.py` | draw the two footprints together for one valid time, in CAPS's own projection. |
+
+### Finding, 2026-11-10: the supplied CAPS extraction does not cover the patch
+
+**Only 25.5% of the 448x448 patch falls inside the CAPS domain** — a band across the north,
+`lat 67.94..72.42`, `lon 215.33..242.98`. The rest is up to **799 km** outside. Confirmed two
+independent ways: measured from the delivered file's own coordinates, and reproduced to within
+0.01% by reconstructing the grid analytically from the documented parameters (polar
+stereographic, `lon_0 = 244`, `LaD = 60`, `Dx = Dy = 2500 m`, 1465 x 825, first point
+67.960/219.239). So it is the delivered geometry, not a parsing error.
+
+Everything *else* about the data is right: `2t`/`10u`/`10v`, K and m s-1, **2.5 km — the same
+resolution as CARRA2**, 3-hourly valid times across 2020-2022. Only the domain placement is
+wrong, which is why re-requesting the extraction is worth trying before redesigning around it.
 
 Planned, per the roadmap:
 
