@@ -33,6 +33,10 @@ Two further conditions make a comparison fair, and neither is enforced by the sc
 | `inspect_caps.sh` | interrogate the CAPS archive: variables, units, grid, **wind frame**. Run this before writing any adapter. |
 | `check_caps_coverage.py` | does the source domain contain our patch, and how much de-rotation does it need? Measures both from one `grib_get_data` dump. |
 | `plot_caps_vs_patch.py` | draw the two footprints together for one valid time, in CAPS's own projection. |
+| `coarsen.py` | footprint-mean HR→LR (`build_binning`/`coarsen`, now also used by `scripts/lr_hr_consistency.py`) and the model's own bilinear LR→HR (`LRtoHR`). One implementation of each direction. |
+| `write_nc.py` | the schema emitter, shared by every benchmark; `read_times` takes the times from a model's NetCDF. |
+| `bcsd.py` | Bias-Correction Spatial Disaggregation (Wood et al. 2004). `fit` on the train years, `predict` onto the test times. CPU-only. |
+| `run_bcsd.sh` | fit → predict → score as one CPU SLURM job on fir. |
 
 ### Finding, 2026-11-10: the supplied CAPS extraction does not cover the patch
 
@@ -51,10 +55,43 @@ Planned, per the roadmap:
 
 | file | what |
 |---|---|
-| `coarsen.py` | binned footprint-mean HR→LR, promoted out of `scripts/lr_hr_consistency.py` so there is one implementation |
-| `write_nc.py` | the schema emitter above, shared by every benchmark |
-| `bcsd.py` | Bias-Correction Spatial Disaggregation (Wood et al. 2004), CPU-only |
 | `adapt_caps.py` | CAPS GRIB2 → the schema: pick a lead, regrid to the patch, de-rotate winds if needed |
+
+## BCSD
+
+```bash
+# on fir: fit (2011-18) -> predict on the model's exact test times -> score
+NAME=bcsd TIMES_FROM=$SCRATCH/corrdiff_runs/diffusion_2/eval/full.nc \
+  bash training_mini/slurm/submit.sh benchmarks/run_bcsd.sh
+# if that full.nc has been purged, re-draw the same times as run_eval.sh did
+NAME=bcsd YEARS="2020 2021 2022" N=400 SEED=0 \
+  bash training_mini/slurm/submit.sh benchmarks/run_bcsd.sh
+```
+
+**What it does.** *BC*: CARRA2 is footprint-mean coarsened onto the ERA5 grid, and at each LR
+cell ERA5 is quantile-mapped onto that coarse CARRA2 distribution, per calendar month (±1 month
+pooled, ~700 samples per map). *SD*: the corrected coarse field becomes an anomaly from the coarse
+CARRA2 climatology, the anomaly is interpolated with the model's own bilinear weights, and the
+2.5 km CARRA2 climatology (month × hour of day) is added back (t2m) or multiplied in (wind speed).
+All fine-scale structure therefore comes from climatology. That is the method's bet, and also its
+limit: detail that isn't climatological, like a front or one night's cold pool, can't appear.
+
+**Winds are speed + direction, not u + v**, as the roadmap required. Speed is quantile-mapped and
+disaggregated multiplicatively. Direction gets a per-cell, per-month mean rotation (the same
+magnitude-weighted circular estimator as the consistency check), then a per-pixel climatological
+rotation of HR wind against the interpolated coarse wind, which is where terrain channelling
+lives.
+
+**Guards.** `predict` refuses a store whose `winds_frame` differs from the fit's. With
+`--times-from`, it compares its truth with that file's `truth` group and fails beyond 1e-2: a
+mismatch means BCSD was scored against a different store than the model was. It also warns when
+asked to predict on a year it was fitted on.
+
+**Sanity, local 2011 shard (in-sample year, 60 times, so not a result):** t2m MAE 1.77 vs 2.49 for
+bilinear ERA5. That shard's winds are still grid-relative, and BCSD's direction correction
+absorbed the ~100° rotation completely (u10 MAE 1.00 vs 3.56). `training_mini/tests/test_bcsd.py`
+checks out-of-sample recovery of a known bias, rotation and fine-scale pattern on synthetic shards.
+Disabling any one correction term fails the test.
 
 ## The trap to keep in mind
 
