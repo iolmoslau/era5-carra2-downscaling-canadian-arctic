@@ -66,48 +66,9 @@ SURFACE = ("t2m", "u10", "v10")
 
 
 # ----------------------------------------------------------------------------- grid binning
-def build_binning(z: xr.Dataset, coverage: float = 0.5) -> dict:
-    """Map every HR cell to the LR cell containing it (area-average weights).
-
-    Returns the flat LR index per HR cell, the per-cell counts, and a validity mask over LR
-    cells that are sufficiently covered by the HR patch.
-    """
-    lat = np.asarray(z["lat"].values, dtype=float)          # 1-D, stored descending
-    lon = np.asarray(z["lon"].values, dtype=float)          # 1-D, [0, 360)
-    lat_asc = lat[::-1] if lat[0] > lat[-1] else lat
-    flipped = lat[0] > lat[-1]
-
-    def edges(c: np.ndarray) -> np.ndarray:
-        step = np.abs(np.diff(c)).mean()
-        return np.concatenate([[c[0] - step / 2], (c[:-1] + c[1:]) / 2, [c[-1] + step / 2]])
-
-    lat_edges, lon_edges = edges(lat_asc), edges(lon)
-    hr_lat = np.asarray(z["hr_lat"].values, dtype=float).ravel()
-    hr_lon = np.mod(np.asarray(z["hr_lon"].values, dtype=float), 360.0).ravel()  # match LR
-
-    iy = np.digitize(hr_lat, lat_edges) - 1
-    ix = np.digitize(hr_lon, lon_edges) - 1
-    ny, nx = lat_asc.size, lon.size
-    ok = (iy >= 0) & (iy < ny) & (ix >= 0) & (ix < nx)
-    flat = np.where(ok, iy * nx + ix, 0)
-
-    counts = np.bincount(flat[ok], minlength=ny * nx).astype(float)
-    # Full cells all hold about the same number of HR cells; partial ones sit at the patch edge.
-    full = np.median(counts[counts > 0]) if np.any(counts > 0) else 0.0
-    valid = counts >= coverage * full
-    return {"flat": flat, "ok": ok, "counts": counts, "valid": valid,
-            "shape": (ny, nx), "flipped": flipped, "full": float(full)}
-
-
-def coarsen(field_hr: np.ndarray, b: dict) -> np.ndarray:
-    """Area-average one HR field (y, x) onto the LR grid, oriented like the stored LR."""
-    ny, nx = b["shape"]
-    flat_vals = np.asarray(field_hr, dtype=float).ravel()[b["ok"]]
-    sums = np.bincount(b["flat"][b["ok"]], weights=flat_vals, minlength=ny * nx)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        mean = np.where(b["counts"] > 0, sums / b["counts"], np.nan)
-    out = mean.reshape(ny, nx)
-    return out[::-1] if b["flipped"] else out     # back to the store's lat order
+# One implementation of the footprint-mean HR -> LR coarsening, shared with the benchmarks.
+from benchmarks.coarsen import build_binning_from_store as build_binning  # noqa: E402
+from benchmarks.coarsen import coarsen  # noqa: E402,F401
 
 
 # ----------------------------------------------------------------------------- statistics
